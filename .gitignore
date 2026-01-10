@@ -12,3 +12,8 @@ DerivedData/
 # SwiftPM / build
 .build/
 .swiftpm/
+
+# Xcode user-specific
+*.xcuserdata/
+xcuserdata/
+
