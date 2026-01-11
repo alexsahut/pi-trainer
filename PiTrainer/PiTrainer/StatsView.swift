@@ -11,20 +11,42 @@ struct StatsView: View {
     @ObservedObject var statsStore: StatsStore
     @Environment(\.dismiss) var dismiss
     
+    @State private var selectedConstantForStats: Constant
+    
+    init(statsStore: StatsStore) {
+        self.statsStore = statsStore
+        // Initialize with the currently global selected constant, or default to Pi
+        _selectedConstantForStats = State(initialValue: statsStore.selectedConstant)
+    }
+    
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    Picker("stats.constant_picker", selection: $selectedConstantForStats) {
+                        ForEach(Constant.allCases) { constant in
+                            Text(constant.symbol).tag(constant)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+                }
+                .listRowSeparator(.hidden)
+                
+                let currentStats = statsStore.stats(for: selectedConstantForStats)
+                
                 Section(header: Text("stats.global_records")) {
                     HStack {
                         Text("stats.best_streak")
                         Spacer()
-                        Text("\(statsStore.globalBestStreak)")
+                        Text("\(currentStats.bestStreak)")
                             .fontWeight(.bold)
                             .foregroundColor(.gold)
                     }
                 }
                 
-                if let last = statsStore.lastSession {
+                if let last = currentStats.lastSession {
                     Section(header: Text("stats.last_session")) {
                         StatRow(label: String(localized: "stats.attempts"), value: String(localized: "stats.attempts_count \(last.attempts)"))
                         StatRow(label: String(localized: "stats.errors"), value: String(localized: "session.errors_count \(last.errors)"), color: .red)

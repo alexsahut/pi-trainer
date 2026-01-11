@@ -110,13 +110,14 @@ struct HomeView: View {
                 Spacer()
                 
                 // Quick Stats Summary
-                if statsStore.globalBestStreak > 0 {
+                let bestStreak = statsStore.bestStreak(for: statsStore.selectedConstant)
+                if bestStreak > 0 {
                     VStack(spacing: 4) {
-                        Text("home.best_streak")
+                        Text("home.best_streak \(statsStore.selectedConstant.symbol)")
                             .font(.caption)
                             .fontWeight(.bold)
                             .foregroundColor(.secondary)
-                        Text("\(statsStore.globalBestStreak)")
+                        Text("\(bestStreak)")
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.gold)

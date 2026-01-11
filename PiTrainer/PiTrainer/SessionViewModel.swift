@@ -134,7 +134,7 @@ class SessionViewModel: ObservableObject {
                 digitsPerMinute: engine.digitsPerMinute,
                 date: Date()
             )
-            statsStore.saveSession(snapshot)
+            statsStore.saveSession(snapshot, for: statsStore.selectedConstant)
             engine.reset()
         }
     }
