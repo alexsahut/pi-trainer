@@ -28,7 +28,9 @@ struct PracticeEngine {
     
     // MARK: - Properties
     
-    private let piDigitsProvider: PiDigitsProvider
+    // MARK: - Properties
+    
+    private var digitsProvider: any DigitsProvider
     
     // Session state
     private(set) var currentIndex: Int = 0
@@ -61,8 +63,8 @@ struct PracticeEngine {
     
     // MARK: - Initialization
     
-    init(piDigitsProvider: PiDigitsProvider = PiDigitsProvider()) {
-        self.piDigitsProvider = piDigitsProvider
+    init(provider: any DigitsProvider) {
+        self.digitsProvider = provider
     }
     
     // MARK: - Public Methods
@@ -79,6 +81,9 @@ struct PracticeEngine {
         self.bestStreak = 0
         self.startTime = Date()
         self.elapsedTimeInternal = 0
+        
+        // Ensure digits are loaded
+        try? digitsProvider.loadDigits()
     }
     
     /// Processes a digit input
@@ -87,7 +92,7 @@ struct PracticeEngine {
     mutating func input(digit: Int) -> InputResult {
         guard isActive else {
             // If not active, return current state without changes
-            let expected = piDigitsProvider.getDigit(at: currentIndex) ?? 0
+            let expected = digitsProvider.getDigit(at: currentIndex) ?? 0
             return InputResult(
                 isCorrect: false,
                 expectedDigit: expected,
@@ -97,7 +102,7 @@ struct PracticeEngine {
         }
         
         // Get expected digit
-        guard let expectedDigit = piDigitsProvider.getDigit(at: currentIndex) else {
+        guard let expectedDigit = digitsProvider.getDigit(at: currentIndex) else {
             // Reached end of available digits
             isActive = false
             pauseTimer()

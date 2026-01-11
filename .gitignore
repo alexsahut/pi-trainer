@@ -20,3 +20,4 @@ xcuserdata/
 # Python
 .venv/
 
+generate_constants.py

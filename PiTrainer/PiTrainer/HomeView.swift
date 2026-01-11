@@ -25,7 +25,7 @@ struct HomeView: View {
             VStack(spacing: 40) {
                 // Brand / Title
                 VStack(spacing: 8) {
-                    Text("π")
+                    Text(statsStore.selectedConstant.symbol)
                         .font(.system(size: 80, weight: .thin))
                         .foregroundColor(.blue)
                     
@@ -44,6 +44,21 @@ struct HomeView: View {
                     Picker("home.mode", selection: $sessionViewModel.selectedMode) {
                         Text("home.strict").tag(PracticeEngine.Mode.strict)
                         Text("home.learning").tag(PracticeEngine.Mode.learning)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 40)
+                }
+                
+                // Constant Picker
+                VStack(spacing: 12) {
+                    Text("home.constant")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    Picker("home.constant", selection: $statsStore.selectedConstant) {
+                        ForEach(Constant.allCases) { constant in
+                            Text(constant.symbol + " " + NSLocalizedString(constant.localizedNameKey, comment: "")).tag(constant)
+                        }
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal, 40)

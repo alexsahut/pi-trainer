@@ -41,14 +41,19 @@ class SessionViewModel: ObservableObject {
     }
     
     var displayString: String {
-        return "3." + typedDigits
+        return statsStore.selectedConstant.integerPart + "." + typedDigits
     }
     
     // MARK: - Initialization
     
-    init(statsStore: StatsStore, engine: PracticeEngine = PracticeEngine()) {
+    // MARK: - Initialization
+    
+    init(statsStore: StatsStore) {
         self.statsStore = statsStore
-        self.engine = engine
+        // Initialize with the selected constant from store
+        let constant = statsStore.selectedConstant
+        let provider = FileDigitsProvider(constant: constant)
+        self.engine = PracticeEngine(provider: provider)
     }
     
     // MARK: - Public Methods
@@ -109,7 +114,9 @@ class SessionViewModel: ObservableObject {
     
     /// Resets the current session
     func reset() {
-        engine = PracticeEngine() // Re-initialize to clear all state
+        let constant = statsStore.selectedConstant
+        let provider = FileDigitsProvider(constant: constant)
+        engine = PracticeEngine(provider: provider) // Re-initialize to clear all state
         typedDigits = ""
         showErrorFlash = false
         lastCorrectDigit = nil

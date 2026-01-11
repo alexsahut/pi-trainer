@@ -26,6 +26,7 @@ class StatsStore: ObservableObject {
     private let globalBestStreakKey = "com.alexandre.pitrainer.globalBestStreak"
     private let lastSessionKey = "com.alexandre.pitrainer.lastSession"
     private let keypadLayoutKey = "com.alexandre.pitrainer.keypadLayout"
+    private let selectedConstantKey = "com.alexandre.pitrainer.selectedConstant"
     
     // MARK: - Published Properties
     
@@ -34,6 +35,12 @@ class StatsStore: ObservableObject {
     @Published var keypadLayout: KeypadLayout = .phone {
         didSet {
             UserDefaults.standard.set(keypadLayout.rawValue, forKey: keypadLayoutKey)
+        }
+    }
+    
+    @Published var selectedConstant: Constant = .pi {
+        didSet {
+            UserDefaults.standard.set(selectedConstant.rawValue, forKey: selectedConstantKey)
         }
     }
     
@@ -89,6 +96,13 @@ class StatsStore: ObservableObject {
             keypadLayout = layout
         } else {
             keypadLayout = .phone
+        }
+        
+        if let constantString = UserDefaults.standard.string(forKey: selectedConstantKey),
+           let constant = Constant(rawValue: constantString) {
+            selectedConstant = constant
+        } else {
+            selectedConstant = .pi
         }
     }
 }
