@@ -49,6 +49,21 @@ struct HomeView: View {
                     .padding(.horizontal, 40)
                 }
                 
+                // Keypad Layout Picker
+                VStack(spacing: 12) {
+                    Text("settings.keypad_layout")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    Picker("settings.keypad_layout", selection: $statsStore.keypadLayout) {
+                        ForEach(KeypadLayout.allCases, id: \.self) { layout in
+                            Text(layout.localizedName).tag(layout)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 40)
+                }
+                
                 // Main Actions
                 VStack(spacing: 16) {
                     NavigationLink(destination: SessionView(viewModel: sessionViewModel)) {

@@ -1314,6 +1314,56 @@
         }
       }
     },
+    "settings.keypad_layout" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keypad Layout"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disposition du pavé"
+          }
+        }
+      }
+    },
+    "settings.layout.pc" : {
+      "comment" : "PC layout",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PC (7 at top)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PC (7 en haut)"
+          }
+        }
+      }
+    },
+    "settings.layout.phone" : {
+      "comment" : "Phone layout",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone (1 at top)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Téléphone (1 en haut)"
+          }
+        }
+      }
+    },
     "stats.attempts" : {
       "localizations" : {
         "ar" : {
@@ -1636,6 +1686,22 @@
         }
       }
     },
+    "stats.settings" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SETTINGS"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RÉGLAGES"
+          }
+        }
+      }
+    },
     "stats.speed.title" : {
       "localizations" : {
         "ar" : {
@@ -1720,70 +1786,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Statistiche"
-          }
-        }
-      }
-    },
-    "settings.keypad_layout" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keypad Layout"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disposition du pavé"
-          }
-        }
-      }
-    },
-    "settings.layout.pc" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PC (7 at top)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PC (7 en haut)"
-          }
-        }
-      }
-    },
-    "settings.layout.phone" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Phone (1 at top)"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Téléphone (1 en haut)"
-          }
-        }
-      }
-    },
-    "stats.settings" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SETTINGS"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "RÉGLAGES"
           }
         }
       }
