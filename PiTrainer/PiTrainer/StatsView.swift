@@ -29,7 +29,12 @@ struct StatsView: View {
                         StatRow(label: String(localized: "stats.attempts"), value: String(localized: "stats.attempts_count \(last.attempts)"))
                         StatRow(label: String(localized: "stats.errors"), value: String(localized: "session.errors_count \(last.errors)"), color: .red)
                         StatRow(label: String(localized: "stats.best_streak"), value: "\(last.bestStreak)", color: .green)
-                        StatRow(label: String(localized: "stats.speed_label"), value: String(localized: "stats.speed \(last.digitsPerMinute)"))
+                        
+                        let speedValue = last.digitsPerMinute.formatted(.number.precision(.fractionLength(...1)))
+                        let speedFormat = String(localized: "stats.speed.value")
+                        let speedText = String(format: speedFormat, speedValue)
+                        StatRow(label: String(localized: "stats.speed.title"), value: speedText)
+                        
                         StatRow(label: String(localized: "stats.time"), value: formatTime(last.elapsedTime))
                         StatRow(label: String(localized: "stats.date"), value: formatDate(last.date))
                     }
@@ -82,9 +87,9 @@ struct StatRow: View {
     
     var body: some View {
         HStack {
-            Text(label)
+            Text(verbatim: label)
             Spacer()
-            Text(value)
+            Text(verbatim: value)
                 .fontWeight(.semibold)
                 .foregroundColor(color)
         }
