@@ -13,22 +13,24 @@ This repository contains a Pi digits trainer iPhone app designed to help users m
    - [x] Comprehensive unit test suite with 100% pass rate
    - [x] Resolve `libswift_Concurrency` related `malloc` issues by moving to value types
 
-2. **Training Modes & Progress Tracking**
-   - Develop multiple training modes (timed practice, endless mode, daily challenge)
-   - Implement progress tracking and statistics (accuracy, personal best, streak)
-   - Add local data persistence with CoreData or SwiftData
-   - Create progress visualization dashboard
+2. [x] **Minimal UI & Navigation**
+   - [x] Initial SwiftUI project setup with `NavigationStack`
+   - [x] Implementation of `HomeView`, `SessionView`, and `StatsView`
+   - [x] `SessionViewModel` to bridge UI and `PracticeEngine` logic
+   - [x] `StatsStore` with `UserDefaults` persistence
+   - [x] Reusable `KeypadView` with haptic feedback support
 
-3. **Polish & App Store Release**
-   - Add animations and haptic feedback for enhanced UX
-   - Implement achievements and milestone rewards
-   - Create app icon and onboarding flow
-   - Write App Store listing and submit for review
+3. [x] **Localization & RTL Support** (Milestone 3)
+   - [x] Implementation of String Catalog (`Localizable.xcstrings`)
+   - [x] Localization for 21+ languages including Arabic (RTL)
+   - [x] Pluralization support for Errors and Attempts
+   - [x] Layout refinement using leading/trailing for RTL compatibility
 
 ## January 11, 2026
 
 ### Progress
 - **Milestone 1 finalized**: Core engine and digit loading are complete.
 - **Safety Overhaul**: Refactored major components to `struct` to eliminate complex ARC issues in the simulator environment.
-- **Verification**: Confirmed fix with successful `xcodebuild` run on iPhone 16e (24 passing tests).
-- **Cleaned Repo**: Finalized `.gitignore` and committed Milestone 1 code.
+- **Milestone 2 finalized**: Full SwiftUI UI with Home, Practice, and Stats screens.
+- **Milestone 3 finalized**: Complete localization for 21+ languages, RTL support, and pluralization.
+- **Verification**: All 24 core logic unit tests passed successfully on iPhone 16e after localization.

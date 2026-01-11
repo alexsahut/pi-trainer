@@ -17,3 +17,6 @@ DerivedData/
 *.xcuserdata/
 xcuserdata/
 
+# Python
+.venv/
+
