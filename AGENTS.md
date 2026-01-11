@@ -53,7 +53,30 @@ Aucun “c’est push” sans ces preuves.
 - Les tests locaux sont la source de vérité.
 - Xcode Cloud sert à **builder et livrer**, pas à “découvrir” les erreurs.
 
-## 4) Definition of Done (DoD) pour toute PR/itération
+## 4) Règles d’exécution (confirmations)
+
+### Commandes autorisées sans confirmation
+- Tu exécutes directement (sans me demander “Proceed?”) :
+  - xcodebuild test (et toutes variantes : -only-testing, -parallel-testing-enabled, -enableAddressSanitizer, etc.)
+  - xcodebuild build / archive
+  - commandes de diagnostic NON destructives :
+    git status, git diff, git log, git show, git rev-parse, git branch, git ls-remote, git remote -v,
+    ls, find, grep/rg, cat, pwd, echo, sw_vers, xcrun simctl list
+  - commandes de nettoyage NON risquées et ciblées :
+    rm -rf ~/Library/Developer/Xcode/DerivedData/PiTrainer-* (uniquement ce pattern)
+
+- Après exécution : tu fournis les sorties utiles (erreurs + résumés), et tu continues à avancer.
+
+### Commandes nécessitant confirmation
+- Tu DOIS me demander validation avant :
+  - git commit / git push / git tag
+  - git reset --hard / rebase / amend / force push
+  - suppression de fichiers dans le repo (rm -rf … dans le workspace)
+  - changements de config Xcode Cloud / App Store Connect
+  - xcrun simctl erase all (Uniquement si Busy persistant ET après validation), ou toute commande destructive sur simulateurs
+  - toute action irréversible ou à impact large
+
+## 5) Definition of Done (DoD) pour toute PR/itération
 Avant de dire “c’est terminé” :
 1. `git status` = clean (ou seulement les fichiers attendus)
 2. Tests locaux OK (commande en 3.1 ou 3.2)
@@ -61,7 +84,7 @@ Avant de dire “c’est terminé” :
 4. Push vérifié avec preuves (section 2.3)
 5. Résumé : liste des fichiers modifiés + ce que ça change côté user
 
-## 5) Communication et anti-hallucination
+## 6) Communication et anti-hallucination
 - Si une action n’a pas été exécutée, dire “je propose de faire …” au lieu de l’affirmer.
 - Ne jamais inventer un résultat de commande.
 - Toujours distinguer :
