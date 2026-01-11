@@ -45,6 +45,14 @@ struct StatsView: View {
                     }
                 }
                 
+                Section(header: Text("stats.settings")) {
+                    Picker("settings.keypad_layout", selection: $statsStore.keypadLayout) {
+                        ForEach(KeypadLayout.allCases, id: \.self) { layout in
+                            Text(layout.localizedName).tag(layout)
+                        }
+                    }
+                }
+                
                 Section {
                     Button(role: .destructive) {
                         statsStore.reset()

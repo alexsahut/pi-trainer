@@ -89,6 +89,7 @@ struct SessionView: View {
             
             // Keypad
             KeypadView(
+                layout: viewModel.keypadLayout,
                 onDigit: { digit in
                     viewModel.processInput(digit)
                 },

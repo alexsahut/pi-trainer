@@ -25,11 +25,17 @@ class StatsStore: ObservableObject {
     
     private let globalBestStreakKey = "com.alexandre.pitrainer.globalBestStreak"
     private let lastSessionKey = "com.alexandre.pitrainer.lastSession"
+    private let keypadLayoutKey = "com.alexandre.pitrainer.keypadLayout"
     
     // MARK: - Published Properties
     
     @Published private(set) var globalBestStreak: Int = 0
     @Published private(set) var lastSession: SessionSnapshot?
+    @Published var keypadLayout: KeypadLayout = .phone {
+        didSet {
+            UserDefaults.standard.set(keypadLayout.rawValue, forKey: keypadLayoutKey)
+        }
+    }
     
     // MARK: - Initialization
     
@@ -76,6 +82,13 @@ class StatsStore: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: lastSessionKey),
            let snapshot = try? JSONDecoder().decode(SessionSnapshot.self, from: data) {
             lastSession = snapshot
+        }
+        
+        if let layoutString = UserDefaults.standard.string(forKey: keypadLayoutKey),
+           let layout = KeypadLayout(rawValue: layoutString) {
+            keypadLayout = layout
+        } else {
+            keypadLayout = .phone
         }
     }
 }

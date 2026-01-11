@@ -9,6 +9,7 @@ import SwiftUI
 
 struct KeypadView: View {
     
+    let layout: KeypadLayout
     let onDigit: (Int) -> Void
     let onBackspace: () -> Void
     let onReset: () -> Void
@@ -23,8 +24,8 @@ struct KeypadView: View {
     var body: some View {
         VStack(spacing: 12) {
             LazyVGrid(columns: columns, spacing: 12) {
-                // Digits 1-9
-                ForEach(1...9, id: \.self) { digit in
+                // Digits based on layout
+                ForEach(layout.digits, id: \.self) { digit in
                     KeypadButton(label: "\(digit)") {
                         onDigit(digit)
                     }
@@ -81,6 +82,7 @@ struct KeypadButton: View {
 
 #Preview {
     KeypadView(
+        layout: .phone,
         onDigit: { _ in },
         onBackspace: { },
         onReset: { },

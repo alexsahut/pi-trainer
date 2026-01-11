@@ -36,6 +36,10 @@ class SessionViewModel: ObservableObject {
     var errors: Int { engine.errors }
     var bestStreak: Int { engine.bestStreak }
     
+    var keypadLayout: KeypadLayout {
+        statsStore.keypadLayout
+    }
+    
     var displayString: String {
         return "3." + typedDigits
     }
