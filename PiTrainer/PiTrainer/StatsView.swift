@@ -83,7 +83,7 @@ struct StatsView: View {
                                         Text("\(session.bestStreakInSession)")
                                             .foregroundColor(.green)
                                             .fontWeight(.bold)
-                                        Text("stats.errors_short \(session.errors)")
+                                        Text(String(format: String(localized: "stats.errors_short %@"), "\(session.errors)"))
                                             .font(.caption)
                                             .foregroundColor(.red)
                                     }

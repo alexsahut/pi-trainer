@@ -23,7 +23,8 @@ struct SessionDetailView: View {
                 DetailRow(label: "stats.errors", value: "\(session.errors)", color: session.errors > 0 ? .red : .primary)
                 DetailRow(label: "stats.best_streak", value: "\(session.bestStreakInSession)", color: .green)
                 
-                let speedText = String(format: String(localized: "stats.speed.value"), session.digitsPerMinute)
+                let speedValue = session.digitsPerMinute.formatted(.number.precision(.fractionLength(...1)))
+                let speedText = String(format: String(localized: "stats.speed.value"), speedValue)
                 DetailRow(label: "stats.speed.title", value: speedText)
             }
         }
