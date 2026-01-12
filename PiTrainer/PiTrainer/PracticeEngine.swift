@@ -13,7 +13,8 @@ struct PracticeEngine {
     // MARK: - Types
     
     /// Practice mode
-    enum Mode {
+    /// Practice mode
+    enum Mode: String, Codable {
         case strict   // Wrong digit does not advance; user must retry
         case learning // Wrong digit reveals answer and advances
     }

@@ -50,14 +50,14 @@ struct StatsView: View {
                     Section(header: Text("stats.last_session")) {
                         StatRow(label: String(localized: "stats.attempts"), value: String(localized: "stats.attempts_count \(last.attempts)"))
                         StatRow(label: String(localized: "stats.errors"), value: String(localized: "session.errors_count \(last.errors)"), color: .red)
-                        StatRow(label: String(localized: "stats.best_streak"), value: "\(last.bestStreak)", color: .green)
+                        StatRow(label: String(localized: "stats.best_streak"), value: "\(last.bestStreakInSession)", color: .green)
                         
                         let speedValue = last.digitsPerMinute.formatted(.number.precision(.fractionLength(...1)))
                         let speedFormat = String(localized: "stats.speed.value")
                         let speedText = String(format: speedFormat, speedValue)
                         StatRow(label: String(localized: "stats.speed.title"), value: speedText)
                         
-                        StatRow(label: String(localized: "stats.time"), value: formatTime(last.elapsedTime))
+                        StatRow(label: String(localized: "stats.time"), value: formatTime(last.durationSeconds))
                         StatRow(label: String(localized: "stats.date"), value: formatDate(last.date))
                     }
                 } else {
@@ -67,10 +67,48 @@ struct StatsView: View {
                     }
                 }
                 
+                if !currentStats.sessionHistory.isEmpty {
+                    Section(header: Text("stats.history")) {
+                        ForEach(currentStats.sessionHistory.prefix(20)) { session in
+                            NavigationLink(destination: SessionDetailView(session: session)) {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(session.date, style: .date)
+                                        Text(formatMode(session.mode))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    VStack(alignment: .trailing) {
+                                        Text("\(session.bestStreakInSession)")
+                                            .foregroundColor(.green)
+                                            .fontWeight(.bold)
+                                        Text("stats.errors_short \(session.errors)")
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    Section {
+                        Button(role: .destructive) {
+                            showClearHistoryConfirmation = true
+                        } label: {
+                            Text("stats.clear_history")
+                        }
+                    }
+                } else {
+                    Section(header: Text("stats.history")) {
+                         Text("stats.no_history")
+                             .foregroundColor(.secondary)
+                    }
+                }
                 
                 Section {
                     Button(role: .destructive) {
-                        statsStore.reset()
+                        showResetConfirmation = true
                     } label: {
                         Text("stats.reset_all")
                     }
@@ -84,6 +122,32 @@ struct StatsView: View {
                     }
                 }
             }
+            .alert("stats.reset_confirmation.title", isPresented: $showResetConfirmation) {
+                Button("stats.cancel", role: .cancel) { }
+                Button("stats.reset_all", role: .destructive) {
+                    statsStore.reset()
+                }
+            } message: {
+                Text("stats.reset_confirmation.message")
+            }
+            .alert("stats.clear_history.title", isPresented: $showClearHistoryConfirmation) {
+                Button("stats.cancel", role: .cancel) { }
+                Button("stats.clear", role: .destructive) {
+                    statsStore.clearHistory(for: selectedConstantForStats)
+                }
+            } message: {
+                Text("stats.clear_history.message")
+            }
+        }
+    }
+    
+    @State private var showResetConfirmation = false
+    @State private var showClearHistoryConfirmation = false
+    
+    private func formatMode(_ mode: PracticeEngine.Mode) -> String {
+        switch mode {
+        case .strict: return String(localized: "mode.strict")
+        case .learning: return String(localized: "mode.learning")
         }
     }
     

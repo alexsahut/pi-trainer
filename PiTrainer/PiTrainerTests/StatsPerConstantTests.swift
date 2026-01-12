@@ -90,25 +90,45 @@ final class StatsPerConstantTests: XCTestCase {
     }
     */
     
-    func testSaveSessionUpdatesBestStreakLocally() {
+    func testAddSessionRecordUpdatesBestStreakLocally() {
         // Given a session with a new high score
-        let session = SessionSnapshot(attempts: 100, errors: 0, bestStreak: 50, elapsedTime: 120, digitsPerMinute: 30, date: Date())
+        let record = SessionRecord(
+            id: UUID(),
+            date: Date(),
+            constant: .phi,
+            mode: .strict,
+            attempts: 100,
+            errors: 0,
+            bestStreakInSession: 50,
+            durationSeconds: 120,
+            digitsPerMinute: 30
+        )
         
         // When saving
-        statsStore.saveSession(session, for: .phi)
+        statsStore.addSessionRecord(record)
         
         // Then best streak should be updated automatically
         let stats = statsStore.stats(for: .phi)
         XCTAssertEqual(stats.bestStreak, 50)
-        XCTAssertEqual(stats.lastSession?.bestStreak, 50)
+        XCTAssertEqual(stats.lastSession?.bestStreakInSession, 50)
         
         // When saving a worse session
-        let worseSession = SessionSnapshot(attempts: 10, errors: 5, bestStreak: 5, elapsedTime: 20, digitsPerMinute: 10, date: Date())
-        statsStore.saveSession(worseSession, for: .phi)
+        let worseRecord = SessionRecord(
+            id: UUID(),
+            date: Date(),
+            constant: .phi,
+            mode: .strict,
+            attempts: 10,
+            errors: 5,
+            bestStreakInSession: 5,
+            durationSeconds: 20,
+            digitsPerMinute: 10
+        )
+        statsStore.addSessionRecord(worseRecord)
         
         // Then best streak should remain high, but last session updated
         let updatedStats = statsStore.stats(for: .phi)
         XCTAssertEqual(updatedStats.bestStreak, 50) // Still 50
-        XCTAssertEqual(updatedStats.lastSession?.bestStreak, 5) // Last session shows 5
+        XCTAssertEqual(updatedStats.lastSession?.bestStreakInSession, 5) // Last session shows 5
     }
 }

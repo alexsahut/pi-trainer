@@ -8,22 +8,28 @@
 import Foundation
 import Combine
 
-/// Simple statistics for a practice session
-struct SessionSnapshot: Codable, Equatable {
+/// Detailed record of a practice session
+struct SessionRecord: Codable, Identifiable, Equatable {
+    let id: UUID
+    let date: Date
+    let constant: Constant
+    let mode: PracticeEngine.Mode
     let attempts: Int
     let errors: Int
-    let bestStreak: Int
-    let elapsedTime: TimeInterval
+    let bestStreakInSession: Int
+    let durationSeconds: TimeInterval
     let digitsPerMinute: Double
-    let date: Date
+    
+    // Legacy support init (if needed) or convenience
 }
 
-/// Stats specific to a single constant
+/// Statistics specific to a single constant
 struct ConstantStats: Codable, Equatable {
     var bestStreak: Int
-    var lastSession: SessionSnapshot?
+    var lastSession: SessionRecord?
+    var sessionHistory: [SessionRecord]
     
-    static let empty = ConstantStats(bestStreak: 0, lastSession: nil)
+    static let empty = ConstantStats(bestStreak: 0, lastSession: nil, sessionHistory: [])
 }
 
 /// Manages persistence of statistics and global records
@@ -32,8 +38,10 @@ class StatsStore: ObservableObject {
     // MARK: - Constants
     
     private let statsKey = "com.alexandre.pitrainer.stats"
+    // Legacy keys for migration
     private let legacyGlobalBestStreakKey = "com.alexandre.pitrainer.globalBestStreak"
     private let legacyLastSessionKey = "com.alexandre.pitrainer.lastSession"
+    
     private let keypadLayoutKey = "com.alexandre.pitrainer.keypadLayout"
     private let selectedConstantKey = "com.alexandre.pitrainer.selectedConstant"
     
@@ -56,6 +64,7 @@ class StatsStore: ObservableObject {
     // MARK: - Private Properties
     
     private let userDefaults: UserDefaults
+    private let maxHistoryCount = 200
     
     // MARK: - Initialization
     
@@ -77,8 +86,13 @@ class StatsStore: ObservableObject {
     }
     
     /// Helper to get last session for the currently selected constant (or any other)
-    func lastSession(for constant: Constant) -> SessionSnapshot? {
+    func lastSession(for constant: Constant) -> SessionRecord? {
         return stats(for: constant).lastSession
+    }
+    
+    /// Returns the history for a specific constant, most recent first
+    func history(for constant: Constant) -> [SessionRecord] {
+        return stats(for: constant).sessionHistory
     }
 
     /// Updates the best streak for a constant if the new value is higher
@@ -93,18 +107,38 @@ class StatsStore: ObservableObject {
         }
     }
     
-    /// Saves the last session statistics for a specific constant
-    /// - Parameter snapshot: The session snapshot to save
-    /// - Parameter constant: The constant for which the session was played
-    func saveSession(_ snapshot: SessionSnapshot, for constant: Constant) {
-        var currentStats = stats(for: constant)
-        currentStats.lastSession = snapshot
+    /// Adds a new session record to history and updates stats
+    /// - Parameter record: The session record to add
+    func addSessionRecord(_ record: SessionRecord) {
+        var currentStats = stats(for: record.constant)
         
-        // Also update best streak if needed (local check against current stats)
-        if snapshot.bestStreak > currentStats.bestStreak {
-            currentStats.bestStreak = snapshot.bestStreak
+        // Update last session
+        currentStats.lastSession = record
+        
+        // Update best streak if needed
+        if record.bestStreakInSession > currentStats.bestStreak {
+            currentStats.bestStreak = record.bestStreakInSession
         }
         
+        // Add to history (FIFO, max 200)
+        // We prepend to keep list sorted by date desc if needed, or just append and sort later.
+        // Requirement says "History", usually viewed newest first.
+        // Let's modify to prepend for "Recent Sessions" view easily.
+        currentStats.sessionHistory.insert(record, at: 0)
+        
+        if currentStats.sessionHistory.count > maxHistoryCount {
+            currentStats.sessionHistory = Array(currentStats.sessionHistory.prefix(maxHistoryCount))
+        }
+        
+        stats[record.constant] = currentStats
+        persistStats()
+    }
+    
+    /// Clears the history for a specific constant (but keeps best streak)
+    func clearHistory(for constant: Constant) {
+        var currentStats = stats(for: constant)
+        currentStats.sessionHistory = []
+        currentStats.lastSession = nil // Should we clear last session too? Usually yes if clearing history.
         stats[constant] = currentStats
         persistStats()
     }
@@ -144,6 +178,16 @@ class StatsStore: ObservableObject {
     }
     
     private func migrateIfNeeded() {
+        // Define temporary legacy struct for migration
+        struct LegacySessionSnapshot: Codable {
+            let attempts: Int
+            let errors: Int
+            let bestStreak: Int
+            let elapsedTime: TimeInterval
+            let digitsPerMinute: Double
+            let date: Date
+        }
+        
         // Check if legacy keys exist
         let hasLegacyData = userDefaults.object(forKey: legacyGlobalBestStreakKey) != nil ||
                             userDefaults.object(forKey: legacyLastSessionKey) != nil
@@ -151,14 +195,33 @@ class StatsStore: ObservableObject {
         if hasLegacyData {
             let legacyStreak = userDefaults.integer(forKey: legacyGlobalBestStreakKey)
             
-            var legacySession: SessionSnapshot?
+            var legacySessionRecord: SessionRecord?
             if let sessionData = userDefaults.data(forKey: legacyLastSessionKey),
-               let session = try? JSONDecoder().decode(SessionSnapshot.self, from: sessionData) {
-                legacySession = session
+               let session = try? JSONDecoder().decode(LegacySessionSnapshot.self, from: sessionData) {
+                
+                // Convert LegacySessionSnapshot to SessionRecord
+                // Assuming legacy was strictly strict mode or unknown, we'll default to strict
+                legacySessionRecord = SessionRecord(
+                    id: UUID(),
+                    date: session.date,
+                    constant: .pi, // Legacy only supported Pi
+                    mode: .strict, // Default assumption
+                    attempts: session.attempts,
+                    errors: session.errors,
+                    bestStreakInSession: session.bestStreak,
+                    durationSeconds: session.elapsedTime,
+                    digitsPerMinute: session.digitsPerMinute
+                )
             }
             
             // Migrate to .pi
-            let piStats = ConstantStats(bestStreak: legacyStreak, lastSession: legacySession)
+            var piStats = ConstantStats.empty
+            piStats.bestStreak = legacyStreak
+            if let rec = legacySessionRecord {
+                piStats.lastSession = rec
+                piStats.sessionHistory = [rec]
+            }
+            
             stats[.pi] = piStats
             persistStats()
             

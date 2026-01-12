@@ -34,3 +34,14 @@ This repository contains a Pi digits trainer iPhone app designed to help users m
 - **Milestone 2 finalized**: Full SwiftUI UI with Home, Practice, and Stats screens.
 - **Milestone 3 finalized**: Complete localization for 21+ languages, RTL support, and pluralization.
 - **Verification**: All 24 core logic unit tests passed successfully on iPhone 16e after localization.
+
+## January 12, 2026
+
+### Progress
+- **Constant Management**: Fixed constant values (10k digits) and dynamic integer part logic.
+- **Session History (New Feature)**: Implemented persistent session history per constant with a 200-item limit (FIFO).
+  - New `SessionRecord` struct.
+  - History list and "Clear History" in `StatsView`.
+  - Detailed session view in `SessionDetailView`.
+  - Automatic migration from legacy `SessionSnapshot`.
+- **Verification**: All unit tests passed, including new `SessionHistoryTests`.

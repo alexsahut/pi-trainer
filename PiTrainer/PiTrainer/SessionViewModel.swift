@@ -139,15 +139,18 @@ class SessionViewModel: ObservableObject {
     /// Ends the session and saves stats
     func endSession() {
         if engine.isActive {
-            let snapshot = SessionSnapshot(
+            let record = SessionRecord(
+                id: UUID(),
+                date: Date(),
+                constant: statsStore.selectedConstant,
+                mode: selectedMode,
                 attempts: engine.attempts,
                 errors: engine.errors,
-                bestStreak: engine.bestStreak,
-                elapsedTime: engine.elapsedTime,
-                digitsPerMinute: engine.digitsPerMinute,
-                date: Date()
+                bestStreakInSession: engine.bestStreak,
+                durationSeconds: engine.elapsedTime,
+                digitsPerMinute: engine.digitsPerMinute
             )
-            statsStore.saveSession(snapshot, for: statsStore.selectedConstant)
+            statsStore.addSessionRecord(record)
             engine.reset()
         }
     }
