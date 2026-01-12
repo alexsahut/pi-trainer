@@ -47,7 +47,7 @@ struct SessionView: View {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 2) {
-                        Text("3.")
+                        Text("\(viewModel.integerPart).")
                             .font(.system(size: 48, weight: .bold, design: .monospaced))
                         
                         Text(viewModel.typedDigits)

@@ -40,6 +40,10 @@ class SessionViewModel: ObservableObject {
         statsStore.keypadLayout
     }
     
+    var integerPart: String {
+        statsStore.selectedConstant.integerPart
+    }
+    
     var displayString: String {
         return statsStore.selectedConstant.integerPart + "." + typedDigits
     }
