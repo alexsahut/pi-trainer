@@ -44,6 +44,10 @@ class SessionViewModel: ObservableObject {
         return statsStore.selectedConstant.integerPart + "." + typedDigits
     }
     
+    var constantSymbol: String {
+        return statsStore.selectedConstant.symbol
+    }
+    
     // MARK: - Initialization
     
     // MARK: - Initialization
@@ -60,6 +64,11 @@ class SessionViewModel: ObservableObject {
     
     /// Starts a new session with the selected mode
     func startSession() {
+        // Always refresh the engine with the currently selected constant
+        let constant = statsStore.selectedConstant
+        let provider = FileDigitsProvider(constant: constant)
+        self.engine = PracticeEngine(provider: provider)
+        
         engine.start(mode: selectedMode)
         typedDigits = ""
         showErrorFlash = false

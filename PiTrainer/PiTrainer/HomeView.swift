@@ -113,7 +113,7 @@ struct HomeView: View {
                 let bestStreak = statsStore.bestStreak(for: statsStore.selectedConstant)
                 if bestStreak > 0 {
                     VStack(spacing: 4) {
-                        Text("home.best_streak \(statsStore.selectedConstant.symbol)")
+                        (Text("home.best_streak") + Text(" \(statsStore.selectedConstant.symbol)"))
                             .font(.caption)
                             .fontWeight(.bold)
                             .foregroundColor(.secondary)

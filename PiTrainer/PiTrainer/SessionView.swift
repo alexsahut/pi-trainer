@@ -20,9 +20,8 @@ struct SessionView: View {
                         String(localized: "home.strict") : 
                         String(localized: "home.learning")
                     
-                    Text(String(localized: "session.mode_label \(modeName)"))
+                    (Text(modeName) + Text("   ") + Text(viewModel.constantSymbol).font(.body).fontWeight(.black))
                         .font(.caption)
-                        .fontWeight(.bold)
                         .foregroundColor(.secondary)
                     
                     Text(String(localized: "session.streak \(viewModel.engine.currentStreak)"))
