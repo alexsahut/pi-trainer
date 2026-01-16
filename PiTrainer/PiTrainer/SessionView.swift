@@ -76,7 +76,29 @@ struct SessionView: View {
                             Text(viewModel.engine.errors > 0 ? String(localized: "session.game_over") : String(localized: "session.complete"))
                                 .font(DesignSystem.Fonts.monospaced(size: 32, weight: .black))
                                 .foregroundColor(viewModel.engine.errors > 0 ? .red : DesignSystem.Colors.cyanElectric)
+                                .foregroundColor(viewModel.engine.errors > 0 ? .red : DesignSystem.Colors.cyanElectric)
                                 .textCase(.uppercase)
+                            
+                            HStack(spacing: 40) {
+                                VStack(spacing: 4) {
+                                    Text(String(localized: "stats.best_streak"))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(viewModel.engine.currentStreak)")
+                                        .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                                
+                                VStack(spacing: 4) {
+                                    Text(String(localized: "stats.speed.title"))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text(String(format: "%.1f", viewModel.engine.digitsPerMinute))
+                                        .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
+                                        .foregroundColor(.white)
+                                }
+                            }
+                            .padding(.bottom, 10)
                             
                             VStack(spacing: 12) {
                                 Button {

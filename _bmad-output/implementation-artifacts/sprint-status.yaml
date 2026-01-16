@@ -56,9 +56,9 @@ development_status:
 
   epic-3: in-progress
   3-0-architecture-navigation-home-design: done
-  3-1-selection-de-la-constante-mathematique: review
+  3-1-selection-de-la-constante-mathematique: done
   3-2-lancement-et-controle-de-session-zen-mode: done
-  3-3-implementation-du-mode-strict: review
+  3-3-implementation-du-mode-strict: done
   3-4-integrite-du-build-verification-des-ressources: done
   epic-3-retrospective: optional
 
