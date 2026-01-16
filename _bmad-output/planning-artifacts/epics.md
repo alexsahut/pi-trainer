@@ -221,6 +221,18 @@ So that me concentrer exclusivement sur mes chiffres et ma mémoire musculaire.
 
 Gérer la sélection des constantes (Pi, e, phi) et le cycle de vie complet d'une session avec le défi du Mode Strict.
 
+### Story 3.0: Architecture Navigation & Redesign Home
+
+As a utilisateur,
+I want une navigation fluide et cohérente entre l'accueil et la session,
+So that l'immersion "Zen-Athlete" ne soit jamais brisée par des composants standards ou des bugs de navigation.
+
+**Acceptance Criteria:**
+- **Given** l'écran d'accueil
+- **When** je lance l'application
+- **Then** le design respecte la charte "Dark & Sharp" (Pas de composants natifs gris).
+- **And** le cycle de vie Start (Home -> Session) et Stop (Session -> Home) est géré par une machine à état robuste.
+
 ### Story 3.1: Sélection de la Constante Mathématique
 
 As a utilisateur,

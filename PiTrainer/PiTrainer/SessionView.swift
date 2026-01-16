@@ -8,6 +8,11 @@
 import SwiftUI
 
 struct SessionView: View {
+    
+    private enum Constants {
+        static let exitLongPressDuration: TimeInterval = 3.0
+    }
+    
     @ObservedObject var viewModel: SessionViewModel
     @Environment(\.dismiss) var dismiss
     
@@ -60,6 +65,7 @@ struct SessionView: View {
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 200)
                 .modifier(StreakFlowEffect(streak: viewModel.engine.currentStreak))
+                .modifier(ShakeEffect(animatableData: viewModel.showErrorFlash ? 1 : 0))
                 
                 // Retry / Quit Overlay when session ends
                 if !viewModel.isActive && viewModel.engine.attempts > 0 {
@@ -105,7 +111,7 @@ struct SessionView: View {
                 }
             }
             .contentShape(Rectangle())
-            .onLongPressGesture(minimumDuration: 3.0) {
+            .onLongPressGesture(minimumDuration: Constants.exitLongPressDuration) {
                 // Emergency exit / finish session
                 if viewModel.isActive {
                     viewModel.endSession()
@@ -114,20 +120,20 @@ struct SessionView: View {
             }
             
             Spacer()
-            
-            Spacer()
+
             
             // ProPad (Numeric Keypad)
             ProPadView(
+                layout: viewModel.keypadLayout,
                 currentStreak: viewModel.engine.currentStreak,
-                isActive: viewModel.isActive,
+                isActive: viewModel.isInputAllowed, // Allow input when Ready or Running
                 onDigit: { digit in
-                    if viewModel.isActive {
+                    if viewModel.isInputAllowed {
                         viewModel.processInput(digit)
                     }
                 },
                 onBackspace: {
-                    if viewModel.isActive {
+                    if viewModel.isInputAllowed {
                         viewModel.backspace()
                     }
                 },
@@ -136,7 +142,17 @@ struct SessionView: View {
                 }
             )
         }
+
         .navigationBarBackButtonHidden(true)
+        .interactiveDismissDisabled(viewModel.isActive) // Story 3.2: Zen Mode (only when running)
+        // Long Press to Exit (Story 3.2)
+        .onLongPressGesture(minimumDuration: Constants.exitLongPressDuration) {
+            if viewModel.isActive {
+                HapticService.shared.playError() // Feedback for manual abort
+                viewModel.endSession()
+                dismiss()
+            }
+        }
         .onAppear {
             viewModel.startSession()
         }
@@ -187,6 +203,6 @@ struct SessionView: View {
 
 #Preview {
     NavigationStack {
-        SessionView(viewModel: SessionViewModel(statsStore: StatsStore()))
+        SessionView(viewModel: SessionViewModel())
     }
 }

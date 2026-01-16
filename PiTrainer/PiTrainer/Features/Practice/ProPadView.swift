@@ -3,6 +3,8 @@ import SwiftUI
 struct ProPadView: View {
     @State private var viewModel = ProPadViewModel()
     
+    var layout: KeypadLayout = .phone
+    
     // Current streak from PracticeEngine (passed from SessionView)
     var currentStreak: Int = 0
     
@@ -17,10 +19,17 @@ struct ProPadView: View {
     // Grid Setup
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
     
+    private var digits: [Int] {
+        switch layout {
+        case .phone: return [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        case .pc: return [7, 8, 9, 4, 5, 6, 1, 2, 3]
+        }
+    }
+    
     var body: some View {
         LazyVGrid(columns: columns, spacing: 12) {
-            // Digits 1-9
-            ForEach(1...9, id: \.self) { digit in
+            // Digits 1-9 (Ordered by Layout)
+            ForEach(digits, id: \.self) { digit in
                 ProPadButton(content: "\(digit)") {
                     viewModel.digitPressed(digit)
                     onDigit(digit)
@@ -46,6 +55,7 @@ struct ProPadView: View {
             }
         }
         .padding()
+        .padding()
         .opacity(isActive ? viewModel.opacity : 0.3)
         .disabled(!isActive)
         .onAppear {
@@ -56,7 +66,7 @@ struct ProPadView: View {
         }
         .animation(.easeInOut(duration: 1.0), value: viewModel.opacity)
         // Optimization: Render as texture if complex
-        .drawingGroup() 
+        // .drawingGroup() // POTENTIAL BUG CAUSE WITH LAZYVGRID
     }
 }
 

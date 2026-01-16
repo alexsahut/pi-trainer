@@ -20,80 +20,92 @@ class SessionViewModel: ObservableObject {
     @Published private(set) var showErrorFlash: Bool = false
     @Published private(set) var lastCorrectDigit: Int?
     @Published private(set) var expectedDigit: Int? // For learning mode feedback
+    @Published var errorState: String? // Critical error preventing session start
     
     // UI selection state
     @Published var selectedMode: PracticeEngine.Mode = .strict
+    @Published var keypadLayout: KeypadLayout = .phone
     
     // MARK: - Properties
     
-    private let statsStore: StatsStore
     private let persistence: PracticePersistenceProtocol
     private let providerFactory: (Constant) -> any DigitsProvider
+    
+    // Configuration for the current session
+    var selectedConstant: Constant = .pi
+    var onSaveSession: ((SessionRecord) -> Void)?
 
     
     // MARK: - Derived Properties
     
+    /// True if the session is currently running (timer active) - Trigger for Zen Mode
     var isActive: Bool { engine.isActive }
+    
+    /// True if the session is ready to accept input or running
+    var isInputAllowed: Bool { engine.isReadyOrRunning }
+    
     var currentIndex: Int { engine.currentIndex }
     var attempts: Int { engine.attempts }
     var errors: Int { engine.errors }
     var bestStreak: Int { engine.bestStreak }
     
-    var keypadLayout: KeypadLayout {
-        statsStore.keypadLayout
-    }
-    
     var integerPart: String {
-        statsStore.selectedConstant.integerPart
+        selectedConstant.integerPart
     }
     
     var displayString: String {
-        return statsStore.selectedConstant.integerPart + "." + typedDigits
+        return selectedConstant.integerPart + "." + typedDigits
     }
     
     var constantSymbol: String {
-        return statsStore.selectedConstant.symbol
+        return selectedConstant.symbol
     }
     
     // MARK: - Initialization
     
-    init(statsStore: StatsStore, 
-         persistence: PracticePersistenceProtocol = PracticePersistence(),
+    init(persistence: PracticePersistenceProtocol = PracticePersistence(),
          providerFactory: @escaping (Constant) -> any DigitsProvider = { FileDigitsProvider(constant: $0) }) {
-        self.statsStore = statsStore
         self.persistence = persistence
         self.providerFactory = providerFactory
         
-        // Initialize with the selected constant from store
-        let constant = statsStore.selectedConstant
+        // Initialize with default (pi) - will be updated before start
+        let constant = Constant.pi
         let provider = providerFactory(constant)
-        self.engine = PracticeEngine(provider: provider, persistence: persistence)
+        self.engine = PracticeEngine(constant: constant, provider: provider, persistence: persistence)
     }
     
     // MARK: - Public Methods
     
     /// Starts a new session with the selected mode
     func startSession() {
-        // Always refresh the engine with the currently selected constant
-        let constant = statsStore.selectedConstant
+        // Clear previous error state
+        errorState = nil
+        
+        // Always refresh the engine with the configured constant
+        let constant = selectedConstant
         var provider = providerFactory(constant)
         
         do {
+
             try provider.loadDigits()
-            self.engine = PracticeEngine(provider: provider, persistence: persistence)
+            self.engine = PracticeEngine(constant: constant, provider: provider, persistence: persistence)
             engine.start(mode: selectedMode)
+            
+            // Pre-warm the haptic engine only on success
+            HapticService.shared.prewarm()
+            
+            // Reset UI state
+            typedDigits = ""
+            showErrorFlash = false
+            lastCorrectDigit = nil
+            expectedDigit = nil
+            
         } catch {
-            print("Failed to start engine: \(error)")
-            // Fallback to empty engine if load fails to prevent crash
-            self.engine = PracticeEngine(provider: provider, persistence: persistence)
+            print("CRITICAL: Failed to start engine: \(error)")
+            self.errorState = "Failed to load resources: \(error.localizedDescription)"
+            // Do NOT start the engine. Session remains inactive.
+            // The UI should verify 'errorState' and show an alert or placeholder.
         }
-        typedDigits = ""
-        showErrorFlash = false
-        lastCorrectDigit = nil
-        expectedDigit = nil
-        
-        // Pre-warm the haptic engine
-        HapticService.shared.prewarm()
     }
     
     /// Processes a digit input from the keypad
@@ -131,6 +143,12 @@ class SessionViewModel: ObservableObject {
                 typedDigits.append(String(result.expectedDigit))
             }
         }
+        
+        // Critical Fix: Check if engine finished (e.g. Strict Mode failure)
+        // If engine finished internally, we MUST trigger persistence and cleanup
+        if !engine.isActive {
+            endSession()
+        }
     }
     
     /// Goes back one digit
@@ -144,13 +162,8 @@ class SessionViewModel: ObservableObject {
     
     /// Resets the current session
     func reset() {
-        let constant = statsStore.selectedConstant
-        let provider = providerFactory(constant)
-        engine = PracticeEngine(provider: provider, persistence: persistence) // Re-initialize to clear all state
-        typedDigits = ""
-        showErrorFlash = false
-        lastCorrectDigit = nil
-        expectedDigit = nil
+        // Reuse startSession logic to ensure proper loading and error handling
+        startSession()
     }
     
     /// Ends the session and saves stats
@@ -159,7 +172,7 @@ class SessionViewModel: ObservableObject {
             let record = SessionRecord(
                 id: UUID(),
                 date: Date(),
-                constant: statsStore.selectedConstant,
+                constant: selectedConstant,
                 mode: selectedMode,
                 attempts: engine.attempts,
                 errors: engine.errors,
@@ -167,7 +180,13 @@ class SessionViewModel: ObservableObject {
                 durationSeconds: engine.elapsedTime,
                 digitsPerMinute: engine.digitsPerMinute
             )
-            statsStore.addSessionRecord(record)
+            // Note: Saving session record now requires StatsStore reference or a callback.
+            // Since we decoupled StatsStore, we should ideally use a closure or delegate.
+            // For now, to minimize impact, we can expose a 'onSaveSession' callback.
+            onSaveSession?(record)
+            
+            // Critical: Notify observers before mutating the engine reference type
+            objectWillChange.send()
             engine.reset()
             HapticService.shared.stop()
         }

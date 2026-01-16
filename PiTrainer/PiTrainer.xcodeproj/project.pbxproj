@@ -111,8 +111,6 @@
 				ACF454F52F130C370031BD08 /* PiTrainer */,
 			);
 			name = PiTrainer;
-			packageProductDependencies = (
-			);
 			productName = PiTrainer;
 			productReference = ACF454F32F130C370031BD08 /* PiTrainer.app */;
 			productType = "com.apple.product-type.application";
@@ -134,8 +132,6 @@
 				ACF455032F130C380031BD08 /* PiTrainerTests */,
 			);
 			name = PiTrainerTests;
-			packageProductDependencies = (
-			);
 			productName = PiTrainerTests;
 			productReference = ACF455002F130C380031BD08 /* PiTrainerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -157,8 +153,6 @@
 				ACF4550D2F130C380031BD08 /* PiTrainerUITests */,
 			);
 			name = PiTrainerUITests;
-			packageProductDependencies = (
-			);
 			productName = PiTrainerUITests;
 			productReference = ACF4550A2F130C380031BD08 /* PiTrainerUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";

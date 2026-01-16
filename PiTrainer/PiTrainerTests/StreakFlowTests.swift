@@ -18,7 +18,7 @@ final class StreakFlowTests: XCTestCase {
         super.setUp()
         provider = MockDigitsProvider()
         persistence = MockPracticePersistence()
-        engine = PracticeEngine(provider: provider, persistence: persistence)
+        engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
         try? engine.start(mode: .strict)
     }
     

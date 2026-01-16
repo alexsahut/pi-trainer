@@ -69,6 +69,14 @@ class PracticeEngine {
         case learning // Wrong digit reveals answer and advances
     }
     
+    /// Engine State
+    enum State: Equatable {
+        case idle      // Initial state, nothing loaded
+        case ready     // Loaded and ready to start
+        case running   // Active session
+        case finished  // Session ended (completed or failed)
+    }
+    
     /// Result of a digit input
     struct InputResult {
         let validationResult: ValidationResult
@@ -83,6 +91,7 @@ class PracticeEngine {
     
     // MARK: - Properties
     
+    private let constant: Constant
     private var digitsProvider: any DigitsProvider
     private let persistence: PracticePersistenceProtocol
     
@@ -92,8 +101,19 @@ class PracticeEngine {
     private(set) var errors: Int = 0
     private(set) var currentStreak: Int = 0
     private(set) var bestStreak: Int = 0
-    private(set) var isActive: Bool = false
+    
+    private(set) var state: State = .idle
     private(set) var mode: Mode = .strict
+    
+    /// Returns true if the session is currently running (timer active)
+    var isActive: Bool {
+        return state == .running
+    }
+    
+    /// Returns true if input is allowed (ready or running)
+    var isReadyOrRunning: Bool {
+        return state == .ready || state == .running
+    }
     
     // Time tracking
     private(set) var startTime: Date?
@@ -117,7 +137,8 @@ class PracticeEngine {
     
     // MARK: - Initialization
     
-    init(provider: any DigitsProvider, persistence: PracticePersistenceProtocol = PracticePersistence()) {
+    init(constant: Constant, provider: any DigitsProvider, persistence: PracticePersistenceProtocol = PracticePersistence()) {
+        self.constant = constant
         self.digitsProvider = provider
         self.persistence = persistence
     }
@@ -128,13 +149,14 @@ class PracticeEngine {
     /// - Parameter mode: The practice mode (strict or learning)
     func start(mode: Mode) {
         self.mode = mode
-        self.isActive = true
+        self.state = .ready // Ready to accept input, but timer hasn't started
+        
         self.currentIndex = 0
         self.attempts = 0
         self.errors = 0
         self.currentStreak = 0
         self.bestStreak = 0
-        self.startTime = Date()
+        self.startTime = nil // clear start time
         self.elapsedTimeInternal = 0
     }
     
@@ -142,8 +164,14 @@ class PracticeEngine {
     /// - Parameter digit: The digit entered by the user (0-9)
     /// - Returns: InputResult with details about the input
     func input(digit: Int) -> InputResult {
-        guard isActive else {
-            // If not active, return current state without changes
+        // Auto-start logic: Transition from Ready to Running on first input
+        if state == .ready {
+            state = .running
+            startTime = Date()
+        }
+        
+        guard state == .running else {
+            // If not running (e.g. idle or finished), return current state without changes
             let expected = digitsProvider.getDigit(at: currentIndex) ?? 0
             return InputResult(
                 validationResult: .incorrect(expected: expected, actual: digit),
@@ -155,8 +183,7 @@ class PracticeEngine {
         
         guard let expectedDigit = digitsProvider.getDigit(at: currentIndex) else {
             // Reached end of available digits
-            isActive = false
-            pauseTimer()
+            finishSession()
             return InputResult(
                 validationResult: .incorrect(expected: 0, actual: digit), // Or specific error state
                 expectedDigit: 0,
@@ -181,10 +208,8 @@ class PracticeEngine {
                 bestStreak = currentStreak
             }
             
-            // Persist progress (assuming Pi for now as default, needs context in future)
-            // Ideally Constant enum should be passed, but sticking to simple string generic for now
-            // FIXME: Pass actual constant key. defaulting to 'pi' for MVP of Story 1.4
-            persistence.saveHighestIndex(currentIndex, for: "pi")
+            // Persist progress
+            persistence.saveHighestIndex(currentIndex, for: constant.id)
             
             currentIndex += 1
             indexAdvanced = true
@@ -198,8 +223,7 @@ class PracticeEngine {
             switch mode {
             case .strict:
                 // Strict Mode = Sudden Death. End session immediately.
-                isActive = false
-                pauseTimer()
+                finishSession()
                 indexAdvanced = false
                 
             case .learning:
@@ -219,14 +243,15 @@ class PracticeEngine {
     
     /// Goes back one digit (if possible)
     func backspace() {
-        guard currentIndex > 0 else { return }
+        // Only allow backspace if running or ready (though ready implies index 0)
+        guard isReadyOrRunning && currentIndex > 0 else { return }
         currentIndex -= 1
     }
     
     /// Resets all state and statistics
     func reset() {
-        pauseTimer()
-        isActive = false
+        finishSession()
+        state = .idle
         currentIndex = 0
         attempts = 0
         errors = 0
@@ -237,6 +262,13 @@ class PracticeEngine {
     }
     
     // MARK: - Private Methods
+    
+    private func finishSession() {
+        if state == .running {
+            pauseTimer()
+        }
+        state = .finished
+    }
     
     private func pauseTimer() {
         guard let start = startTime else { return }

@@ -1,3 +1,4 @@
+
 //
 //  HomeView.swift
 //  PiTrainer
@@ -9,147 +10,133 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var statsStore = StatsStore()
-    @StateObject private var sessionViewModel: SessionViewModel
+    @StateObject private var sessionViewModel = SessionViewModel()
     
+    @Environment(NavigationCoordinator.self) private var coordinator
     @State private var showingStats = false
-    @State private var showingSession = false
     
-    init() {
-        let store = StatsStore()
-        _statsStore = StateObject(wrappedValue: store)
-        _sessionViewModel = StateObject(wrappedValue: SessionViewModel(statsStore: store))
-    }
+    // No explicit init needed anymore!
     
     var body: some View {
-        NavigationStack {
+        ZStack {
+            DesignSystem.Colors.blackOLED.ignoresSafeArea()
+            
             VStack(spacing: 40) {
-                // Brand / Title
-                VStack(spacing: 8) {
+                // Header Massif
+                VStack(spacing: 0) {
                     Text(statsStore.selectedConstant.symbol)
-                        .font(.system(size: 80, weight: .thin))
-                        .foregroundColor(.blue)
+                        .font(.system(size: 120, weight: .ultraLight))
+                        .foregroundColor(DesignSystem.Colors.cyanElectric)
+                        .shadow(color: DesignSystem.Colors.cyanElectric.opacity(0.3), radius: 20)
                     
-                    Text("home.title")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
+                    Text(constantTitle)
+                        .font(DesignSystem.Fonts.monospaced(size: 16, weight: .bold))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .tracking(4)
                 }
                 .padding(.top, 40)
                 
-                // Mode Picker
-                VStack(spacing: 12) {
-                    Text("home.select_mode")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                // Selectors Stack
+                VStack(spacing: 32) {
+                    ZenSegmentedControl(
+                        title: "CONSTANTE",
+                        options: Constant.allCases,
+                        selection: $statsStore.selectedConstant
+                    )
                     
-                    Picker("home.mode", selection: $sessionViewModel.selectedMode) {
-                        Text("home.strict").tag(PracticeEngine.Mode.strict)
-                        Text("home.learning").tag(PracticeEngine.Mode.learning)
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 40)
-                }
-                
-                // Constant Picker
-                VStack(spacing: 12) {
-                    Text("home.constant")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                    ZenSegmentedControl(
+                        title: "MODE",
+                        options: [PracticeEngine.Mode.strict, PracticeEngine.Mode.learning],
+                        selection: $sessionViewModel.selectedMode
+                    )
                     
-                    Picker("home.constant", selection: $statsStore.selectedConstant) {
-                        ForEach(Constant.allCases) { constant in
-                            Text(constant.symbol + " " + NSLocalizedString(constant.localizedNameKey, comment: "")).tag(constant)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 40)
+                    ZenSegmentedControl(
+                        title: "CLAVIER",
+                        options: KeypadLayout.allCases,
+                        selection: $statsStore.keypadLayout
+                    )
                 }
-                
-                // Keypad Layout Picker
-                VStack(spacing: 12) {
-                    Text("settings.keypad_layout")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    Picker("settings.keypad_layout", selection: $statsStore.keypadLayout) {
-                        ForEach(KeypadLayout.allCases, id: \.self) { layout in
-                            Text(layout.localizedName).tag(layout)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal, 40)
-                }
-                
-                // Main Actions
-                VStack(spacing: 16) {
-                    // Practice Mode
-                    NavigationLink(destination: SessionView(viewModel: sessionViewModel)) {
-                        Text("home.start")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 60)
-                            .background(Color.blue)
-                            .cornerRadius(16)
-                            .shadow(radius: 4)
-                            .accessibilityIdentifier("home.start_button")
-                    }
-                    .padding(.horizontal, 40)
-                    
-                    // Learning Mode Button
-                    NavigationLink(destination: LearningHomeView()) {
-                        Text("home.learn_module")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 60)
-                            .background(Color.purple) // Distinct color for Learning
-                            .cornerRadius(16)
-                            .shadow(radius: 4)
-                    }
-                    .padding(.horizontal, 40)
-
-                    Button(action: { showingStats = true }) {
-                        Text("home.stats")
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.blue)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 60)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(16)
-                    }
-                    .padding(.horizontal, 40)
-                }
+                .padding(.horizontal, 20)
                 
                 Spacer()
                 
-                // Quick Stats Summary
-                let bestStreak = statsStore.bestStreak(for: statsStore.selectedConstant)
-                if bestStreak > 0 {
-                    VStack(spacing: 4) {
-                        (Text("home.best_streak") + Text(" \(statsStore.selectedConstant.symbol)"))
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .foregroundColor(.secondary)
-                        Text("\(bestStreak)")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundColor(.gold)
+                // Start Button (Action Pivot)
+                ZenPrimaryButton(title: "START SESSION", accessibilityIdentifier: "home.start_button") {
+                    // Configure ViewModel with latest settings
+                    sessionViewModel.keypadLayout = statsStore.keypadLayout
+                    sessionViewModel.selectedConstant = statsStore.selectedConstant
+                    sessionViewModel.onSaveSession = { record in
+                        statsStore.addSessionRecord(record)
                     }
-                    .padding(.bottom, 20)
+                    
+                    coordinator.push(.session(mode: sessionViewModel.selectedMode))
+                }
+                .padding(.horizontal, 20)
+                
+                // Footer Stats
+                Button(action: { showingStats = true }) {
+                    VStack(spacing: 4) {
+                        Text("RECORDS PERSONNELS >")
+                            .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.white.opacity(0.05))
                 }
             }
-            .navigationTitle("")
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showingStats) {
+        }
+        .navigationBarHidden(true)
+        .navigationDestination(for: NavigationCoordinator.Destination.self) { destination in
+            switch destination {
+            case .session(let mode):
+                SessionView(viewModel: sessionViewModel)
+                    .navigationBarBackButtonHidden(true)
+            case .learning:
+                LearningHomeView()
+            case .stats:
                 StatsView(statsStore: statsStore)
             }
+        }
+        .sheet(isPresented: $showingStats) {
+            StatsView(statsStore: statsStore)
+        }
+    }
+    
+    private var constantTitle: String {
+        switch statsStore.selectedConstant {
+        case .pi: return "PI TRAINER"
+        case .e: return "E TRAINER"
+        case .sqrt2: return "SQRT2 TRAINER"
+        case .phi: return "PHI TRAINER"
+        }
+    }
+}
+
+// Extensions for CustomStringConvertible to make ZenSegmentedControl happy
+extension Constant: CustomStringConvertible {
+    var description: String { symbol }
+}
+
+extension PracticeEngine.Mode: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .strict: return "STRICT"
+        case .learning: return "LEARN"
+        }
+    }
+}
+
+extension KeypadLayout: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .phone: return "PHONE"
+        case .pc: return "PC"
         }
     }
 }
 
 #Preview {
     HomeView()
+        .environment(NavigationCoordinator())
 }

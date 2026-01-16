@@ -41,14 +41,9 @@ struct FileDigitsProvider: DigitsProvider {
     
     init(constant: Constant, bundle: Bundle = .main) {
         self.constant = constant
-        // Fallback bundle logic for testing vs app
-        if bundle.url(forResource: constant.resourceName, withExtension: "txt") != nil {
-            self.bundle = bundle
-        } else {
-            self.bundle = Bundle(for: BundleToken.self)
-        }
+        self.bundle = bundle
         
-        // Try to load immediately to be ready (fail silently here, let loadDigits throw if needed explicitly)
+        // Try to load immediately to be ready (fail silently here, explicit load called later)
         try? loadDigits()
     }
     
@@ -64,6 +59,7 @@ struct FileDigitsProvider: DigitsProvider {
         
         let resourceName = constant.resourceName
         
+        // Attempt to load from file
         guard let url = bundle.url(forResource: resourceName, withExtension: "txt") else {
             throw ProviderError.fileNotFound(resourceName)
         }
@@ -72,16 +68,16 @@ struct FileDigitsProvider: DigitsProvider {
         let trimmed = content.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
         let utf8 = Array(trimmed.utf8)
         
-        // Validate
         if utf8.isEmpty {
-             // It's allowed to be empty but let's treat it as valid empty
-        } else {
-             guard utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }) else {
-                 throw ProviderError.invalidContent("Contains non-digit characters")
-             }
+             throw ProviderError.invalidContent("Empty file")
+        }
+        
+        guard utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }) else {
+             throw ProviderError.invalidContent("Contains non-digit characters")
         }
         
         self.digits = utf8.map { $0 - 48 }
+        print("Successfully loaded \(self.digits.count) digits from \(resourceName)")
     }
     
     func getDigit(at index: Int) -> Int? {

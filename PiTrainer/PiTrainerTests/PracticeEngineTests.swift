@@ -42,7 +42,8 @@ final class PracticeEngineTests: XCTestCase {
         super.setUp()
         provider = MockDigitsProvider()
         persistence = MockPracticePersistence()
-        engine = PracticeEngine(provider: provider, persistence: persistence)
+        // Default to Pi for general tests
+        engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
     }
     
     // MARK: - Core Input Logic
@@ -142,9 +143,52 @@ final class PracticeEngineTests: XCTestCase {
         engine.backspace()
         XCTAssertEqual(engine.currentIndex, 1)
     }
+
+    // MARK: - State Management (New for Story 3.2)
+
+    func testStart_SetsStateToReady() {
+        try? engine.start(mode: .strict)
+        // Should be ready but not yet active/running
+        XCTAssertEqual(engine.state, .ready)
+        XCTAssertFalse(engine.isActive) // isActive tracks .running only
+    }
+
+    func testFirstInput_TransitionsToRunning() {
+        try? engine.start(mode: .strict)
+        
+        // First input
+        _ = engine.input(digit: 1)
+        
+        XCTAssertEqual(engine.state, .running)
+        XCTAssertTrue(engine.isActive)
+        // Timer should have started now
+        Thread.sleep(forTimeInterval: 0.1)
+        XCTAssertGreaterThan(engine.elapsedTime, 0.05)
+    }
+
+    func testInput_WhenIdle_ReturnsIncorrectAndMaintainsState() {
+        // Engine not started, state should be .idle (default)
+        // Note: verify default state is idle if exposed, or assume start() hasn't been called
+        
+        let result = engine.input(digit: 1)
+        XCTAssertFalse(result.indexAdvanced)
+        XCTAssertFalse(result.isCorrect)
+        XCTAssertEqual(engine.currentIndex, 0)
+    }
+    
+    func testElapsedTime_ZeroInReadyState() {
+        try? engine.start(mode: .strict)
+        Thread.sleep(forTimeInterval: 0.1)
+        // Should be 0 because timer starts on first input
+        XCTAssertEqual(engine.elapsedTime, 0)
+    }
+
     
     func testElapsedTime_IncreasesAfterStart() throws {
         try engine.start(mode: .strict)
+        // Auto-start: timer only starts after first input
+        _ = engine.input(digit: 1) // Start timer
+        
         Thread.sleep(forTimeInterval: 0.1) // 100ms
         XCTAssertGreaterThan(engine.elapsedTime, 0.05, "Elapsed time should be > 50ms")
     }
@@ -160,11 +204,16 @@ final class PracticeEngineTests: XCTestCase {
     // MARK: - Persistence Integration
     
     func testPersistence_SavedOnCorrectInput() {
+        // Setup with specific constant
+        let engine = PracticeEngine(constant: .e, provider: provider, persistence: persistence)
         try? engine.start(mode: .strict)
+        
+        // 1 (Mock provider returns digits from Pi array, so 1 is correct for index 0 regardless of constant logic in this mock)
         _ = engine.input(digit: 1)
         
         XCTAssertEqual(persistence.saveCallCount, 1)
         XCTAssertEqual(persistence.savedIndex, 0)
+        XCTAssertEqual(persistence.savedKey, "e") // Verify constant ID is used
     }
     
     func testPersistence_NotSavedOnIncorrectInput() {

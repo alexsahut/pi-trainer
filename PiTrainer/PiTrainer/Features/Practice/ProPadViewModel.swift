@@ -3,7 +3,7 @@ import SwiftUI
 @Observable
 final class ProPadViewModel {
     
-    var opacity: Double = 0.2 // Current opacity (animated)
+    var opacity: Double = 0.2
     var inactivityThreshold: TimeInterval = 3.0 // Configurable for testing
     private var currentStreak: Int = 0
     private var lastInputTime: Date = Date()
