@@ -55,7 +55,6 @@ struct ProPadView: View {
             }
         }
         .padding()
-        .padding()
         .opacity(isActive ? viewModel.opacity : 0.3)
         .disabled(!isActive)
         .onAppear {
