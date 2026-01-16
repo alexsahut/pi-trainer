@@ -99,7 +99,7 @@ L'Epic 3 a complété le cycle de vie de l'application en ajoutant la navigation
 3. **No Shortcuts:** Les solutions temporaires doivent être justifiées et trackées
 4. **Documentation:** Chaque problème résolu = leçon documentée
 
-### 5. **CRITIQUE: Déviation UX/UI Non Validée** ⚠️ MAJEUR
+### 5. **CRITIQUE: Déviation UX/UI Non Validée** ⚠️ MAJEUR → ✅ VALIDÉE
 
 **Problème Identifié:**
 - **Bouton Options (⚙️)** implémenté au lieu du **Long Press 3s**
@@ -121,11 +121,18 @@ L'Epic 3 a complété le cycle de vie de l'application en ajoutant la navigation
 - Décisions prises sans validation
 - Risque de dérive du produit vision
 
-**Action Requise:**
-- [ ] Revoir TOUTES les UX/UI guidance
-- [ ] Vérifier conformité de l'implémentation
-- [ ] Corriger les déviations ou valider les changements
-- [ ] Établir processus de validation UX obligatoire
+**✅ RÉSOLUTION (2026-01-16):**
+- **Product Owner Decision:** Bouton ⚙️ VALIDÉ comme déviation acceptable
+- **Justification:** Accessibilité et découvrabilité des options
+- **Long Press 3s:** Maintenu comme méthode alternative (redondance UX)
+- **Leçon:** Déviations UX doivent être validées AVANT implémentation
+
+**Actions Complétées:**
+- [x] Validation product owner obtenue
+- [ ] Vérifier long press 3s fonctionne correctement
+- [ ] Considérer placement toggle Haptic (Settings vs Menu)
+- [ ] Tester exit flow avec long press
+- [ ] Documenter déviation validée dans UX spec
 
 ## 📈 Métriques
 
@@ -169,6 +176,7 @@ Epic 3 a **fermé la boucle** laissée ouverte par Epic 2. L'application est mai
 3. Valider TOUS les changements UX avec le product owner
 4. Documenter systématiquement les leçons apprises
 
-**Prêt pour la Release:** ⚠️ **CONDITIONNEL**
+**Prêt pour la Release:** ✅ **OUI (avec déviations validées)**
 - Code: ✅ Fonctionnel
-- UX/UI: ⚠️ Nécessite revue et corrections
+- UX/UI: ✅ Déviation Options button validée par product owner
+- Tests: ⚠️ Long press 3s à vérifier manuellement
