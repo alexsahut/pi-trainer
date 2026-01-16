@@ -9,10 +9,6 @@ import SwiftUI
 
 struct SessionView: View {
     
-    private enum Constants {
-        static let exitLongPressDuration: TimeInterval = 3.0
-    }
-    
     @ObservedObject var viewModel: SessionViewModel
     @Environment(\.dismiss) var dismiss
     
@@ -159,14 +155,6 @@ struct SessionView: View {
 
         .navigationBarBackButtonHidden(true)
         .interactiveDismissDisabled(viewModel.isActive) // Story 3.2: Zen Mode (only when running)
-        // Long Press to Exit (Story 3.2)
-        .onLongPressGesture(minimumDuration: Constants.exitLongPressDuration) {
-            if viewModel.isActive {
-                HapticService.shared.playError() // Feedback for manual abort
-                viewModel.endSession()
-                dismiss()
-            }
-        }
         .onAppear {
             viewModel.startSession()
         }

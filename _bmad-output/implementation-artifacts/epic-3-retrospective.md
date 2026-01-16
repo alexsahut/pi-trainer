@@ -121,18 +121,23 @@ L'Epic 3 a complété le cycle de vie de l'application en ajoutant la navigation
 - Décisions prises sans validation
 - Risque de dérive du produit vision
 
-**✅ RÉSOLUTION (2026-01-16):**
-- **Product Owner Decision:** Bouton ⚙️ VALIDÉ comme déviation acceptable
-- **Justification:** Accessibilité et découvrabilité des options
-- **Long Press 3s:** Maintenu comme méthode alternative (redondance UX)
-- **Leçon:** Déviations UX doivent être validées AVANT implémentation
+**✅ RÉSOLUTION FINALE (2026-01-16):**
+- **Product Owner Decision:** Bouton ⚙️ VALIDÉ comme solution unique
+- **Long Press 3s:** ABANDONNÉ (non fonctionnel malgré tentatives de fix)
+- **Justification:** Accessibilité, découvrabilité, fiabilité
+- **Leçon:** Tester les gestures tôt, ne pas s'accrocher aux solutions non fonctionnelles
 
 **Actions Complétées:**
 - [x] Validation product owner obtenue
-- [ ] Vérifier long press 3s fonctionne correctement
-- [ ] Considérer placement toggle Haptic (Settings vs Menu)
-- [ ] Tester exit flow avec long press
-- [ ] Documenter déviation validée dans UX spec
+- [x] Tenté de corriger long press (conflit de gestures)
+- [x] Test manuel: long press ne fonctionne toujours pas
+- [x] Décision: Abandonner long press, nettoyer le code
+- [ ] Future: Revue complète UX/UI avec toutes les gestures
+
+**Code Nettoyé:**
+- Supprimé `Constants.exitLongPressDuration`
+- Supprimé `.onLongPressGesture()` de SessionView
+- Solution unique: Bouton ⚙️ Options
 
 ## 📈 Métriques
 
