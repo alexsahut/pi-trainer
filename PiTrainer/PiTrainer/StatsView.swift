@@ -9,6 +9,7 @@ import SwiftUI
 
 struct StatsView: View {
     @ObservedObject var statsStore: StatsStore
+    @StateObject private var learningStore = LearningStore() // Internal store for learning stats
     @Environment(\.dismiss) var dismiss
     
     @State private var selectedConstantForStats: Constant
@@ -35,6 +36,40 @@ struct StatsView: View {
                 .listRowSeparator(.hidden)
                 
                 let currentStats = statsStore.stats(for: selectedConstantForStats)
+                let learningState = learningStore.state(for: selectedConstantForStats)
+                
+                // NEW: Learning Section
+                Section(header: Text("home.learn_module")) {
+                     HStack {
+                         VStack(alignment: .leading) {
+                             Text("learning.mastered_count")
+                                 .font(.caption)
+                                 .foregroundColor(.secondary)
+                             Text("\(learningState.masteredCount)")
+                                 .font(.title2)
+                                 .fontWeight(.bold)
+                         }
+                         Spacer()
+                         VStack(alignment: .center) {
+                             Text("learning.in_learning_count")
+                                 .font(.caption)
+                                 .foregroundColor(.secondary)
+                             Text("\(learningState.inLearningCount)")
+                                 .font(.title2)
+                                 .fontWeight(.bold)
+                         }
+                         Spacer()
+                         VStack(alignment: .trailing) {
+                             Text("Due")
+                                 .font(.caption)
+                                 .foregroundColor(.secondary)
+                             Text("\(learningStore.dueChunks(for: selectedConstantForStats).count)")
+                                 .font(.title2)
+                                 .fontWeight(.bold)
+                                 .foregroundColor(.orange)
+                         }
+                     }
+                }
                 
                 Section(header: Text("stats.global_records")) {
                     HStack {
@@ -126,6 +161,7 @@ struct StatsView: View {
                 Button("stats.cancel", role: .cancel) { }
                 Button("stats.reset_all", role: .destructive) {
                     statsStore.reset()
+                    learningStore.reset()
                 }
             } message: {
                 Text("stats.reset_confirmation.message")

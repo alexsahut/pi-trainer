@@ -48,10 +48,10 @@ struct SessionView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 2) {
                         Text("\(viewModel.integerPart).")
-                            .font(.system(size: 48, weight: .bold, design: .monospaced))
+                            .font(DesignSystem.Fonts.monospaced(size: 48, weight: .bold))
                         
                         Text(viewModel.typedDigits)
-                            .font(.system(size: 48, weight: .medium, design: .monospaced))
+                            .font(DesignSystem.Fonts.monospaced(size: 48, weight: .medium))
                         
                         // Current cursor / pending digit
                         ZStack {
@@ -62,11 +62,11 @@ struct SessionView: View {
                             
                             if let expected = viewModel.expectedDigit {
                                 Text("\(expected)")
-                                    .font(.system(size: 40, weight: .bold, design: .monospaced))
+                                    .font(DesignSystem.Fonts.monospaced(size: 40, weight: .bold))
                                     .foregroundColor(.red)
                             } else {
                                 Text("?")
-                                    .font(.system(size: 40, weight: .thin, design: .monospaced))
+                                    .font(DesignSystem.Fonts.monospaced(size: 40, weight: .thin))
                                     .foregroundColor(.blue)
                             }
                         }

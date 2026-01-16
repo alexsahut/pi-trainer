@@ -12,6 +12,8 @@ struct PiTrainerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .background(DesignSystem.Colors.blackOLED.ignoresSafeArea())
+                .preferredColorScheme(.dark)
         }
     }
 }

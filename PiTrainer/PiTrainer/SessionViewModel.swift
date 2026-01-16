@@ -26,7 +26,7 @@ class SessionViewModel: ObservableObject {
     // MARK: - Properties
     
     private let statsStore: StatsStore
-    private var hapticFeedback = UINotificationFeedbackGenerator()
+
     
     // MARK: - Derived Properties
     
@@ -78,6 +78,9 @@ class SessionViewModel: ObservableObject {
         showErrorFlash = false
         lastCorrectDigit = nil
         expectedDigit = nil
+        
+        // Pre-warm the haptic engine
+        HapticService.shared.prewarm()
     }
     
     /// Processes a digit input from the keypad
@@ -94,12 +97,12 @@ class SessionViewModel: ObservableObject {
             typedDigits.append(String(digit))
             
             // Light haptic for success (optional, can be subtle)
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
+            // Light haptic for success (instant)
+            HapticService.shared.playSuccess()
         } else {
             // Error feedback
             expectedDigit = result.expectedDigit
-            hapticFeedback.notificationOccurred(.error)
+            HapticService.shared.playError()
             
             withAnimation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true)) {
                 showErrorFlash = true
@@ -152,6 +155,7 @@ class SessionViewModel: ObservableObject {
             )
             statsStore.addSessionRecord(record)
             engine.reset()
+            HapticService.shared.stop()
         }
     }
 }
