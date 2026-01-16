@@ -71,12 +71,70 @@ L'Epic 3 a complété le cycle de vie de l'application en ajoutant la navigation
 - `FallbackData.swift` créé pour gérer ces cas edge
 - **Leçon:** Toujours prévoir des fallbacks pour les ressources critiques
 
+### 4. **CRITIQUE: Problèmes Récurrents et Shortcuts** ⚠️ MAJEUR
+
+**Problème Identifié:**
+- **Même problème rencontré plusieurs fois** (bundle resources)
+- **Solutions de facilité prises** au lieu d'investigation root cause
+- **Manque de documentation** pour prévenir récurrence
+
+**Impact:**
+- Perte de temps à re-débugger les mêmes problèmes
+- Frustration de l'équipe
+- Qualité du produit compromise
+
+**Root Cause:**
+- Pas de guideline obligatoire pour investigation approfondie
+- Pression pour "passer au suivant" sans comprendre le "pourquoi"
+- Documentation insuffisante des leçons apprises
+
+**Leçon Apprise:**
+> [!CAUTION]
+> **TOUT problème DOIT être investigué jusqu'à la root cause.**
+> Les shortcuts et workarounds ne sont PAS acceptables.
+
+**Nouvelles Guidelines Obligatoires:**
+1. **Root Cause Investigation:** Toujours chercher le "pourquoi" profond
+2. **Prevention Plan:** Documenter comment éviter la récurrence
+3. **No Shortcuts:** Les solutions temporaires doivent être justifiées et trackées
+4. **Documentation:** Chaque problème résolu = leçon documentée
+
+### 5. **CRITIQUE: Déviation UX/UI Non Validée** ⚠️ MAJEUR
+
+**Problème Identifié:**
+- **Bouton Options (⚙️)** implémenté au lieu du **Long Press 3s**
+- **Changement UX non validé** avec le product owner
+- **Violation du principe Zen-Athlete:** Écran épuré, pas de boutons visibles
+
+**UX Guidance Originale:**
+- **Long Press 3s:** Geste "caché" qui ne pollue pas l'écran
+- **Principe:** Pas de menu visible pendant la performance
+- **Objectif:** Immersion totale, focus sur les décimales
+
+**Implémentation Actuelle:**
+- Bouton ⚙️ visible en permanence dans le clavier
+- Menu avec options (Haptic, Quit)
+- **Violation** du principe d'écran épuré
+
+**Impact:**
+- UX compromise (bouton distrayant)
+- Décisions prises sans validation
+- Risque de dérive du produit vision
+
+**Action Requise:**
+- [ ] Revoir TOUTES les UX/UI guidance
+- [ ] Vérifier conformité de l'implémentation
+- [ ] Corriger les déviations ou valider les changements
+- [ ] Établir processus de validation UX obligatoire
+
 ## 📈 Métriques
 
 - **Stories Complétées:** 5/5 (100%)
 - **Code Reviews:** 2 (Story 3.1 et 3.3)
 - **Bugs Critiques Détectés:** 1 (Double padding)
 - **Tests UI Ajoutés:** 6 tests dans `KeypadInteractionTests.swift`
+- **Problèmes Récurrents:** 1 (Bundle resources - rencontré 3+ fois)
+- **Déviations UX/UI Non Validées:** 1 (Options button vs Long Press)
 
 ## 🚀 Vers l'Epic 4
 
@@ -98,6 +156,19 @@ L'Epic 3 a complété le cycle de vie de l'application en ajoutant la navigation
 
 ## 🎯 Conclusion
 
-Epic 3 a **fermé la boucle** laissée ouverte par Epic 2. L'application est maintenant un produit cohérent et testable. La découverte du gap de tests UI est une leçon précieuse qui améliore notre processus de qualité pour les Epics suivants.
+Epic 3 a **fermé la boucle** laissée ouverte par Epic 2. L'application est maintenant un produit cohérent et testable.
 
-**Prêt pour la Release:** ✅ OUI
+**Leçons Majeures:**
+1. ✅ Gap de tests UI identifié et corrigé
+2. ⚠️ **CRITIQUE:** Problèmes récurrents = manque de root cause investigation
+3. ⚠️ **CRITIQUE:** Déviations UX/UI non validées = risque de dérive produit
+
+**Actions Obligatoires pour Epic 4:**
+1. Appliquer les nouvelles guidelines de root cause investigation
+2. Vérifier conformité UX/UI avant toute implémentation
+3. Valider TOUS les changements UX avec le product owner
+4. Documenter systématiquement les leçons apprises
+
+**Prêt pour la Release:** ⚠️ **CONDITIONNEL**
+- Code: ✅ Fonctionnel
+- UX/UI: ⚠️ Nécessite revue et corrections

@@ -14,84 +14,127 @@
 - **Observable**: Use the `@Observable` macro for ViewModels and Engines.
 - **Value Types**: Prefer `struct` for logic (e.g., `PracticeEngine`) to ensure memory stability.
 
-### 🧪 Quality Gates
-1. **Build**: Run `xcodebuild build` for the `PiTrainer` scheme before completing any story.
-2. **Regression**: Run the UI test `RegressionTests.testFirstDigitVisibility` if any changes affect the `SessionView` or `TerminalGridView`.
-3. **Tests**: All unit tests must pass. Use `xcodebuild test`.
-
-### 🔒 Bundle Resources: Understanding Xcode's Mechanism
+### ⚠️ Mandatory Development Principles
 
 > [!CAUTION]
-> **Non-Swift files (.txt, .json, images) require manual Xcode configuration.**
-> They will NOT be included in the app bundle unless added via Xcode UI.
+> **These principles are MANDATORY. Violations will block PR approval.**
 
-#### How Xcode Bundles Resources (Technical Explanation)
+#### 1. Root Cause Investigation (CRITICAL)
 
-When you add a file via **Xcode UI** (File → Add Files to "PiTrainer"...):
+**Rule:** EVERY problem MUST be investigated until the root cause is understood.
 
-1. **PBXFileReference** is created → File metadata (path, type)
-2. **PBXBuildFile** is created → Links file to a build phase
-3. **PBXResourcesBuildPhase.files** array is updated → File ID added
-4. → At build time, file is **copied to app bundle**
+**Process:**
+1. **Identify the Problem:** What is the observable symptom?
+2. **Ask "Why?" 5 Times:** Dig deeper until you reach the fundamental cause
+3. **Document the Root Cause:** Write it down in retrospective or project-context.md
+4. **Create Prevention Plan:** How do we ensure this never happens again?
+5. **Implement Prevention:** Update guidelines, add tests, create scripts
 
-When a file is created **programmatically** (script/AI):
-- ❌ None of these steps happen
-- ❌ `PBXResourcesBuildPhase` remains empty
-- ❌ File exists in filesystem but **NOT in bundle**
-- ❌ `bundle.url(forResource:)` returns `nil`
+**Examples:**
+- ❌ **WRONG:** "Bundle resources don't load → Use FallbackData" (shortcut)
+- ✅ **CORRECT:** "Bundle resources don't load → Why? → Xcode 16 uses PBXFileSystemSynchronizedRootGroup → Document mechanism → Create verification script"
 
-**Verification:**
+**No Shortcuts Allowed:**
+- Workarounds must be justified and tracked as technical debt
+- "It works now" is NOT acceptable without understanding why
+- Recurring problems indicate failed root cause investigation
+
+#### 2. UX/UI Compliance (CRITICAL)
+
+**Rule:** ALL UX/UI decisions MUST comply with [ux-design-specification.md](file:///Users/alexandre/Dev/antigravity/pi-trainer/_bmad-output/planning-artifacts/ux-design-specification.md).
+
+**Zen-Athlete Principles:**
+- **Écran Épuré:** No visible buttons/menus during performance
+- **Hidden Gestures:** Long press, swipes for non-critical actions
+- **Immersion:** Nothing distracts from decimal input
+
+**Validation Process:**
+1. **Before Implementation:** Review UX spec for guidance
+2. **During Implementation:** Verify compliance with principles
+3. **Before PR:** Check against UX spec checklist
+4. **Any Deviation:** MUST be validated with product owner
+
+**Examples:**
+- ❌ **WRONG:** Adding ⚙️ Options button in keypad (violates "écran épuré")
+- ✅ **CORRECT:** Long press 3s for exit (hidden gesture, no visual pollution)
+
+#### 3. Documentation Requirements
+
+**Rule:** Every problem solved = lesson documented.
+
+**What to Document:**
+- Root cause of the problem
+- Why it happened
+- How it was fixed
+- How to prevent recurrence
+- Update project-context.md or retrospective
+
+**Where to Document:**
+- `project-context.md`: Permanent guidelines and patterns
+- `epic-X-retrospective.md`: Lessons learned during epic
+- Code comments: Complex logic or non-obvious solutions
+
+
+
+### 🔒 Bundle Resources: Xcode 16 File System Synchronized Groups
+
+> [!IMPORTANT]
+> **This project uses Xcode 16's `PBXFileSystemSynchronizedRootGroup`.**
+> ALL files in the `PiTrainer/` folder are automatically included in the bundle.
+
+#### How It Works (Xcode 16 Mechanism)
+
+**Automatic Synchronization:**
+```xml
+<!-- In project.pbxproj -->
+<PBXFileSystemSynchronizedRootGroup>
+    path = PiTrainer;
+    sourceTree = "<group>";
+</PBXFileSystemSynchronizedRootGroup>
+```
+
+When Xcode sees this:
+1. **Scans the entire `PiTrainer/` directory** at build time
+2. **Automatically includes ALL files** (.swift, .txt, .json, images, etc.)
+3. **No manual "Add Files to Target" required** for files in synced folders
+4. **PBXResourcesBuildPhase remains empty** (resources managed automatically)
+
+**Why This is Better:**
+- ✅ No need to manually add each resource file
+- ✅ New files are automatically detected
+- ✅ Simpler project file (no PBXFileReference clutter)
+- ✅ Fewer merge conflicts in `project.pbxproj`
+
+#### Verification
+
+**Check if your project uses this mechanism:**
 ```bash
-# Check if files are in Copy Bundle Resources
-grep -A 20 "PBXResourcesBuildPhase" PiTrainer/PiTrainer.xcodeproj/project.pbxproj | grep "pi_digits.txt"
+grep "PBXFileSystemSynchronizedRootGroup" PiTrainer/PiTrainer.xcodeproj/project.pbxproj
 # Expected: Should find at least one match
 ```
 
-#### Correct Process for Adding Resources
-
-**Step-by-Step (MUST be done in Xcode):**
-
-1. Open `PiTrainer.xcodeproj` in Xcode
-2. Right-click on `PiTrainer` folder in Project Navigator
-3. Select "Add Files to 'PiTrainer'..."
-4. Navigate to `PiTrainer/Constants/`
-5. Select ALL `.txt` files (pi_digits, e_digits, phi_digits, sqrt2_digits)
-6. ✅ **CHECK:** "Copy items if needed"
-7. ✅ **CHECK:** "Add to targets: PiTrainer"
-8. Click "Add"
-
-**Verify in Xcode:**
-1. Select `PiTrainer` target
-2. Go to "Build Phases" tab
-3. Expand "Copy Bundle Resources"
-4. Confirm all 4 `.txt` files are listed
-
-**Commit the changes:**
+**Verify resources are in bundle:**
 ```bash
-git add PiTrainer/PiTrainer.xcodeproj/project.pbxproj
-git commit -m "fix: add resource files to Copy Bundle Resources build phase"
+./verify_bundle_resources.sh --test
+# Runs AssetIntegrityTests to confirm bundle inclusion
 ```
 
-#### Automated Verification
+#### Adding New Resources
 
-**Before every commit, run:**
-```bash
-./verify_bundle_resources.sh
-```
+**For files INSIDE `PiTrainer/` folder:**
+1. Simply create the file in the filesystem
+2. No Xcode action required
+3. File is automatically included in next build
 
-This script checks:
-- ✅ Files exist in filesystem
-- ✅ Files referenced in `project.pbxproj`
-- ✅ Files in `PBXResourcesBuildPhase`
-- ✅ `AssetIntegrityTests` pass (with `--test` flag)
-
-**If verification fails:**
-- Follow the "Correct Process" above
-- Commit the updated `project.pbxproj`
+**For files OUTSIDE synced folders:**
+1. Open Xcode
+2. Right-click target folder → "Add Files to PiTrainer..."
+3. ✅ Check "Copy items if needed"
+4. ✅ Check "Add to targets: PiTrainer"
 
 #### Defense in Depth: FallbackData
 
-Even with proper configuration, ALWAYS use FallbackData as a safety net:
+Even with automatic synchronization, ALWAYS use FallbackData:
 
 ```swift
 // ✅ CORRECT: Try bundle first, fallback to embedded data
@@ -109,24 +152,37 @@ self.data = FallbackData.digits(for: constant)
 print("⚠️ Using FallbackData (bundle resource missing)")
 ```
 
-#### Why This Problem Occurs
+**Why FallbackData is still needed:**
+- Test bundle configuration issues
+- Corrupted resource files
+- File system permissions
+- Defense in depth
 
-**Root Cause:**
-- AI agents create files programmatically
-- Cannot safely modify `project.pbxproj` (complex, undocumented format)
-- Manual Xcode step required
+#### Common Misconceptions
 
-**Why it worked before (maybe):**
-- FallbackData was always used
-- Bundle resources never actually loaded
-- App worked, but used embedded data
+**❌ WRONG:** "PBXResourcesBuildPhase is empty, so resources aren't bundled"
+**✅ CORRECT:** Xcode 16 uses `PBXFileSystemSynchronizedRootGroup` instead
 
-#### Long-Term Solutions
+**❌ WRONG:** "I need to manually add .txt files in Xcode"
+**✅ CORRECT:** Files in synced folders are automatically included
 
-- [ ] Add Xcode Build Phase script to verify resources
-- [ ] Create pre-commit git hook running `verify_bundle_resources.sh`
-- [ ] Consider SwiftGen or R.swift for type-safe resource management
-- [ ] Investigate `xcodeproj` Ruby gem for programmatic project modification
+**❌ WRONG:** "AI agents can't add resources because they can't modify project.pbxproj"
+**✅ CORRECT:** With Xcode 16, just creating the file is enough (if in synced folder)
+
+#### Troubleshooting
+
+**If resources are missing from bundle:**
+1. Verify file is in `PiTrainer/PiTrainer/` (synced folder)
+2. Check file exists in filesystem
+3. Run `./verify_bundle_resources.sh --test`
+4. Clean build folder (Cmd+Shift+K in Xcode)
+5. Rebuild project
+
+**If using older Xcode (<16):**
+- Project may use legacy `PBXFileReference` + `PBXResourcesBuildPhase`
+- Manual "Add Files to Target" required
+- See [XCODE16_DISCOVERY.md](file:///Users/alexandre/Dev/antigravity/pi-trainer/XCODE16_DISCOVERY.md) for migration guide
+
 
 
 
