@@ -101,7 +101,8 @@ class SessionViewModel: ObservableObject {
             expectedDigit = nil
             
         } catch {
-            print("CRITICAL: Failed to start engine: \(error)")
+            print("❌ CRITICAL: Failed to start engine: \(error)")
+            print("❌ Error details: \(error.localizedDescription)")
             self.errorState = "Failed to load resources: \(error.localizedDescription)"
             // Do NOT start the engine. Session remains inactive.
             // The UI should verify 'errorState' and show an alert or placeholder.

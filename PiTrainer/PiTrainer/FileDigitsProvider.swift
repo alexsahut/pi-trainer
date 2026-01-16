@@ -60,24 +60,33 @@ struct FileDigitsProvider: DigitsProvider {
         let resourceName = constant.resourceName
         
         // Attempt to load from file
-        guard let url = bundle.url(forResource: resourceName, withExtension: "txt") else {
-            throw ProviderError.fileNotFound(resourceName)
+        if let url = bundle.url(forResource: resourceName, withExtension: "txt") {
+            do {
+                let content = try String(contentsOf: url, encoding: .utf8)
+                let trimmed = content.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                let utf8 = Array(trimmed.utf8)
+                
+                if utf8.isEmpty {
+                    throw ProviderError.invalidContent("Empty file")
+                }
+                
+                guard utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }) else {
+                    throw ProviderError.invalidContent("Contains non-digit characters")
+                }
+                
+                self.digits = utf8.map { $0 - 48 }
+                print("✅ Successfully loaded \(self.digits.count) digits from \(resourceName)")
+                return
+            } catch {
+                print("⚠️ Failed to load from bundle: \(error). Using FallbackData.")
+            }
+        } else {
+            print("⚠️ Resource '\(resourceName).txt' not found in bundle. Using FallbackData.")
         }
         
-        let content = try String(contentsOf: url, encoding: .utf8)
-        let trimmed = content.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-        let utf8 = Array(trimmed.utf8)
-        
-        if utf8.isEmpty {
-             throw ProviderError.invalidContent("Empty file")
-        }
-        
-        guard utf8.allSatisfy({ $0 >= 48 && $0 <= 57 }) else {
-             throw ProviderError.invalidContent("Contains non-digit characters")
-        }
-        
-        self.digits = utf8.map { $0 - 48 }
-        print("Successfully loaded \(self.digits.count) digits from \(resourceName)")
+        // FALLBACK: Use embedded data
+        self.digits = FallbackData.digits(for: constant)
+        print("✅ Loaded \(self.digits.count) digits from FallbackData for \(constant.rawValue)")
     }
     
     func getDigit(at index: Int) -> Int? {
