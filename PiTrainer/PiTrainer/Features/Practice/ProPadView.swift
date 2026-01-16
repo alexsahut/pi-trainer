@@ -106,6 +106,7 @@ struct ProPadButton: View {
             }
         }
         .buttonStyle(PlainButtonStyle()) // Remove default fade to handle instant flush
+        .accessibilityIdentifier(content) // Use content as identifier for UI tests
     }
     
     private func triggerFlash() {

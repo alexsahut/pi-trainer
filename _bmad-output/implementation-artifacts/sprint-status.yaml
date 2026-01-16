@@ -60,7 +60,7 @@ development_status:
   3-2-lancement-et-controle-de-session-zen-mode: done
   3-3-implementation-du-mode-strict: done
   3-4-integrite-du-build-verification-des-ressources: done
-  epic-3-retrospective: done
+  epic-3-retrospective: optional
 
   epic-4: backlog
   4-1-systeme-de-persistance-hybride-records-histoire: backlog
