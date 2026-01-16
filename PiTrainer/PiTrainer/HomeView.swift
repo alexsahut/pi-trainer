@@ -81,6 +81,7 @@ struct HomeView: View {
                 
                 // Main Actions
                 VStack(spacing: 16) {
+                    // Practice Mode
                     NavigationLink(destination: SessionView(viewModel: sessionViewModel)) {
                         Text("home.start")
                             .font(.title3)
@@ -91,9 +92,24 @@ struct HomeView: View {
                             .background(Color.blue)
                             .cornerRadius(16)
                             .shadow(radius: 4)
+                            .accessibilityIdentifier("home.start_button")
                     }
                     .padding(.horizontal, 40)
                     
+                    // Learning Mode Button
+                    NavigationLink(destination: LearningHomeView()) {
+                        Text("home.learn_module")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 60)
+                            .background(Color.purple) // Distinct color for Learning
+                            .cornerRadius(16)
+                            .shadow(radius: 4)
+                    }
+                    .padding(.horizontal, 40)
+
                     Button(action: { showingStats = true }) {
                         Text("home.stats")
                             .font(.title3)

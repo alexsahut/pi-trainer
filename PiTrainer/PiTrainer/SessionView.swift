@@ -26,6 +26,13 @@ struct SessionView: View {
                     
                     Text(String(localized: "session.streak \(viewModel.engine.currentStreak)"))
                         .font(.headline)
+                    
+                    // Position Tracker - displays current digit index (1-based for UX)
+                    Text(String(localized: "session.decimal_position \(viewModel.engine.currentIndex + 1)"))
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(.secondary)
+                        .accessibilityLabel(String(localized: "session.decimal_position.accessibility \(viewModel.engine.currentIndex + 1)"))
+                        .accessibilityAddTraits(.updatesFrequently)
                 }
                 
                 Spacer()
@@ -43,64 +50,89 @@ struct SessionView: View {
             .padding()
             .background(Color(uiColor: .secondarySystemBackground))
             
-            // Pi Display Area
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 2) {
-                        Text("\(viewModel.integerPart).")
-                            .font(DesignSystem.Fonts.monospaced(size: 48, weight: .bold))
+            // Terminal-Grid Display Area (blocks of 10 digits)
+            ZStack {
+                TerminalGridView(
+                    typedDigits: viewModel.typedDigits,
+                    integerPart: viewModel.integerPart,
+                    showError: viewModel.showErrorFlash
+                )
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: 200)
+                .modifier(StreakFlowEffect(streak: viewModel.engine.currentStreak))
+                
+                // Retry / Quit Overlay when session ends
+                if !viewModel.isActive && viewModel.engine.attempts > 0 {
+                    ZStack {
+                        Color.black.opacity(0.8)
                         
-                        Text(viewModel.typedDigits)
-                            .font(DesignSystem.Fonts.monospaced(size: 48, weight: .medium))
-                        
-                        // Current cursor / pending digit
-                        ZStack {
-                            Rectangle()
-                                .fill(viewModel.showErrorFlash ? Color.red.opacity(0.3) : Color.blue.opacity(0.2))
-                                .frame(width: 30, height: 60)
-                                .cornerRadius(4)
+                        VStack(spacing: 24) {
+                            Text(viewModel.engine.errors > 0 ? String(localized: "session.game_over") : String(localized: "session.complete"))
+                                .font(DesignSystem.Fonts.monospaced(size: 32, weight: .black))
+                                .foregroundColor(viewModel.engine.errors > 0 ? .red : DesignSystem.Colors.cyanElectric)
+                                .textCase(.uppercase)
                             
-                            if let expected = viewModel.expectedDigit {
-                                Text("\(expected)")
-                                    .font(DesignSystem.Fonts.monospaced(size: 40, weight: .bold))
-                                    .foregroundColor(.red)
-                            } else {
-                                Text("?")
-                                    .font(DesignSystem.Fonts.monospaced(size: 40, weight: .thin))
-                                    .foregroundColor(.blue)
+                            VStack(spacing: 12) {
+                                Button {
+                                    viewModel.startSession()
+                                } label: {
+                                    Text(String(localized: "session.retry"))
+                                        .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
+                                        .foregroundColor(.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(DesignSystem.Colors.cyanElectric)
+                                        .cornerRadius(12)
+                                }
+                                
+                                Button {
+                                    viewModel.endSession()
+                                    dismiss()
+                                } label: {
+                                    Text(String(localized: "session.quit"))
+                                        .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color.white.opacity(0.1))
+                                        .cornerRadius(12)
+                                }
                             }
+                            .padding(.horizontal, 40)
                         }
-                        .id("cursor")
                     }
-                    .padding(.horizontal)
-                    .padding(.vertical, 40)
-                }
-                .onChange(of: viewModel.typedDigits) { _ in
-                    withAnimation {
-                        proxy.scrollTo("cursor", anchor: .trailing)
-                    }
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
-            .frame(maxWidth: .infinity)
-            .background(viewModel.showErrorFlash ? Color.red.opacity(0.1) : Color.clear)
+            .contentShape(Rectangle())
+            .onLongPressGesture(minimumDuration: 3.0) {
+                // Emergency exit / finish session
+                if viewModel.isActive {
+                    viewModel.endSession()
+                    dismiss()
+                }
+            }
             
             Spacer()
             
-            // Keypad
-            KeypadView(
-                layout: viewModel.keypadLayout,
+            Spacer()
+            
+            // ProPad (Numeric Keypad)
+            ProPadView(
+                currentStreak: viewModel.engine.currentStreak,
+                isActive: viewModel.isActive,
                 onDigit: { digit in
-                    viewModel.processInput(digit)
+                    if viewModel.isActive {
+                        viewModel.processInput(digit)
+                    }
                 },
                 onBackspace: {
-                    viewModel.backspace()
+                    if viewModel.isActive {
+                        viewModel.backspace()
+                    }
                 },
-                onReset: {
-                    viewModel.reset()
-                },
-                onQuit: {
-                    viewModel.endSession()
-                    dismiss()
+                onOptions: {
+                    showOptions = true
                 }
             )
         }
@@ -108,7 +140,49 @@ struct SessionView: View {
         .onAppear {
             viewModel.startSession()
         }
+        .animation(.default, value: viewModel.isActive)
+        .sheet(isPresented: $showOptions) {
+            NavigationStack {
+                List {
+                    Section {
+                        Toggle(String(localized: "settings.haptics"), isOn: $hapticsEnabled)
+                            .onChange(of: hapticsEnabled) { newValue in
+                                HapticService.shared.isEnabled = newValue
+                            }
+                    }
+                    
+                    Section {
+                        Button(role: .destructive) {
+                            showOptions = false
+                            viewModel.reset()
+                        } label: {
+                            Label(String(localized: "keypad.reset"), systemImage: "arrow.counterclockwise")
+                        }
+                        
+                        Button(role: .destructive) {
+                            showOptions = false
+                            viewModel.endSession()
+                            dismiss()
+                        } label: {
+                            Label(String(localized: "keypad.quit"), systemImage: "xmark.circle")
+                        }
+                    }
+                }
+                .navigationTitle(String(localized: "session.options"))
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button(String(localized: "common.close")) {
+                            showOptions = false
+                        }
+                    }
+                }
+                .presentationDetents([.medium])
+            }
+        }
     }
+    
+    @State private var showOptions = false
+    @State private var hapticsEnabled = HapticService.shared.isEnabled
 }
 
 #Preview {

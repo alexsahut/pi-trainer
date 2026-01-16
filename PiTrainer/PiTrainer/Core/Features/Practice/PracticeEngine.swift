@@ -59,7 +59,7 @@ class PracticePersistence: PracticePersistenceProtocol {
 }
 
 /// Core practice engine for Pi digit training
-struct PracticeEngine {
+class PracticeEngine {
     
     // MARK: - Types
     
@@ -126,7 +126,7 @@ struct PracticeEngine {
     
     /// Starts a new practice session
     /// - Parameter mode: The practice mode (strict or learning)
-    mutating func start(mode: Mode) throws {
+    func start(mode: Mode) {
         self.mode = mode
         self.isActive = true
         self.currentIndex = 0
@@ -136,15 +136,12 @@ struct PracticeEngine {
         self.bestStreak = 0
         self.startTime = Date()
         self.elapsedTimeInternal = 0
-        
-        // Ensure digits are loaded - propagate error if fails
-        try digitsProvider.loadDigits()
     }
     
     /// Processes a digit input
     /// - Parameter digit: The digit entered by the user (0-9)
     /// - Returns: InputResult with details about the input
-    mutating func input(digit: Int) -> InputResult {
+    func input(digit: Int) -> InputResult {
         guard isActive else {
             // If not active, return current state without changes
             let expected = digitsProvider.getDigit(at: currentIndex) ?? 0
@@ -156,7 +153,6 @@ struct PracticeEngine {
             )
         }
         
-        // Get expected digit
         guard let expectedDigit = digitsProvider.getDigit(at: currentIndex) else {
             // Reached end of available digits
             isActive = false
@@ -222,13 +218,13 @@ struct PracticeEngine {
     }
     
     /// Goes back one digit (if possible)
-    mutating func backspace() {
+    func backspace() {
         guard currentIndex > 0 else { return }
         currentIndex -= 1
     }
     
     /// Resets all state and statistics
-    mutating func reset() {
+    func reset() {
         pauseTimer()
         isActive = false
         currentIndex = 0
@@ -242,7 +238,7 @@ struct PracticeEngine {
     
     // MARK: - Private Methods
     
-    private mutating func pauseTimer() {
+    private func pauseTimer() {
         guard let start = startTime else { return }
         elapsedTimeInternal += Date().timeIntervalSince(start)
         startTime = nil

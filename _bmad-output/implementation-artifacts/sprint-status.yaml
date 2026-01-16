@@ -1,0 +1,73 @@
+# generated: 2026-01-16
+# project: pi-trainer
+# project_key: pi-trainer
+# tracking_system: file-system
+# story_location: /Users/alexandre/Dev/antigravity/pi-trainer/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-16
+project: pi-trainer
+project_key: pi-trainer
+tracking_system: file-system
+story_location: /Users/alexandre/Dev/antigravity/pi-trainer/_bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: done
+  1-1-initialisation-du-projet-architecture-de-base: done
+  1-2-service-haptique-core-haptics-avec-pre-warming: done
+  1-3-pave-numerique-pro-pad-immersif: done
+  1-4-moteur-de-validation-practiceengine: done
+  epic-1-retrospective: done
+
+  epic-2: done
+  2-1-affichage-terminal-grid-par-blocs-de-10: done
+  2-2-suivi-de-position-position-tracker: done
+  2-3-activation-du-streak-flow-paliers-visuels: done
+  2-4-mode-ghost-opacite-dynamique-du-clavier: done
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-selection-de-la-constante-mathematique: backlog
+  3-2-lancement-et-controle-de-session-zen-mode: backlog
+  3-3-implementation-du-mode-strict: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-systeme-de-persistance-hybride-records-histoire: backlog
+  4-2-dashboard-des-records-personnels-pb: backlog
+  4-3-historique-detaille-des-performances: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-gestion-du-daily-streak-utilisation-consecutive: backlog
+  5-2-systeme-de-consentement-notifications-locales: backlog
+  5-3-notifications-de-rappel-journalier: backlog
+  epic-5-retrospective: optional

@@ -35,7 +35,7 @@ This repository contains a Pi digits trainer iPhone app designed to help users m
 - **Milestone 3 finalized**: Complete localization for 21+ languages, RTL support, and pluralization.
 - **Verification**: All 24 core logic unit tests passed successfully on iPhone 16e after localization.
 
-## January 12, 2026
+### January 12, 2026
 
 ### Progress
 - **Constant Management**: Fixed constant values (10k digits) and dynamic integer part logic.
@@ -45,3 +45,26 @@ This repository contains a Pi digits trainer iPhone app designed to help users m
   - Detailed session view in `SessionDetailView`.
   - Automatic migration from legacy `SessionSnapshot`.
 - **Verification**: All unit tests passed, including new `SessionHistoryTests`.
+
+### January 16, 2026
+
+### Progress
+- **Epic 2 (Ghost Terminal) Finalized**:
+  - [x] Story 2.1: Terminal Grid (blocs de 10)
+  - [x] Story 2.2: Position Tracker
+  - [x] Story 2.3: Streak Flow Effect
+  - [x] Story 2.4: Ghost Mode (Dynamic Opacity)
+- **Adversarial Code Review**: Story 2.4 reviewed and fixed (animation optimization, Design System compliance, integration tests).
+- **Verification**: All 55+ unit tests passed, including new ProPad Ghost Mode tests.
+- **Structural Integrity**: All features consolidated and target iOS 18.0 verified.
+
+### 🚨 Post-Mortem: Functional Regression
+**Issue**: Missing "3." display and unresponsive UI.
+**Root Causes**:
+1. Files created in `PiTrainer/Features/` (outside synchronized root `PiTrainer/PiTrainer/`).
+2. Target deployment accidentally bumped to `iOS 26.2`.
+**Resolution**:
+- Relocated files to sync root.
+- Reverted deployment target to 18.0.
+- Added UI tests for regression testing.
+**Prevention**: New files MUST be inside `PiTrainer/PiTrainer/`.

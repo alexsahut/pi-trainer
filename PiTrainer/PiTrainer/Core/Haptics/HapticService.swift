@@ -22,8 +22,8 @@ class HapticService {
     private var engine: CHHapticEngine?
     private var isEngineRunning = false
     
-    var isEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: "haptics_enabled") } // Default false if not set? Maybe default true.
+    public var isEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: "haptics_enabled") }
         set { UserDefaults.standard.set(newValue, forKey: "haptics_enabled") }
     }
     
@@ -41,6 +41,12 @@ class HapticService {
     
     /// Creates and configures the Haptic Engine
     private func createEngine() {
+        // Prevent engine creation during unit tests to avoid CI hangs
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            print("Haptic Engine creation skipped (Unit Testing environment)")
+            return
+        }
+        
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
         
         do {
@@ -104,6 +110,8 @@ class HapticService {
     /// Plays a crisp, transient "Success" haptic pattern.
     /// Designed for <16ms latency perception.
     func playSuccess() {
+        guard isEnabled else { return }
+        
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
             // Fallback for devices without Core Haptics support
             let generator = UIImpactFeedbackGenerator(style: .light)

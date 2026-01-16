@@ -4,277 +4,9 @@
     "" : {
 
     },
-    "mode.learning" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Learning"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apprentissage"
-          }
-        }
-      }
-    },
-    "mode.strict" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strict"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strict"
-          }
-        }
-      }
-    },
-    "stats.cancel" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annuler"
-          }
-        }
-      }
-    },
-    "stats.clear" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effacer"
-          }
-        }
-      }
-    },
-    "stats.clear_history" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear History"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effacer l'historique"
-          }
-        }
-      }
-    },
-    "stats.clear_history.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are you sure you want to clear the history for this constant? This action cannot be undone."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voulez-vous vraiment effacer l'historique pour cette constante ? Cette action est irréversible."
-          }
-        }
-      }
-    },
-    "stats.clear_history.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear History"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effacer l'historique"
-          }
-        }
-      }
-    },
-    "stats.date" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Date"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Date"
-          }
-        }
-      }
-    },
-    "stats.duration" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Duration"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Durée"
-          }
-        }
-      }
-    },
-    "stats.errors_short %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ errors"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ erreurs"
-          }
-        }
-      }
-    },
-    "stats.history" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "History"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Historique"
-          }
-        }
-      }
-    },
-    "stats.mode" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mode"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mode"
-          }
-        }
-      }
-    },
-    "stats.no_history" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No history available"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun historique"
-          }
-        }
-      }
-    },
-    "stats.performance" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Performance"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Performance"
-          }
-        }
-      }
-    },
-    "stats.reset_confirmation.message" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are you sure you want to reset all statistics? This action cannot be undone."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voulez-vous vraiment réinitialiser toutes les statistiques ? Cette action est irréversible."
-          }
-        }
-      }
-    },
-    "stats.reset_confirmation.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset All Stats"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réinitialiser tout"
-          }
-        }
-      }
-    },
-    "stats.session_details" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Session Details"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Détails de la session"
-          }
-        }
-      }
+    " " : {
+      "comment" : "A spacer to align the integer part with the digits.",
+      "isCommentAutoGenerated" : true
     },
     "   " : {
       "comment" : "A space character used in the translation of \"home.strict\" and \"home.learning\".",
@@ -284,17 +16,41 @@
       "comment" : "A label describing the user's best streak for a specific constant. The argument is the symbol of the constant.",
       "isCommentAutoGenerated" : true
     },
-    "?" : {
-      "comment" : "A placeholder text that appears when the expected digit is not yet typed.",
+    "·" : {
+      "comment" : "A placeholder character used to represent an empty digit slot in the terminal grid.",
+      "isCommentAutoGenerated" : true
+    },
+    "%@." : {
+      "comment" : "A large, bold text field displaying the current number to be typed. The first argument is the integer part of the number. The second argument is the digits that have been typed so far.",
       "isCommentAutoGenerated" : true
     },
     "%lld" : {
       "comment" : "A label displaying the user's best streak. The argument is the user's best streak.",
       "isCommentAutoGenerated" : true
     },
-    "3." : {
-      "comment" : "The first digit of the Pi symbol displayed in the session view.",
+    "%lld >" : {
+      "comment" : "A text label that appears after a line of 10 digits in the terminal grid, showing the line number and an arrow. The argument is the line number (e.g., 10).",
       "isCommentAutoGenerated" : true
+    },
+    "%lld chunks reviewed" : {
+      "comment" : "A text showing the number of chunks that have been reviewed during the current learning session.",
+      "isCommentAutoGenerated" : true
+    },
+    "common.close" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fermer"
+          }
+        }
+      }
     },
     "constant.e" : {
       "extractionState" : "manual",
@@ -364,132 +120,51 @@
         }
       }
     },
+    "Décimales %lld à %lld: %@" : {
+      "comment" : "VoiceOver label for a complete row of 10 digits. The first argument is the line number (e.g., \"30\"). The second argument is the digits in that row.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Décimales %1$lld à %2$lld: %3$@"
+          }
+        }
+      }
+    },
+    "Due" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dû"
+          }
+        }
+      }
+    },
+    "Hint" : {
+      "comment" : "A button label that, when tapped, provides a hint for the user.",
+      "isCommentAutoGenerated" : true
+    },
     "home.best_streak" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أفضل سلسلة"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nejlepší série"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bedste stime"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BESTE SERIE"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "BEST STREAK"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MEJOR RACHA"
-          }
-        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "MEILLEURE SÉRIE"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Legjobb sorozat"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MIGLIOR SERIE"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最高記録"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "최고 기록"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beste serie"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beste reeks"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Najlepsza seria"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MELHOR SEQUÊNCIA"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cea mai bună serie"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ЛУЧШАЯ СЕРИЯ"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bästa svit"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "EN İYİ SERİ"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Найкраща серія"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最佳纪录"
           }
         }
       }
@@ -511,132 +186,36 @@
         }
       }
     },
-    "home.learning" : {
+    "home.learn_module" : {
+      "extractionState" : "manual",
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تعلم"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Učení"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Læring"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lernen"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Learning"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aprendizaje"
+            "value" : "Learn"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apprentissage"
+            "value" : "Apprendre"
           }
-        },
-        "hu" : {
+        }
+      }
+    },
+    "home.learning" : {
+      "comment" : "Renamed to Training (Help) per user request",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tanulás"
+            "value" : "Training (Help)"
           }
         },
-        "it" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apprendimento"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "学習中"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "학습"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Læring"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leren"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uczenie się"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aprendizado"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Învățare"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Обучение"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inlärning"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öğrenme"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Навчання"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "学习"
+            "value" : "Entraînement (aide)"
           }
         }
       }
@@ -659,40 +238,10 @@
     },
     "home.select_mode" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "اختر الوضع"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vyberte režim"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vælg tilstand"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modus wählen"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Select Mode"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seleccionar modo"
           }
         },
         "fr" : {
@@ -700,129 +249,15 @@
             "state" : "translated",
             "value" : "Choisir le mode"
           }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mód kiválasztása"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seleziona modalità"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "モードを選択"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "모드 선택"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Velg modus"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecteer modus"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wybierz tryb"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selecionar modo"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selectați modul"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выберите режим"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Välj läge"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mod Seçin"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Виберіть режим"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择模式"
-          }
         }
       }
     },
     "home.start" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ابدأ"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "START"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "START"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "START"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "START"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "INICIO"
           }
         },
         "fr" : {
@@ -830,84 +265,12 @@
             "state" : "translated",
             "value" : "DÉBUTER"
           }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "INIZIA"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "スタート"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "시작"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "START"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "START"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "START"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "INICIAR"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "СТАРТ"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BAŞLA"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始"
-          }
         }
       }
     },
     "home.stats" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الإحصائيات"
-          }
-        },
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "STATS"
-          }
-        },
-        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "STATS"
@@ -917,717 +280,633 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "STATS"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "STATS"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "統計"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "통계"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "STATS"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "СТАТИСТИКА"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "İSTATİSTİKLER"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "统计"
           }
         }
       }
     },
     "home.strict" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "صارم"
-          }
-        },
-        "cs" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Striktní"
-          }
-        },
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strikt"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strikt"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Strict"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Estricto"
-          }
-        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Strict"
-          }
-        },
-        "hu" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Szigorú"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rigoroso"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ストリクト"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "엄격"
-          }
-        },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strikt"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strikt"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Surowy"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Estrito"
-          }
-        },
-        "ro" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strict"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Строгий"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Strikt"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sıkı"
-          }
-        },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Суворий"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "严格"
           }
         }
       }
     },
     "home.title" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PiTrainer"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PiTrainer"
+            "value" : "Pi Trainer"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PiTrainer"
+            "value" : "Pi Trainer"
           }
         }
       }
     },
     "keypad.quit" : {
+      "comment" : "The text for the \"Quit\" button in the keypad view.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "خروج"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "BEENDEN"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "QUIT"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SALIR"
+            "value" : "Quit"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "QUITTER"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ESCI"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "終了"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "종료"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SAIR"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ВЫХОД"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ÇIK"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "退出"
+            "value" : "Quitter"
           }
         }
       }
     },
     "keypad.reset" : {
+      "comment" : "Label for the \"Reset\" button in the keypad.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إعادة تعيين"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ZURÜCK"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RESET"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "REINICIAR"
+            "value" : "Reset"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RÉINIT"
+            "value" : "Réinitialiser"
           }
-        },
-        "it" : {
+        }
+      }
+    },
+    "learning.again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RESET"
+            "value" : "Again"
           }
         },
-        "ja" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "リセット"
+            "value" : "Encore"
+          }
+        }
+      }
+    },
+    "learning.due_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld reviews due"
           }
         },
-        "ko" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "초기화"
+            "value" : "%lld révisions dues"
+          }
+        }
+      }
+    },
+    "learning.easy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Easy"
           }
         },
-        "pt" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RESET"
+            "value" : "Facile"
+          }
+        }
+      }
+    },
+    "learning.feedback_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How was it?"
           }
         },
-        "ru" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "СБРОС"
+            "value" : "C'était comment ?"
+          }
+        }
+      }
+    },
+    "learning.good" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good"
           }
         },
-        "tr" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SIFIRLA"
+            "value" : "Bien"
+          }
+        }
+      }
+    },
+    "learning.hard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hard"
           }
         },
-        "zh-Hans" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重置"
+            "value" : "Difficile"
+          }
+        }
+      }
+    },
+    "learning.in_learning_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active Chunks"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En cours"
+          }
+        }
+      }
+    },
+    "learning.mastered_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastered Chunks"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chunks maîtrisés"
+          }
+        }
+      }
+    },
+    "learning.memorize_this" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memorize these digits"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mémorisez ces chiffres"
+          }
+        }
+      }
+    },
+    "learning.new_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld new chunks"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld nouveaux chunks"
+          }
+        }
+      }
+    },
+    "learning.ready_button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I am ready"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je suis prêt"
+          }
+        }
+      }
+    },
+    "learning.session_complete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session Complete!"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session terminée !"
+          }
+        }
+      }
+    },
+    "learning.start_session" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Session"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer"
+          }
+        }
+      }
+    },
+    "learning.test_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type the sequence"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saisissez la suite"
+          }
+        }
+      }
+    },
+    "learning.today_plan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's Plan"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plan du jour"
+          }
+        }
+      }
+    },
+    "mode.learning" : {
+      "comment" : "Title for the learning practice mode.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Training (Help)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entraînement (avec aide)"
+          }
+        }
+      }
+    },
+    "mode.strict" : {
+      "comment" : "Title for the strict practice mode.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strict"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Strict"
+          }
+        }
+      }
+    },
+    "New" : {
+      "comment" : "A caption displayed underneath the count of new chunks.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveaux"
+          }
+        }
+      }
+    },
+    "Review" : {
+      "comment" : "A singular noun describing a review.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Review"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Révision"
+          }
+        }
+      }
+    },
+    "Reviews" : {
+      "comment" : "Plural form of \"Review\".",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reviews"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Révisions"
+          }
+        }
+      }
+    },
+    "session.back" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retour"
           }
         }
       }
     },
     "session.best_streak %lld" : {
+      "comment" : "A label below the error count that shows the user's best streak.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الأفضل: %lld"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Best: %lld"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mejor: %lld"
+            "value" : "Best Streak: %lld"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meilleur : %lld"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Migliore: %lld"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ベスト: %lld"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "최고: %lld"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Melhor: %lld"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Лучший: %lld"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "佳绩: %lld"
+            "value" : "Meilleure série : %lld"
           }
         }
       }
     },
     "session.errors_count %lld" : {
+      "comment" : "A label at the bottom of the checkout view displaying the number of errors made during the session.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "الأخطاء: %lld"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "الأخطاء: %lld"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "خطأ: %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "أخطاء: %lld"
-                }
-              },
-              "two" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "خطآن: %lld"
-                }
-              },
-              "zero" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "أخطاء: %lld"
-                }
-              }
-            }
-          }
-        },
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Fehler: %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Fehler: %lld"
-                }
-              }
-            }
-          }
-        },
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Error: %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Errors: %lld"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Error: %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Errores: %lld"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Errors: %lld"
           }
         },
         "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Erreur : %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Erreurs : %lld"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Errore: %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Errori: %lld"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "エラー: %lld"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "오류: %lld"
-          }
-        },
-        "pt" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Erro: %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Erros: %lld"
-                }
-              }
-            }
-          }
-        },
-        "ru" : {
-          "variations" : {
-            "plural" : {
-              "few" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Ошибки: %lld"
-                }
-              },
-              "many" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Ошибок: %lld"
-                }
-              },
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Ошибка: %lld"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Ошибки: %lld"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "错误: %lld"
+            "value" : "Erreurs : %lld"
           }
         }
       }
     },
-    "session.mode_label %@" : {
-      "extractionState" : "stale",
+    "session.options" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الوضع: %@"
-          }
-        },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modus: %@"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mode: %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modo: %@"
+            "value" : "Options"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mode : %@"
+            "value" : "Options"
           }
-        },
-        "it" : {
+        }
+      }
+    },
+    "session.position %lld" : {
+      "comment" : "A label displaying the current position (digit index) in the practice session.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modo: %@"
+            "value" : "Position: #%lld"
           }
         },
-        "ja" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "モード: %@"
+            "value" : "Position : #%lld"
+          }
+        }
+      }
+    },
+    "session.position.accessibility %lld" : {
+      "comment" : "VoiceOver accessibility label for the position tracker displaying the current digit index.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current position: %lld"
           }
         },
-        "ko" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "모드: %@"
+            "value" : "Position actuelle : %lld"
+          }
+        }
+      }
+    },
+    "session.game_over" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game Over"
           }
         },
-        "pt" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modo: %@"
+            "value" : "Terminé"
+          }
+        }
+      }
+    },
+    "session.complete" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session Complete"
           }
         },
-        "ru" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Режим: %@"
+            "value" : "Session Terminée"
+          }
+        }
+      }
+    },
+    "session.retry" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
           }
         },
-        "tr" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mod: %@"
+            "value" : "Réessayer"
+          }
+        }
+      }
+    },
+    "session.quit" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit"
           }
         },
-        "zh-Hans" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "模式: %@"
+            "value" : "Quitter"
+          }
+        }
+      }
+    },
+    "session.decimal_position %lld" : {
+      "comment" : "A label displaying the current decimal position (digit index) in the practice session.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decimal: #%lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Décimale : #%lld"
+          }
+        }
+      }
+    },
+    "session.decimal_position.accessibility %lld" : {
+      "comment" : "VoiceOver accessibility label for the position tracker displaying the current decimal digit index.",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current decimal position: %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Position de la décimale actuelle : %lld"
           }
         }
       }
     },
     "session.streak %lld" : {
+      "comment" : "A label displaying the current streak of correct answers in the session.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "سلسلة: %lld"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Streak: %lld"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Racha: %lld"
           }
         },
         "fr" : {
@@ -1635,47 +914,21 @@
             "state" : "translated",
             "value" : "Série : %lld"
           }
-        },
-        "it" : {
+        }
+      }
+    },
+    "settings.haptics" : {
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Serie: %lld"
+            "value" : "Haptic Feedback"
           }
         },
-        "ja" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "連続: %lld"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "연속: %lld"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sequência: %lld"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Серия: %lld"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seri: %lld"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连续: %lld"
+            "value" : "Retour Haptique"
           }
         }
       }
@@ -1691,7 +944,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Disposition du pavé"
+            "value" : "Clavier"
           }
         }
       }
@@ -1702,13 +955,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PC (7 at top)"
+            "value" : "PC (789)"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PC (7 en haut)"
+            "value" : "PC (789)"
           }
         }
       }
@@ -1719,139 +972,57 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Phone (1 at top)"
+            "value" : "Phone (123)"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Téléphone (1 en haut)"
+            "value" : "Téléphone (123)"
           }
         }
       }
     },
     "stats.attempts" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "المحاولات"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Attempts"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Intentos"
-          }
-        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tentatives"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tentativi"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "試行回数"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "시도"
-          }
-        },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tentativas"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Попытки"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尝试"
+            "value" : "Essais"
           }
         }
       }
     },
     "stats.attempts_count %lld" : {
+      "comment" : "A description of a stat label, in this case \"Attempts\".",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld attempt"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld attempts"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attempts: %lld"
           }
         },
         "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld tentative"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld tentatives"
-                }
-              }
-            }
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Essais : %lld"
           }
         }
       }
     },
     "stats.best_streak" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "أفضل سلسلة"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Best Streak"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mejor Racha"
           }
         },
         "fr" : {
@@ -1859,33 +1030,117 @@
             "state" : "translated",
             "value" : "Meilleure série"
           }
-        },
-        "it" : {
+        }
+      }
+    },
+    "stats.cancel" : {
+      "comment" : "The \"Cancel\" button in the reset all alert.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Miglior Serie"
+            "value" : "Cancel"
           }
         },
-        "ru" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Лучшая серия"
+            "value" : "Annuler"
+          }
+        }
+      }
+    },
+    "stats.clear" : {
+      "comment" : "The text for a button that clears a user's learning history.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer"
+          }
+        }
+      }
+    },
+    "stats.clear_history" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear History"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer l'historique"
+          }
+        }
+      }
+    },
+    "stats.clear_history.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to clear the history for this constant? This action cannot be undone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voulez-vous vraiment effacer l'historique pour cette constante ? Cette action est irréversible."
+          }
+        }
+      }
+    },
+    "stats.clear_history.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear History"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer l'historique"
           }
         }
       }
     },
     "stats.constant_picker" : {
-      "comment" : "The title of the segmented control that allows the user to select a mathematical constant.",
-      "isCommentAutoGenerated" : true
-    },
-    "stats.date" : {
+      "extractionState" : "manual",
       "localizations" : {
-        "ar" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "التاريخ"
+            "value" : "Select Constant"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir une constante"
+          }
+        }
+      }
+    },
+    "stats.date" : {
+      "comment" : "Label for the date in the session details view.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1901,23 +1156,13 @@
       }
     },
     "stats.done" : {
+      "comment" : "The text for a button that dismisses a view presented modally. In this case, it dismisses the",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "تم"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Done"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Listo"
           }
         },
         "fr" : {
@@ -1925,35 +1170,44 @@
             "state" : "translated",
             "value" : "OK"
           }
-        },
-        "it" : {
+        }
+      }
+    },
+    "stats.duration" : {
+      "localizations" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fine"
+            "value" : "Duration"
           }
         },
-        "ja" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "完了"
+            "value" : "Durée"
+          }
+        }
+      }
+    },
+    "stats.empty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No stats recorded yet"
           }
         },
-        "ko" : {
+        "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "완료"
+            "value" : "Aucune statistique"
           }
         }
       }
     },
     "stats.errors" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الأخطاء"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1968,14 +1222,27 @@
         }
       }
     },
-    "stats.global_records" : {
+    "stats.errors_short %@" : {
+      "comment" : "A short label indicating the number of errors made in a session. The argument is the string “%arg”.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "الأرقام القياسية"
+            "value" : "%@ errors"
           }
         },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ erreurs"
+          }
+        }
+      }
+    },
+    "stats.global_records" : {
+      "extractionState" : "manual",
+      "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1985,19 +1252,29 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Records mondiaux"
+            "value" : "Records Globaux"
+          }
+        }
+      }
+    },
+    "stats.history" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Historique"
           }
         }
       }
     },
     "stats.last_session" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الجلسة الأخيرة"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2012,36 +1289,96 @@
         }
       }
     },
-    "stats.no_sessions" : {
+    "stats.mode" : {
+      "comment" : "Label for the mode of a session.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "لا توجد جلسات مسجلة بعد."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No sessions recorded yet."
+            "value" : "Mode"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aucune session enregistrée."
+            "value" : "Mode"
+          }
+        }
+      }
+    },
+    "stats.no_history" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No history available"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun historique disponible"
+          }
+        }
+      }
+    },
+    "stats.no_sessions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No sessions played yet"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune session jouée"
+          }
+        }
+      }
+    },
+    "stats.performance" : {
+      "comment" : "A section header that indicates the content of the section.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Performance"
+          }
+        }
+      }
+    },
+    "stats.reset" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset all stats"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser"
           }
         }
       }
     },
     "stats.reset_all" : {
+      "extractionState" : "manual",
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "إعادة تعيين كافة الإحصائيات"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2051,36 +1388,84 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tout réinitialiser"
+            "value" : "Réinitialiser tout"
           }
         }
       }
     },
-    "stats.settings" : {
-      "extractionState" : "stale",
+    "stats.reset_confirmation.message" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SETTINGS"
+            "value" : "This will delete all progress and history for all constants. Are you sure?"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "RÉGLAGES"
+            "value" : "Ceci effacera toute la progression et l'historique pour toutes les constantes. Êtes-vous sûr ?"
+          }
+        }
+      }
+    },
+    "stats.reset_confirmation.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset All Data"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les données"
+          }
+        }
+      }
+    },
+    "stats.session_details" : {
+      "comment" : "The header title for the section displaying session details.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session Details"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Détails de la session"
+          }
+        }
+      }
+    },
+    "stats.speed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitesse"
           }
         }
       }
     },
     "stats.speed.title" : {
+      "comment" : "Label for the speed of the session.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "السرعة"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2096,29 +1481,27 @@
       }
     },
     "stats.speed.value" : {
+      "comment" : "A label and value pair for displaying the user's typing speed during a session. The value is a single floating-point number, formatted to one decimal place.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ digits/min"
+            "value" : "%.1f digits/min"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ chiffres/min"
+            "value" : "%.1f chiffres/min"
           }
         }
       }
     },
     "stats.time" : {
+      "comment" : "Label for the time spent on a session in the stats screen.",
+      "isCommentAutoGenerated" : true,
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الوقت"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2135,12 +1518,6 @@
     },
     "stats.title" : {
       "localizations" : {
-        "ar" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "الإحصائيات"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
@@ -2151,12 +1528,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Statistiques"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Statistiche"
           }
         }
       }

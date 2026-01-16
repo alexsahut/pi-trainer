@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Directions Showcase - Pi-Trainer</title>
+    <style>
+        :root {
+            --bg: #000000;
+            --cyan: #00F2FF;
+            --dim: #1a1a1a;
+            --text-off: #444;
+        }
+
+        body {
+            background-color: #111;
+            color: white;
+            font-family: 'SF Mono', 'JetBrains Mono', monospace;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+        }
+
+        .mockup-card {
+            background: var(--bg);
+            width: 320px;
+            height: 600px;
+            border: 1px solid #333;
+            border-radius: 40px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            transition: transform 0.3s;
+        }
+
+        .mockup-card:hover {
+            transform: scale(1.02);
+            border-color: var(--cyan);
+        }
+
+        .label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            font-size: 12px;
+            color: var(--cyan);
+            text-transform: uppercase;
+        }
+
+        .desc {
+            margin-top: 10px;
+            font-size: 10px;
+            color: #888;
+            max-width: 320px;
+        }
+
+        /* Variants */
+        .v-header {
+            font-size: 10px;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .digits {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-wrap: wrap;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .key {
+            color: #222;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 18px;
+        }
+
+        /* Variant Specifics */
+        .ghost-keypad .key {
+            opacity: 0;
+        }
+
+        .ghost-keypad:hover .key {
+            opacity: 1;
+            color: #333;
+            transition: 0.5s;
+        }
+
+        .vertical-flow .digits {
+            flex-direction: column;
+            font-size: 24px;
+        }
+
+        .vertical-flow .active {
+            border-left: 2px solid var(--cyan);
+            padding-left: 10px;
+        }
+
+        .focus-mode .dim {
+            display: none;
+        }
+
+        .grid-10x10 .digits {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            font-size: 12px;
+            gap: 2px;
+            color: #222;
+        }
+
+        .grid-10x10 .active {
+            color: var(--cyan);
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="width: 100%; text-align: center; margin-bottom: 60px;">
+        <h1 style="color: var(--cyan)">Showcase "Zen-Athlete"</h1>
+        <p style="color: #666">Exploration du minimalisme extrême pour Pi-Trainer</p>
+    </div>
+
+    <!-- Direction 1: The Ghost -->
+    <div style="position: relative">
+        <div class="label">Direction 1: The Ghost</div>
+        <div class="mockup-card ghost-keypad">
+            <div class="v-header"><span>CPS 4.2</span><span>STREAK 21</span></div>
+            <div class="digits">
+                <span style="color:#222">3.1415</span><span style="color:var(--cyan)">9</span>
+            </div>
+            <div class="keypad">
+                <div class="key">1</div>
+                <div class="key">2</div>
+                <div class="key">3</div>
+                <div class="key">4</div>
+                <div class="key">5</div>
+                <div class="key">6</div>
+                <div class="key">7</div>
+                <div class="key">8</div>
+                <div class="key">9</div>
+                <div></div>
+                <div class="key">0</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="desc">Le clavier est invisible. L'utilisateur fait confiance à sa mémoire musculaire. Apparaît au
+            survol/toucher long.</div>
+    </div>
+
+    <!-- Direction 2: Focus Absolute -->
+    <div style="position: relative">
+        <div class="label">Direction 2: Pure Focus</div>
+        <div class="mockup-card focus-mode">
+            <div class="v-header"><span></span><span>STREAK 21</span></div>
+            <div class="digits">
+                <span style="color:var(--cyan); font-size: 64px;">9</span>
+            </div>
+            <div class="keypad" style="opacity: 0.1">
+                <div class="key">1</div>
+                <div class="key">2</div>
+                <div class="key">3</div>
+                <div class="key">4</div>
+                <div class="key">5</div>
+                <div class="key">6</div>
+                <div class="key">7</div>
+                <div class="key">8</div>
+                <div class="key">9</div>
+                <div></div>
+                <div class="key">0</div>
+                <div></div>
+            </div>
+        </div>
+        <div class="desc">Seul le chiffre en cours est visible. Zéro distraction, immersion tunnel.</div>
+    </div>
+
+    <!-- Direction 3: Vertical Code -->
+    <div style="position: relative">
+        <div class="label">Direction 3: Terminal Flow</div>
+        <div class="mockup-card vertical-flow">
+            <div class="v-header"><span>SYSTEM.LOG</span><span></span></div>
+            <div class="digits" style="align-items: flex-start; padding-left: 20px;">
+                <span style="color: #222">3.14159</span>
+                <span style="color: #222">265358</span>
+                <span class="active" style="color: var(--cyan)">979323...</span>
+            </div>
+            <div class="keypad">
+                <div class="key">1</div>
+                <div class="key">2</div>
+                <div class="key">3</div>
+            </div>
+        </div>
+        <div class="desc">Inspiré des terminaux de code. Les chiffres défilent verticalement par blocs de 10.</div>
+    </div>
+
+    <!-- Direction 4: Matrix Grid -->
+    <div style="position: relative">
+        <div class="label">Direction 4: Data Block</div>
+        <div class="mockup-card grid-10x10">
+            <div class="v-header"><span>BLOCK_ID: 15</span><span>TOTAL: 156</span></div>
+            <div class="digits">
+                <!-- Simple simulation of a grid -->
+                <div class="active">3</div>
+                <div>1</div>
+                <div>4</div>
+                <div>1</div>
+                <div>5</div>
+                <div>9</div>
+                <div>2</div>
+                <div>6</div>
+                <div>5</div>
+                <div>3</div>
+                <div>5</div>
+                <div>8</div>
+                <div>9</div>
+                <div>7</div>
+                <div>9</div>
+                <div>3</div>
+                <div>2</div>
+                <div>3</div>
+                <div>8</div>
+                <div>4</div>
+                <div style="color: #111">.</div>
+                <div style="color: #111">.</div>
+                <div style="color: #111">.</div>
+            </div>
+            <div style="margin-top: auto; font-size: 10px; color: #333; text-align: center;">KEYPAD_ACTIVE_HIDDEN</div>
+        </div>
+        <div class="desc">Les chiffres forment une grille dense, comme un processeur. L'utilisateur remplit la matrice.
+        </div>
+    </div>
+
+</body>
+
+</html>

@@ -69,8 +69,7 @@ struct KeypadButton: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(DesignSystem.Fonts.monospaced(size: 28, weight: .bold)) // Using DesignSystem for digits
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 64)

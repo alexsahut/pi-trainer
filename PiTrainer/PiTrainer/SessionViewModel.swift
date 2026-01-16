@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 
 /// Manages the state and logic for a Pi practice session
+@MainActor
 class SessionViewModel: ObservableObject {
     
     // MARK: - Published Properties
@@ -26,6 +27,8 @@ class SessionViewModel: ObservableObject {
     // MARK: - Properties
     
     private let statsStore: StatsStore
+    private let persistence: PracticePersistenceProtocol
+    private let providerFactory: (Constant) -> any DigitsProvider
 
     
     // MARK: - Derived Properties
@@ -54,14 +57,17 @@ class SessionViewModel: ObservableObject {
     
     // MARK: - Initialization
     
-    // MARK: - Initialization
-    
-    init(statsStore: StatsStore) {
+    init(statsStore: StatsStore, 
+         persistence: PracticePersistenceProtocol = PracticePersistence(),
+         providerFactory: @escaping (Constant) -> any DigitsProvider = { FileDigitsProvider(constant: $0) }) {
         self.statsStore = statsStore
+        self.persistence = persistence
+        self.providerFactory = providerFactory
+        
         // Initialize with the selected constant from store
         let constant = statsStore.selectedConstant
-        let provider = FileDigitsProvider(constant: constant)
-        self.engine = PracticeEngine(provider: provider)
+        let provider = providerFactory(constant)
+        self.engine = PracticeEngine(provider: provider, persistence: persistence)
     }
     
     // MARK: - Public Methods
@@ -70,10 +76,17 @@ class SessionViewModel: ObservableObject {
     func startSession() {
         // Always refresh the engine with the currently selected constant
         let constant = statsStore.selectedConstant
-        let provider = FileDigitsProvider(constant: constant)
-        self.engine = PracticeEngine(provider: provider)
+        var provider = providerFactory(constant)
         
-        engine.start(mode: selectedMode)
+        do {
+            try provider.loadDigits()
+            self.engine = PracticeEngine(provider: provider, persistence: persistence)
+            engine.start(mode: selectedMode)
+        } catch {
+            print("Failed to start engine: \(error)")
+            // Fallback to empty engine if load fails to prevent crash
+            self.engine = PracticeEngine(provider: provider, persistence: persistence)
+        }
         typedDigits = ""
         showErrorFlash = false
         lastCorrectDigit = nil
@@ -86,6 +99,7 @@ class SessionViewModel: ObservableObject {
     /// Processes a digit input from the keypad
     /// - Parameter digit: The digit (0-9)
     func processInput(_ digit: Int) {
+        objectWillChange.send()
         let result = engine.input(digit: digit)
         
         if result.isCorrect {
@@ -96,7 +110,6 @@ class SessionViewModel: ObservableObject {
             // Update displayed digits
             typedDigits.append(String(digit))
             
-            // Light haptic for success (optional, can be subtle)
             // Light haptic for success (instant)
             HapticService.shared.playSuccess()
         } else {
@@ -122,6 +135,7 @@ class SessionViewModel: ObservableObject {
     
     /// Goes back one digit
     func backspace() {
+        objectWillChange.send()
         engine.backspace()
         if !typedDigits.isEmpty {
             typedDigits.removeLast()
@@ -131,8 +145,8 @@ class SessionViewModel: ObservableObject {
     /// Resets the current session
     func reset() {
         let constant = statsStore.selectedConstant
-        let provider = FileDigitsProvider(constant: constant)
-        engine = PracticeEngine(provider: provider) // Re-initialize to clear all state
+        let provider = providerFactory(constant)
+        engine = PracticeEngine(provider: provider, persistence: persistence) // Re-initialize to clear all state
         typedDigits = ""
         showErrorFlash = false
         lastCorrectDigit = nil

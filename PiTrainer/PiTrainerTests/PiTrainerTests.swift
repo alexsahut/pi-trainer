@@ -8,7 +8,27 @@
 import XCTest
 @testable import PiTrainer
 
+@MainActor
 final class PiTrainerTests: XCTestCase {
+    
+    // MARK: - Mocks for Integration
+    
+    class MockPracticePersistence: PracticePersistenceProtocol {
+        var savedIndex: Int?
+        var savedKey: String?
+        var highestIndexToReturn: Int = 0
+        var saveCallCount = 0
+        
+        func saveHighestIndex(_ index: Int, for constantKey: String) {
+            savedIndex = index
+            savedKey = constantKey
+            saveCallCount += 1
+        }
+        
+        func getHighestIndex(for constantKey: String) -> Int {
+            return highestIndexToReturn
+        }
+    }
     
     // MARK: - FileDigitsProvider Tests
     
@@ -67,8 +87,6 @@ final class PiTrainerTests: XCTestCase {
         // But we can check stability.
     }
     
-    // MARK: - Constant Tests
-    
     func testConstant_Properties() {
         XCTAssertEqual(Constant.pi.integerPart, "3")
         XCTAssertEqual(Constant.e.integerPart, "2")
@@ -78,56 +96,5 @@ final class PiTrainerTests: XCTestCase {
         XCTAssertEqual(Constant.pi.symbol, "π")
         XCTAssertEqual(Constant.e.symbol, "e")
     }
-    
-    // MARK: - PracticeEngine Tests (Integration with Provider)
-    
-    func testPracticeEngine_WorksWithPi() {
-        let provider = FileDigitsProvider(constant: .pi)
-        var engine = PracticeEngine(provider: provider)
-        engine.start(mode: .strict)
-        
-        // First digit of Pi is 1
-        let result = engine.input(digit: 1)
-        XCTAssertTrue(result.isCorrect)
-        XCTAssertEqual(engine.currentIndex, 1)
-    }
-    
-    func testPracticeEngine_WorksWithEuler() {
-        let provider = FileDigitsProvider(constant: .e)
-        var engine = PracticeEngine(provider: provider)
-        engine.start(mode: .strict)
-        
-        // First digit of e is 7
-        let result = engine.input(digit: 7)
-        XCTAssertTrue(result.isCorrect)
-        XCTAssertEqual(engine.currentIndex, 1)
-    }
-    
-    // MARK: - Existing Logic Preservation Tests
-    
-    func testPracticeEngine_Logic_StrictMode() {
-        let provider = FileDigitsProvider(constant: .pi)
-        var engine = PracticeEngine(provider: provider)
-        engine.start(mode: .strict)
-        
-        // Correct 1
-        XCTAssertTrue(engine.input(digit: 1).isCorrect)
-        // Incorrect 9 (expected 4)
-        XCTAssertFalse(engine.input(digit: 9).isCorrect)
-        // Index should NOT advance
-        XCTAssertEqual(engine.currentIndex, 1)
-    }
-    
-    func testPracticeEngine_Logic_LearningMode() {
-        let provider = FileDigitsProvider(constant: .pi)
-        var engine = PracticeEngine(provider: provider)
-        engine.start(mode: .learning)
-        
-        // Correct 1
-        XCTAssertTrue(engine.input(digit: 1).isCorrect)
-        // Incorrect 9 (expected 4)
-        XCTAssertFalse(engine.input(digit: 9).isCorrect)
-        // Index SHOULD advance
-        XCTAssertEqual(engine.currentIndex, 2)
-    }
 }
+

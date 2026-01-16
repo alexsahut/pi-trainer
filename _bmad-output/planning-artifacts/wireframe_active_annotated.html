@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe Annoté - Pi-Trainer</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: monospace;
+            padding: 40px;
+        }
+
+        .canvas {
+            width: 375px;
+            height: 812px;
+            border: 2px solid #333;
+            margin: 0 auto;
+            position: relative;
+            background: #000;
+        }
+
+        .annotation {
+            position: absolute;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px dashed #00F2FF;
+            color: #00F2FF;
+            font-size: 10px;
+            padding: 4px;
+        }
+
+        .zone-digits {
+            top: 100px;
+            left: 20px;
+            width: 335px;
+            height: 300px;
+            text-align: center;
+        }
+
+        .zone-keypad {
+            bottom: 40px;
+            left: 20px;
+            width: 335px;
+            height: 300px;
+        }
+
+        .zone-stats {
+            top: 40px;
+            left: 20px;
+            width: 335px;
+            height: 40px;
+            border-color: #666;
+            color: #666;
+        }
+
+        .label-line {
+            position: absolute;
+            height: 1px;
+            background: #00F2FF;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 style="text-align:center">Wireframe Détaillé : Session Active</h1>
+
+    <div class="canvas">
+        <div class="annotation zone-stats">
+            FLOW-O-METER<br>
+            [Pos: #156] [Streak: 42] [CPS: 6.2]
+        </div>
+
+        <div class="annotation zone-digits">
+            TERMINAL-GRID<br>
+            Blocs de 10 chiffres (Monospace)<br>
+            Active: Chiffre '9' à l'index 156
+        </div>
+
+        <div class="annotation zone-keypad">
+            PRO-PAD (Ghost Mode)<br>
+            Touches : 44x44pt minimum<br>
+            Opacité : 5% (Flow État)
+        </div>
+    </div>
+
+    <div style="max-width: 600px; margin: 40px auto; color: #888; font-size: 14px;">
+        <h3>Notes Techniques pour l'implémentation :</h3>
+        <ul>
+            <li><strong>Safe Area :</strong> Respecter les 44pt de marge en haut (encoche iPhone) et 34pt en bas.</li>
+            <li><strong>Terminal-Grid :</strong> Chaque ligne de 10 chiffres doit avoir une hauteur fixe de 32pt pour un
+                défilement prévisible.</li>
+            <li><strong>Ghost Keypad :</strong> Utiliser un
+                <code>LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 3))</code> en SwiftUI.</li>
+            <li><strong>Z-Index :</strong> Le keypad est sur la couche supérieure pour capter les touches, mais
+                visuellement en arrière-plan.</li>
+        </ul>
+    </div>
+</body>
+
+</html>
