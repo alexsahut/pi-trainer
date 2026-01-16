@@ -19,36 +19,68 @@
 2. **Regression**: Run the UI test `RegressionTests.testFirstDigitVisibility` if any changes affect the `SessionView` or `TerminalGridView`.
 3. **Tests**: All unit tests must pass. Use `xcodebuild test`.
 
-### 🔒 Resource Loading Pattern (CRITICAL)
-> [!CAUTION]
-> **ALWAYS use FallbackData for bundle resources.**
-> Bundle resources (`.txt` files) may fail to load in tests or certain build configurations.
+### 🔒 Bundle Resources: CRITICAL Prevention Strategy
 
-**Mandatory Pattern:**
+> [!CAUTION]
+> **Non-Swift files (.txt, .json, images) are NOT auto-synced by Xcode 16.**
+> They MUST be manually added to the Xcode project target.
+
+#### Root Cause of Resource Loading Failures
+1. **Files created via script/code** are not automatically detected by Xcode
+2. **Xcode Synchronized Groups** only work for `.swift` files
+3. **Missing from `project.pbxproj`** → Not included in app bundle → `bundle.url()` returns `nil`
+
+#### Mandatory Process for Adding Resources
+
+**When adding ANY non-Swift resource file:**
+1. Open `PiTrainer.xcodeproj` in Xcode
+2. Right-click on target folder → "Add Files to PiTrainer..."
+3. Select the file(s)
+4. ✅ **CHECK:** "Copy items if needed"
+5. ✅ **CHECK:** "Add to targets: PiTrainer"
+6. Click "Add"
+
+#### Prevention Checklist (BEFORE every commit/PR)
+
+Run the automated check:
+```bash
+./check_bundle_resources.sh
+```
+
+This script:
+- ✅ Verifies files exist in filesystem
+- ✅ Runs `AssetIntegrityTests` to confirm bundle inclusion
+- ❌ Fails if resources are missing from bundle
+
+#### Fallback Pattern (Defense in Depth)
+
+Even with proper Xcode configuration, ALWAYS use FallbackData:
+
 ```swift
-// ✅ CORRECT: Use FallbackData as fallback
+// ✅ CORRECT: Try bundle first, fallback to embedded data
 if let url = bundle.url(forResource: name, withExtension: "txt") {
     do {
-        // Try to load from bundle
         self.data = try load(from: url)
+        print("✅ Loaded from bundle")
         return
     } catch {
-        print("⚠️ Bundle load failed: \(error). Using FallbackData.")
+        print("⚠️ Bundle load failed: \(error)")
     }
 }
 // FALLBACK: Use embedded data
 self.data = FallbackData.digits(for: constant)
+print("✅ Using FallbackData")
 ```
 
-**Why:** Bundle resources can fail due to:
-- Xcode project file sync issues
-- Test bundle configuration
-- Missing file references in `.pbxproj`
+#### Why This Keeps Happening
+- **AI agents create files programmatically** but can't modify Xcode project files
+- **Manual Xcode step required** for non-Swift resources
+- **Easy to forget** when working quickly
 
-**Prevention Checklist:**
-- [ ] Every resource loader has a FallbackData fallback
-- [ ] Error logs use emoji prefixes (✅/⚠️/❌) for visibility
-- [ ] `AssetIntegrityTests` pass before closing stories
+#### Long-Term Solution (Future Epic)
+- [ ] Add Xcode Build Phase to auto-verify resources
+- [ ] Create pre-commit git hook running `check_bundle_resources.sh`
+- [ ] Consider moving to SwiftGen for resource management
 
 
 ## Technology Stack
