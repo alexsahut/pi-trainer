@@ -132,14 +132,6 @@ struct SessionView: View {
                     .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
-            .contentShape(Rectangle())
-            .onLongPressGesture(minimumDuration: Constants.exitLongPressDuration) {
-                // Emergency exit / finish session
-                if viewModel.isActive {
-                    viewModel.endSession()
-                    dismiss()
-                }
-            }
             
             Spacer()
 
