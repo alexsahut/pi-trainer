@@ -88,7 +88,7 @@ struct TerminalGridView: View {
     }
     
     
-    @State private var revealedRows: Set<Int> = []
+    @State private var revealedDigitsPerRow: [Int: Int] = [:]
     
     // MARK: - Body
     
@@ -159,12 +159,13 @@ struct TerminalGridView: View {
             HStack(spacing: 2) {
                 ForEach(0..<10, id: \.self) { digitIndex in
                     let globalIndex = row.id * 10 + digitIndex
+                    let revealedInRow = revealedDigitsPerRow[row.id] ?? 0
                     
                     if digitIndex < row.digits.count {
                         let isLast = globalIndex == typedDigits.count - 1
                         let state = digitState(globalIndex: globalIndex, isLast: isLast)
                         digitView(digit: row.digits[digitIndex], state: state)
-                    } else if revealedRows.contains(row.id) {
+                    } else if digitIndex < revealedInRow {
                         // Ghost Reveal Pattern (Story 6.1)
                         if let ghostChar = fullDigits.count > globalIndex ? fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)] : nil,
                            let digit = Int(String(ghostChar)) {
@@ -203,23 +204,36 @@ struct TerminalGridView: View {
                 Text("\(row.lineNumber) >")
                     .font(.system(size: 12, weight: .regular, design: .monospaced))
                     .foregroundColor(.gray.opacity(0.5))
-            } else if isLearnMode && !revealedRows.contains(row.id) {
+            } else if isLearnMode && (revealedDigitsPerRow[row.id] ?? 0) < 10 {
                 // Reveal Button (Story 6.1)
-                Button {
-                    withAnimation(.spring()) {
-                        revealedRows.insert(row.id)
+                Image(systemName: "eye.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.6))
+                    .frame(width: 24, height: 24)
+                    .background(DesignSystem.Colors.cyanElectric.opacity(0.1))
+                    .clipShape(Circle())
+                    .onTapGesture {
+                        withAnimation(.spring()) {
+                            let current = revealedDigitsPerRow[row.id] ?? row.digits.count
+                            let next = min(10, current + 1)
+                            if next > current {
+                                revealedDigitsPerRow[row.id] = next
+                                onReveal?(1) 
+                            }
+                        }
                     }
-                    onReveal?(row.id)
-                } label: {
-                    Image(systemName: "eye.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.6))
-                        .frame(width: 24, height: 24)
-                        .background(DesignSystem.Colors.cyanElectric.opacity(0.1))
-                        .clipShape(Circle())
-                }
-                .buttonStyle(PlainButtonStyle())
-                .accessibilityLabel(String(localized: "Révéler la ligne"))
+                    .onLongPressGesture {
+                        withAnimation(.spring()) {
+                            let current = revealedDigitsPerRow[row.id] ?? row.digits.count
+                            let next = 10
+                            if next > current {
+                                let newlyRevealed = next - current
+                                revealedDigitsPerRow[row.id] = next
+                                onReveal?(newlyRevealed)
+                            }
+                        }
+                    }
+                    .accessibilityLabel(String(localized: "Révéler la ligne"))
             } else {
                 Text("   ")
                     .font(.system(size: 12, weight: .regular, design: .monospaced))

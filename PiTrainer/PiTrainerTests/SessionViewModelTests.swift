@@ -182,24 +182,41 @@ final class SessionViewModelTests: XCTestCase {
         wait(for: [saveExpectation2], timeout: 1.0)
     }
     
-    func testRevealCurrentLine_TracksUsage() {
-        // When: Call reveal twice
-        viewModel.revealCurrentLine()
-        viewModel.revealCurrentLine()
+    func testRevealGranular_TracksCorrectCount() {
+        // When: Call reveal with specific counts
+        viewModel.reveal(count: 1)
+        viewModel.reveal(count: 9)
         
-        // Then: Counter should be 2
-        XCTAssertEqual(viewModel.revealsUsed, 2)
+        // Then: Counter should be 10
+        XCTAssertEqual(viewModel.revealsUsed, 10)
     }
     
     func testEndSession_IncludesRevealsUsed() {
         // Given: assistance used
         viewModel.startSession()
-        viewModel.revealCurrentLine()
+        viewModel.reveal(count: 5)
         
         // When: End session
         let expectation = XCTestExpectation(description: "Saves record with revealsUsed")
         viewModel.onSaveSession = { record in
-            XCTAssertEqual(record.revealsUsed, 1)
+            XCTAssertEqual(record.revealsUsed, 5)
+            expectation.fulfill()
+        }
+        viewModel.endSession()
+        
+        // Then: verify
+        wait(for: [expectation], timeout: 1.0)
+    }
+    
+    func testEndSession_IncludesSpeedMetrics() {
+        // Given: some input to generate speed
+        viewModel.startSession()
+        viewModel.processInput(1) // 3.1
+        
+        // When: End session
+        let expectation = XCTestExpectation(description: "Saves record with speed metrics")
+        viewModel.onSaveSession = { record in
+            XCTAssertNotNil(record.maxCPS)
             expectation.fulfill()
         }
         viewModel.endSession()

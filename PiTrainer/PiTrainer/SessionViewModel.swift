@@ -186,9 +186,9 @@ class SessionViewModel: ObservableObject {
         startSession()
     }
     
-    /// Reveals the current line (increments help counter)
-    func revealCurrentLine() {
-        revealsUsed += 1
+    /// Reveals a specific number of digits (increments help counter)
+    func reveal(count: Int) {
+        revealsUsed += count
         HapticService.shared.playSuccess() // Light feedback
     }
     
@@ -206,7 +206,9 @@ class SessionViewModel: ObservableObject {
                 bestStreakInSession: engine.bestStreak,
                 durationSeconds: engine.elapsedTime,
                 digitsPerMinute: engine.digitsPerMinute,
-                revealsUsed: revealsUsed
+                revealsUsed: revealsUsed,
+                minCPS: engine.minCPS == .infinity ? nil : engine.minCPS,
+                maxCPS: engine.maxCPS
             )
             
             onSaveSession?(record)

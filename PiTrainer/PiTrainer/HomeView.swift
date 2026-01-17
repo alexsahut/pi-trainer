@@ -161,15 +161,6 @@ extension Constant: CustomStringConvertible {
     var description: String { symbol }
 }
 
-extension PracticeEngine.Mode: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case .strict: return "STRICT"
-        case .learning: return "LEARN"
-        }
-    }
-}
-
 extension KeypadLayout: CustomStringConvertible {
     var description: String {
         switch self {

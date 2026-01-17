@@ -769,8 +769,37 @@
     "RETOUR HAPTIQUE" : {
 
     },
-    "REVEALS" : {
-
+    "session.summary.reveals" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DIGITS REVEALED"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CHIFFRES RÉVÉLÉS"
+          }
+        }
+      }
+    },
+    "session.summary.speed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitesse"
+          }
+        }
+      }
     },
     "Révéler la ligne" : {
       "comment" : "An accessibility label for a button that reveals hidden digits in a terminal grid row.",

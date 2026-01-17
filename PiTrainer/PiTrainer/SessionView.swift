@@ -91,8 +91,8 @@ struct SessionView: View {
                     integerPart: viewModel.integerPart,
                     fullDigits: viewModel.fullDigitsString,
                     isLearnMode: viewModel.selectedMode == .learning,
-                    onReveal: { _ in
-                        viewModel.revealCurrentLine()
+                    onReveal: { count in
+                        viewModel.reveal(count: count)
                     },
                     showError: viewModel.showErrorFlash
                 )
@@ -123,18 +123,9 @@ struct SessionView: View {
                                         .foregroundColor(.white)
                                 }
                                 
-                                VStack(spacing: 4) {
-                                    Text(String(localized: "stats.speed.title"))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text(String(format: "%.1f", viewModel.engine.digitsPerMinute))
-                                        .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
-                                        .foregroundColor(.white)
-                                }
-                                
                                 if viewModel.revealsUsed > 0 {
                                     VStack(spacing: 4) {
-                                        Text(String(localized: "REVEALS"))
+                                        Text(String(localized: "session.summary.reveals"))
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                         Text("\(viewModel.revealsUsed)")
@@ -143,7 +134,41 @@ struct SessionView: View {
                                     }
                                 }
                             }
-                            .padding(.bottom, 10)
+                            
+                            // Advanced Speed Stats (CPS & CPM)
+                            VStack(spacing: 12) {
+                                Text(String(localized: "session.summary.speed").uppercased())
+                                    .font(DesignSystem.Fonts.monospaced(size: 14, weight: .black))
+                                    .foregroundColor(.white.opacity(0.5))
+                                
+                                HStack(spacing: 32) {
+                                    // CPS Column
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("CPS")
+                                            .font(.caption2.bold())
+                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                        
+                                        SpeedMetricRow(label: "MIN", value: viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS)
+                                        SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS)
+                                        SpeedMetricRow(label: "AVG", value: viewModel.engine.digitsPerMinute / 60.0)
+                                    }
+                                    
+                                    // CPM Column
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("CPM")
+                                            .font(.caption2.bold())
+                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                        
+                                        SpeedMetricRow(label: "MIN", value: (viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS) * 60.0)
+                                        SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS * 60.0)
+                                        SpeedMetricRow(label: "AVG", value: viewModel.engine.digitsPerMinute)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(12)
+                            }
                             
                             VStack(spacing: 12) {
                                 Button {
@@ -223,8 +248,21 @@ struct SessionView: View {
     @State private var hapticsEnabled = HapticService.shared.isEnabled
 }
 
-#Preview {
-    NavigationStack {
-        SessionView(viewModel: SessionViewModel(), statsStore: StatsStore())
+
+struct SpeedMetricRow: View {
+    let label: String
+    let value: Double
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Text(label)
+                .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
+                .foregroundColor(.white.opacity(0.3))
+                .frame(width: 25, alignment: .leading)
+            
+            Text(String(format: "%.1f", value))
+                .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
+                .foregroundColor(.white)
+        }
     }
 }

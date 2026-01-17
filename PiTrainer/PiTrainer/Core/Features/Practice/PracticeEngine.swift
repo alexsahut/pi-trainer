@@ -25,9 +25,16 @@ class PracticeEngine {
     // MARK: - Types
     
     /// Practice mode
-    enum Mode: String, Codable {
+    enum Mode: String, Codable, CustomStringConvertible {
         case strict   // Wrong digit ends the session immediately
         case learning // Wrong digit reveals answer and advances
+        
+        var description: String {
+            switch self {
+            case .strict: return "STRICT"
+            case .learning: return "LEARN"
+            }
+        }
     }
     
     /// Engine State
@@ -65,6 +72,11 @@ class PracticeEngine {
     
     private(set) var state: State = .idle
     private(set) var mode: Mode = .strict
+    
+    // Speed tracking (incremental)
+    private(set) var minCPS: Double = .infinity
+    private(set) var maxCPS: Double = 0
+    private var lastCorrectInputTime: Date?
     
     /// Returns true if the session is currently running (timer active)
     var isActive: Bool {
@@ -124,6 +136,10 @@ class PracticeEngine {
         self.bestStreak = 0
         self.startTime = nil // clear start time
         self.elapsedTimeInternal = 0
+        
+        self.minCPS = .infinity
+        self.maxCPS = 0
+        self.lastCorrectInputTime = nil
     }
     
     /// Processes a digit input
@@ -179,6 +195,26 @@ class PracticeEngine {
             
             currentIndex += 1
             indexAdvanced = true
+            
+            // Track speed for this digit
+            let now = Date()
+            if let last = lastCorrectInputTime {
+                let interval = now.timeIntervalSince(last)
+                if interval > 0 {
+                    let instantCPS = 1.0 / interval
+                    if instantCPS < minCPS { minCPS = instantCPS }
+                    if instantCPS > maxCPS { maxCPS = instantCPS }
+                }
+            } else if let start = startTime {
+                // First digit speed relative to start
+                let interval = now.timeIntervalSince(start)
+                if interval > 0 {
+                    let instantCPS = 1.0 / interval
+                    if instantCPS < minCPS { minCPS = instantCPS }
+                    if instantCPS > maxCPS { maxCPS = instantCPS }
+                }
+            }
+            lastCorrectInputTime = now
         } else {
             // Incorrect input
             validationResult = .incorrect(expected: expectedDigit, actual: digit)
@@ -240,5 +276,6 @@ class PracticeEngine {
         guard let start = startTime else { return }
         elapsedTimeInternal += Date().timeIntervalSince(start)
         startTime = nil
+        lastCorrectInputTime = nil // Reset gap tracking on pause
     }
 }

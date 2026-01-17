@@ -20,6 +20,8 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     let durationSeconds: TimeInterval
     let digitsPerMinute: Double
     let revealsUsed: Int
+    let minCPS: Double?
+    let maxCPS: Double?
     
     var cps: Double {
         digitsPerMinute / 60.0
@@ -27,7 +29,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     
     // Custom decoder for backward compatibility (Story 6.2)
     enum CodingKeys: String, CodingKey {
-        case id, date, constant, mode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed
+        case id, date, constant, mode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed, minCPS, maxCPS
     }
     
     init(from decoder: Decoder) throws {
@@ -43,10 +45,12 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         digitsPerMinute = try container.decode(Double.self, forKey: .digitsPerMinute)
         // Default to 0 for records created before Epic 6
         revealsUsed = try container.decodeIfPresent(Int.self, forKey: .revealsUsed) ?? 0
+        minCPS = try container.decodeIfPresent(Double.self, forKey: .minCPS)
+        maxCPS = try container.decodeIfPresent(Double.self, forKey: .maxCPS)
     }
     
     // Memberwise initializer for convenience
-    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int) {
+    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int, minCPS: Double? = nil, maxCPS: Double? = nil) {
         self.id = id
         self.date = date
         self.constant = constant
@@ -57,6 +61,8 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         self.durationSeconds = durationSeconds
         self.digitsPerMinute = digitsPerMinute
         self.revealsUsed = revealsUsed
+        self.minCPS = minCPS
+        self.maxCPS = maxCPS
     }
 }
 
