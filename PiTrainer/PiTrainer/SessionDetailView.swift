@@ -23,12 +23,31 @@ struct SessionDetailView: View {
                 DetailRow(label: "stats.errors", value: "\(session.errors)", color: session.errors > 0 ? .red : .primary)
                 DetailRow(label: "stats.best_streak", value: "\(session.bestStreakInSession)", color: DesignSystem.Colors.cyanElectric)
                 
-                let dpmValue = session.digitsPerMinute.formatted(.number.precision(.fractionLength(...1)))
-                let dpmText = String(format: String(localized: "stats.speed.value"), dpmValue)
-                DetailRow(label: "stats.speed.title", value: dpmText)
+                if session.revealsUsed > 0 {
+                    DetailRow(label: "session.summary.reveals", value: "\(session.revealsUsed)", color: DesignSystem.Colors.cyanElectric)
+                }
+            }
+            
+            Section(header: Text("session.summary.speed")) {
+                // CPS Group
+                DetailRow(label: "CPS AVG", value: String(format: "%.1f", session.cps))
+                if let min = session.minCPS {
+                    DetailRow(label: "CPS MIN", value: String(format: "%.1f", min))
+                }
+                if let max = session.maxCPS {
+                    DetailRow(label: "CPS MAX", value: String(format: "%.1f", max))
+                }
                 
-                let cpsValue = session.cps.formatted(.number.precision(.fractionLength(...2)))
-                DetailRow(label: "CPS", value: "\(cpsValue) ch/s")
+                Divider()
+                
+                // CPM Group
+                DetailRow(label: "CPM AVG", value: String(format: "%.1f", session.digitsPerMinute))
+                if let min = session.minCPS {
+                    DetailRow(label: "CPM MIN", value: String(format: "%.1f", min * 60.0))
+                }
+                if let max = session.maxCPS {
+                    DetailRow(label: "CPM MAX", value: String(format: "%.1f", max * 60.0))
+                }
             }
         }
         .scrollContentBackground(.hidden)
@@ -45,10 +64,7 @@ struct SessionDetailView: View {
     }
     
     private func formatMode(_ mode: PracticeEngine.Mode) -> String {
-        switch mode {
-        case .strict: return String(localized: "mode.strict")
-        case .learning: return String(localized: "mode.learning")
-        }
+        mode.description
     }
     
     private func formatTime(_ seconds: TimeInterval) -> String {

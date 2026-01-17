@@ -65,10 +65,7 @@ struct HistoryRow: View {
     }
     
     private func formatMode(_ mode: PracticeEngine.Mode) -> String {
-        switch mode {
-        case .strict: return String(localized: "mode.strict").uppercased()
-        case .learning: return String(localized: "mode.learning").uppercased()
-        }
+        mode.description
     }
 }
 
