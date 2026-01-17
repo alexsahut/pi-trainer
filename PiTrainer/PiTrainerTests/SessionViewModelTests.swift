@@ -10,14 +10,25 @@ import XCTest
 
 // Mocks unique to SessionViewModelTests
 class SessionMockDigitsProvider: DigitsProvider {
-    var digits = [1, 4, 1, 5, 9]
+    private let constant: Constant
+    private var digits: [UInt8] = []
+    
     var totalDigits: Int { digits.count }
     
-    init() { }
+    init(constant: Constant = .pi) { 
+        self.constant = constant
+        // Return first 5 decimals based on constant
+        switch constant {
+        case .pi:    digits = [1, 4, 1, 5, 9]
+        case .e:     digits = [7, 1, 8, 2, 8]
+        case .phi:   digits = [6, 1, 8, 0, 3]
+        case .sqrt2: digits = [4, 1, 4, 2, 1]
+        }
+    }
     
     func getDigit(at index: Int) -> Int? { 
         guard index < digits.count else { return nil }
-        return digits[index] 
+        return Int(digits[index]) 
     }
     func loadDigits() throws {}
 }
@@ -26,6 +37,12 @@ class SessionMockPracticePersistence: PracticePersistenceProtocol {
     init() { }
     func saveHighestIndex(_ index: Int, for constantKey: String) {}
     func getHighestIndex(for constantKey: String) -> Int { return 0 }
+    func saveStats(_ stats: [Constant: ConstantStats]) {}
+    func loadStats() -> [Constant: ConstantStats]? { return nil }
+    func saveKeypadLayout(_ layout: String) {}
+    func loadKeypadLayout() -> String? { return nil }
+    func saveSelectedConstant(_ constant: String) {}
+    func loadSelectedConstant() -> String? { return nil }
 }
 
 @MainActor
@@ -46,13 +63,14 @@ final class SessionViewModelTests: XCTestCase {
         testDefaults = defaults
         testDefaults.removePersistentDomain(forName: suiteName)
         
-        statsStore = StatsStore(userDefaults: testDefaults)
+        let persistenceService = PracticePersistence(userDefaults: testDefaults)
+        statsStore = StatsStore(persistence: persistenceService)
         persistence = SessionMockPracticePersistence()
         
         viewModel = SessionViewModel(
             persistence: persistence,
-            providerFactory: { _ in 
-                return SessionMockDigitsProvider() 
+            providerFactory: { constant in 
+                return SessionMockDigitsProvider(constant: constant) 
             }
         )
 
@@ -75,13 +93,15 @@ final class SessionViewModelTests: XCTestCase {
         // When: Start session
         viewModel.startSession()
         
-        // Then: Engine should be active and expect 1 (Mock provider uses 1, 4, 1...)
-        XCTAssertTrue(viewModel.isActive, "Session should be active after startSession")
+        // Then: Engine should be ready but not yet active (timer hasn't started)
+        XCTAssertFalse(viewModel.isActive, "Session should NOT be active immediately after startSession (ready state)")
         
-        viewModel.processInput(1)
+        // Mock 'e' provider expects 7 first
+        viewModel.processInput(7)
         
-        XCTAssertEqual(viewModel.lastCorrectDigit, 1, "VM should register 1 as correct from mock provider")
-        XCTAssertEqual(viewModel.typedDigits, "1")
+        XCTAssertTrue(viewModel.isActive, "Session should be active after first input")
+        XCTAssertEqual(viewModel.lastCorrectDigit, 7, "VM should register 7 as correct from mock 'e' provider")
+        XCTAssertEqual(viewModel.typedDigits, "7")
         XCTAssertNil(viewModel.expectedDigit)
     }
     
@@ -90,17 +110,19 @@ final class SessionViewModelTests: XCTestCase {
         statsStore.selectedConstant = .e
         viewModel.selectedConstant = .e
         viewModel.startSession()
-        XCTAssertTrue(viewModel.isActive)
+        XCTAssertFalse(viewModel.isActive, "Session should NOT be active after startSession")
         
         // When: Switch back to Pi
         statsStore.selectedConstant = .pi
         viewModel.selectedConstant = .pi
         viewModel.startSession()
         
-        // Then: Engine should be active and expect 1
-        XCTAssertTrue(viewModel.isActive, "Session should be active after switching back to Pi")
+        // Then: Engine should be ready but not yet active
+        XCTAssertFalse(viewModel.isActive, "Session should NOT be active after switching back to Pi")
+        
         viewModel.processInput(1)
         
+        XCTAssertTrue(viewModel.isActive, "Session should be active after input")
         XCTAssertEqual(viewModel.lastCorrectDigit, 1, "VM should register 1 as correct when Pi is selected")
         XCTAssertEqual(viewModel.typedDigits, "1")
     }
@@ -111,7 +133,7 @@ final class SessionViewModelTests: XCTestCase {
         viewModel.startSession()
         
         // Verify start conditions
-        XCTAssertTrue(viewModel.isActive)
+        XCTAssertFalse(viewModel.isActive)
         XCTAssertFalse(viewModel.showErrorFlash)
         
         // When: Input incorrect digit

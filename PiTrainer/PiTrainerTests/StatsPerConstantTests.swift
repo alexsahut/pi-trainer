@@ -18,7 +18,8 @@ final class StatsPerConstantTests: XCTestCase {
         // Use a clean UserDefaults suite for each test
         userDefaults = UserDefaults(suiteName: "StatsPerConstantTests")
         userDefaults.removePersistentDomain(forName: "StatsPerConstantTests")
-        statsStore = StatsStore(userDefaults: userDefaults)
+        let persistence = PracticePersistence(userDefaults: userDefaults)
+        statsStore = StatsStore(persistence: persistence)
     }
     
     override func tearDown() {

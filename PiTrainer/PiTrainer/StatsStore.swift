@@ -20,6 +20,10 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     let durationSeconds: TimeInterval
     let digitsPerMinute: Double
     
+    var cps: Double {
+        digitsPerMinute / 60.0
+    }
+    
     // Legacy support init (if needed) or convenience
 }
 
@@ -27,9 +31,9 @@ struct SessionRecord: Codable, Identifiable, Equatable {
 struct ConstantStats: Codable, Equatable {
     var bestStreak: Int
     var lastSession: SessionRecord?
-    var sessionHistory: [SessionRecord]
+    // sessionHistory is now managed by SessionHistoryStore
     
-    static let empty = ConstantStats(bestStreak: 0, lastSession: nil, sessionHistory: [])
+    static let empty = ConstantStats(bestStreak: 0, lastSession: nil)
 }
 
 /// Manages persistence of statistics and global records
@@ -47,30 +51,59 @@ class StatsStore: ObservableObject {
     
     // MARK: - Published Properties
     
+    // MARK: - Published Properties
+    
     @Published private(set) var stats: [Constant: ConstantStats] = [:]
+    
+    /// Cached history to avoid repeated file reads. 
+    /// Keyed by constant.
+    @Published private(set) var historyCache: [Constant: [SessionRecord]] = [:]
+    
+    /// Indicates if history is currently being loaded for the selected constant
+    @Published private(set) var isHistoryLoading: Bool = false
     
     @Published var keypadLayout: KeypadLayout = .phone {
         didSet {
-            userDefaults.set(keypadLayout.rawValue, forKey: keypadLayoutKey)
+            persistence.saveKeypadLayout(keypadLayout.rawValue)
         }
     }
     
     @Published var selectedConstant: Constant = .pi {
         didSet {
-            userDefaults.set(selectedConstant.rawValue, forKey: selectedConstantKey)
+            persistence.saveSelectedConstant(selectedConstant.rawValue)
+            // Proactive load to avoid UI flashing
+            loadHistoryEagerly(for: selectedConstant)
         }
     }
     
     // MARK: - Private Properties
     
-    private let userDefaults: UserDefaults
-    private let maxHistoryCount = 200
+    private let persistence: PracticePersistenceProtocol
+    private let historyStore: SessionHistoryStore
     
     // MARK: - Initialization
     
-    init(userDefaults: UserDefaults = .standard) {
-        self.userDefaults = userDefaults
+    init(persistence: PracticePersistenceProtocol = PracticePersistence(), 
+         historyStore: SessionHistoryStore? = nil) {
+        self.persistence = persistence
+        
+        // Handle throwing initializer of SessionHistoryStore
+        if let providedStore = historyStore {
+            self.historyStore = providedStore
+        } else {
+            do {
+                self.historyStore = try SessionHistoryStore()
+            } catch {
+                // FALLBACK: Log error but do NOT crash. 
+                // Using an "unsafe" or empty store is better than a crash on startup.
+                // We'll try to re-init with a fallback dir or just let it be.
+                print("⚠️ CRITICAL: Failed to initialize SessionHistoryStore: \(error)")
+                self.historyStore = try! SessionHistoryStore(customDirectory: FileManager.default.temporaryDirectory)
+            }
+        }
+        
         loadStats()
+        loadHistoryEagerly(for: selectedConstant)
     }
     
     // MARK: - Public Methods
@@ -90,14 +123,30 @@ class StatsStore: ObservableObject {
         return stats(for: constant).lastSession
     }
     
-    /// Returns the history for a specific constant, most recent first
+    /// Returns the history for a specific constant, most recent first.
+    /// This returns the cache immediately. Use loadHistory(for:) to refresh.
     func history(for constant: Constant) -> [SessionRecord] {
-        return stats(for: constant).sessionHistory
+        return historyCache[constant] ?? []
+    }
+
+    /// Explicitly loads or refreszes history for a constant.
+    @MainActor
+    func loadHistory(for constant: Constant) async {
+        isHistoryLoading = true
+        defer { isHistoryLoading = false }
+        
+        if let records = try? await historyStore.loadHistory(for: constant) {
+            self.historyCache[constant] = records
+        }
+    }
+    
+    private func loadHistoryEagerly(for constant: Constant) {
+        Task { @MainActor in
+            await loadHistory(for: constant)
+        }
     }
 
     /// Updates the best streak for a constant if the new value is higher
-    /// - Parameter streak: The streak to compare
-    /// - Parameter constant: The constant to update
     func updateBestStreakIfNeeded(_ streak: Int, for constant: Constant) {
         var currentStats = stats(for: constant)
         if streak > currentStats.bestStreak {
@@ -108,7 +157,6 @@ class StatsStore: ObservableObject {
     }
     
     /// Adds a new session record to history and updates stats
-    /// - Parameter record: The session record to add
     func addSessionRecord(_ record: SessionRecord) {
         var currentStats = stats(for: record.constant)
         
@@ -120,47 +168,59 @@ class StatsStore: ObservableObject {
             currentStats.bestStreak = record.bestStreakInSession
         }
         
-        // Add to history (FIFO, max 200)
-        // We prepend to keep list sorted by date desc if needed, or just append and sort later.
-        // Requirement says "History", usually viewed newest first.
-        // Let's modify to prepend for "Recent Sessions" view easily.
-        currentStats.sessionHistory.insert(record, at: 0)
-        
-        if currentStats.sessionHistory.count > maxHistoryCount {
-            currentStats.sessionHistory = Array(currentStats.sessionHistory.prefix(maxHistoryCount))
-        }
-        
         stats[record.constant] = currentStats
         persistStats()
+        
+        // Update history (Async & Atomic)
+        Task { @MainActor in
+            do {
+                let updatedHistory = try await historyStore.appendRecord(record, for: record.constant)
+                self.historyCache[record.constant] = updatedHistory
+            } catch {
+                // Log error or handle
+                print("Failed to append record: \(error)")
+            }
+        }
     }
     
     /// Clears the history for a specific constant (but keeps best streak)
     func clearHistory(for constant: Constant) {
         var currentStats = stats(for: constant)
-        currentStats.sessionHistory = []
-        currentStats.lastSession = nil // Should we clear last session too? Usually yes if clearing history.
+        currentStats.lastSession = nil
         stats[constant] = currentStats
         persistStats()
+        
+        // Clear history file and cache
+        historyCache[constant] = []
+        Task { @MainActor in
+            try? await historyStore.saveHistory([], for: constant)
+        }
     }
     
     /// Resets all statistics (for debugging or user request)
     func reset() {
         stats = [:]
-        userDefaults.removeObject(forKey: statsKey)
+        persistence.saveStats([:])
+        
+        // Clear all history files
+        Task { @MainActor in
+            try? await historyStore.clearAllHistory()
+            self.historyCache = [:]
+        }
     }
     
     // MARK: - Private Methods
     
     private func loadStats() {
         // 1. Load basic preferences
-        if let layoutString = userDefaults.string(forKey: keypadLayoutKey),
+        if let layoutString = persistence.loadKeypadLayout(),
            let layout = KeypadLayout(rawValue: layoutString) {
             keypadLayout = layout
         } else {
             keypadLayout = .phone
         }
         
-        if let constantString = userDefaults.string(forKey: selectedConstantKey),
+        if let constantString = persistence.loadSelectedConstant(),
            let constant = Constant(rawValue: constantString) {
             selectedConstant = constant
         } else {
@@ -168,8 +228,7 @@ class StatsStore: ObservableObject {
         }
         
         // 2. Load Stats
-        if let data = userDefaults.data(forKey: statsKey),
-           let decodedStats = try? JSONDecoder().decode([Constant: ConstantStats].self, from: data) {
+        if let decodedStats = persistence.loadStats() {
             stats = decodedStats
         } else {
             // Check for migration
@@ -188,24 +247,23 @@ class StatsStore: ObservableObject {
             let date: Date
         }
         
-        // Check if legacy keys exist
-        let hasLegacyData = userDefaults.object(forKey: legacyGlobalBestStreakKey) != nil ||
-                            userDefaults.object(forKey: legacyLastSessionKey) != nil
+        // Check if legacy keys exist in UserDefaults directly (one last time)
+        let legacyUserDefaults = UserDefaults.standard
+        let hasLegacyData = legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.globalBestStreak") != nil ||
+                           legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.lastSession") != nil
         
         if hasLegacyData {
-            let legacyStreak = userDefaults.integer(forKey: legacyGlobalBestStreakKey)
+            let legacyStreak = legacyUserDefaults.integer(forKey: "com.alexandre.pitrainer.globalBestStreak")
             
             var legacySessionRecord: SessionRecord?
-            if let sessionData = userDefaults.data(forKey: legacyLastSessionKey),
+            if let sessionData = legacyUserDefaults.data(forKey: "com.alexandre.pitrainer.lastSession"),
                let session = try? JSONDecoder().decode(LegacySessionSnapshot.self, from: sessionData) {
                 
-                // Convert LegacySessionSnapshot to SessionRecord
-                // Assuming legacy was strictly strict mode or unknown, we'll default to strict
                 legacySessionRecord = SessionRecord(
                     id: UUID(),
                     date: session.date,
-                    constant: .pi, // Legacy only supported Pi
-                    mode: .strict, // Default assumption
+                    constant: .pi,
+                    mode: .strict,
                     attempts: session.attempts,
                     errors: session.errors,
                     bestStreakInSession: session.bestStreak,
@@ -214,26 +272,26 @@ class StatsStore: ObservableObject {
                 )
             }
             
-            // Migrate to .pi
             var piStats = ConstantStats.empty
             piStats.bestStreak = legacyStreak
             if let rec = legacySessionRecord {
                 piStats.lastSession = rec
-                piStats.sessionHistory = [rec]
+                Task { @MainActor in
+                    try? await historyStore.saveHistory([rec], for: .pi)
+                    self.historyCache[.pi] = [rec]
+                }
             }
             
             stats[.pi] = piStats
             persistStats()
             
             // Cleanup legacy keys
-            userDefaults.removeObject(forKey: legacyGlobalBestStreakKey)
-            userDefaults.removeObject(forKey: legacyLastSessionKey)
+            legacyUserDefaults.removeObject(forKey: "com.alexandre.pitrainer.globalBestStreak")
+            legacyUserDefaults.removeObject(forKey: "com.alexandre.pitrainer.lastSession")
         }
     }
     
     private func persistStats() {
-        if let encoded = try? JSONEncoder().encode(stats) {
-            userDefaults.set(encoded, forKey: statsKey)
-        }
+        persistence.saveStats(stats)
     }
 }

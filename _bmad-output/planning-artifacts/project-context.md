@@ -54,9 +54,11 @@
 3. **Before PR:** Check against UX spec checklist
 4. **Any Deviation:** MUST be validated with product owner
 
-**Examples:**
-- ❌ **WRONG:** Adding ⚙️ Options button in keypad (violates "écran épuré")
-- ✅ **CORRECT:** Long press 3s for exit (hidden gesture, no visual pollution)
+**Validated Solutions (Epic 3):**
+- ✅ **Options Button (⚙️):** Validated by product owner as primary exit mechanism
+  - Rationale: Accessibility, discoverability, reliability
+  - Long press 3s was tested and abandoned (gesture conflicts)
+- ⚠️ **Lesson:** Test gesture interactions early, validate with PO before implementation
 
 #### 3. Documentation Requirements
 

@@ -21,13 +21,18 @@ struct SessionDetailView: View {
             Section(header: Text("stats.performance")) {
                 DetailRow(label: "stats.attempts", value: "\(session.attempts)")
                 DetailRow(label: "stats.errors", value: "\(session.errors)", color: session.errors > 0 ? .red : .primary)
-                DetailRow(label: "stats.best_streak", value: "\(session.bestStreakInSession)", color: .green)
+                DetailRow(label: "stats.best_streak", value: "\(session.bestStreakInSession)", color: DesignSystem.Colors.cyanElectric)
                 
-                let speedValue = session.digitsPerMinute.formatted(.number.precision(.fractionLength(...1)))
-                let speedText = String(format: String(localized: "stats.speed.value"), speedValue)
-                DetailRow(label: "stats.speed.title", value: speedText)
+                let dpmValue = session.digitsPerMinute.formatted(.number.precision(.fractionLength(...1)))
+                let dpmText = String(format: String(localized: "stats.speed.value"), dpmValue)
+                DetailRow(label: "stats.speed.title", value: dpmText)
+                
+                let cpsValue = session.cps.formatted(.number.precision(.fractionLength(...2)))
+                DetailRow(label: "CPS", value: "\(cpsValue) ch/s")
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(DesignSystem.Colors.blackOLED)
         .navigationTitle(Text(session.date, style: .date))
         .navigationBarTitleDisplayMode(.inline)
     }

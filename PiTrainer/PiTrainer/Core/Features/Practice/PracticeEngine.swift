@@ -18,45 +18,6 @@ enum ValidationResult: Equatable {
     case incorrect(expected: Int, actual: Int)
 }
 
-/// Protocol defining persistence operations for practice sessions.
-protocol PracticePersistenceProtocol {
-    /// Saves the highest index reached in a practice session for a specific constant.
-    /// - Parameters:
-    ///   - index: The 0-based index of the digit.
-    ///   - constantKey: The identifier for the constant (e.g., "pi").
-    func saveHighestIndex(_ index: Int, for constantKey: String)
-    
-    /// Retrieves the highest index reached for a specific constant.
-    /// - Parameter constantKey: The identifier for the constant.
-    /// - Returns: The 0-based index, or 0 if none saved.
-    func getHighestIndex(for constantKey: String) -> Int
-}
-
-/// Concrete implementation of PracticePersistence using UserDefaults.
-class PracticePersistence: PracticePersistenceProtocol {
-    private let userDefaults: UserDefaults
-    private let keyPrefix = "practice_highest_index_"
-    
-    init(userDefaults: UserDefaults = .standard) {
-        self.userDefaults = userDefaults
-    }
-    
-    private func key(for constant: String) -> String {
-        return keyPrefix + constant
-    }
-    
-    func saveHighestIndex(_ index: Int, for constantKey: String) {
-        let storageKey = key(for: constantKey)
-        let currentHigh = getHighestIndex(for: constantKey)
-        if index > currentHigh {
-            userDefaults.set(index, forKey: storageKey)
-        }
-    }
-    
-    func getHighestIndex(for constantKey: String) -> Int {
-        return userDefaults.integer(forKey: key(for: constantKey))
-    }
-}
 
 /// Core practice engine for Pi digit training
 class PracticeEngine {

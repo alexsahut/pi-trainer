@@ -14,6 +14,7 @@ struct HomeView: View {
     
     @Environment(NavigationCoordinator.self) private var coordinator
     @State private var showingStats = false
+    @State private var showingSettings = false
     
     // No explicit init needed anymore!
     
@@ -36,24 +37,29 @@ struct HomeView: View {
                 }
                 .padding(.top, 40)
                 
+                // PB Pill (Zen-Athlete 2.0)
+                HStack(spacing: 8) {
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 10))
+                    Text("PB: \(statsStore.stats(for: statsStore.selectedConstant).bestStreak)")
+                        .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
+                }
+                .foregroundColor(DesignSystem.Colors.cyanElectric)
+                .padding(.vertical, 6)
+                .padding(.horizontal, 12)
+                .background(DesignSystem.Colors.cyanElectric.opacity(0.1))
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(DesignSystem.Colors.cyanElectric.opacity(0.3), lineWidth: 1)
+                )
+                
                 // Selectors Stack
                 VStack(spacing: 32) {
                     ZenSegmentedControl(
                         title: "CONSTANTE",
                         options: Constant.allCases,
                         selection: $statsStore.selectedConstant
-                    )
-                    
-                    ZenSegmentedControl(
-                        title: "MODE",
-                        options: [PracticeEngine.Mode.strict, PracticeEngine.Mode.learning],
-                        selection: $sessionViewModel.selectedMode
-                    )
-                    
-                    ZenSegmentedControl(
-                        title: "CLAVIER",
-                        options: KeypadLayout.allCases,
-                        selection: $statsStore.keypadLayout
                     )
                 }
                 .padding(.horizontal, 20)
@@ -73,17 +79,29 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 20)
                 
-                // Footer Stats
-                Button(action: { showingStats = true }) {
-                    VStack(spacing: 4) {
-                        Text("RECORDS PERSONNELS >")
-                            .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                // Footer Dashboard Access (Zen-Athlete 2.0 Patch)
+                HStack(spacing: 40) {
+                    Button(action: { showingStats = true }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: "chart.bar.fill")
+                                .font(.system(size: 20))
+                            Text("RECORDS")
+                                .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
+                        }
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.white.opacity(0.05))
+                    
+                    Button(action: { showingSettings = true }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 20))
+                            Text("RÉGLAGES")
+                                .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
+                        }
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
                 }
+                .padding(.bottom, 30)
             }
         }
         .navigationBarHidden(true)
@@ -100,6 +118,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showingStats) {
             StatsView(statsStore: statsStore)
+        }
+        .sheet(isPresented: $showingSettings) {
+             SettingsView(sessionViewModel: sessionViewModel, statsStore: statsStore)
         }
     }
     

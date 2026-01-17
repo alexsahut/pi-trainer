@@ -86,8 +86,8 @@ class SessionViewModel: ObservableObject {
         var provider = providerFactory(constant)
         
         do {
-
             try provider.loadDigits()
+            print("debug: provider loaded \(provider.totalDigits) digits")
             self.engine = PracticeEngine(constant: constant, provider: provider, persistence: persistence)
             engine.start(mode: selectedMode)
             
@@ -99,6 +99,7 @@ class SessionViewModel: ObservableObject {
             showErrorFlash = false
             lastCorrectDigit = nil
             expectedDigit = nil
+            print("debug: session started for \(constant) in \(selectedMode) mode")
             
         } catch {
             print("❌ CRITICAL: Failed to start engine: \(error)")
@@ -114,6 +115,7 @@ class SessionViewModel: ObservableObject {
     func processInput(_ digit: Int) {
         objectWillChange.send()
         let result = engine.input(digit: digit)
+        print("debug: input \(digit), isCorrect: \(result.isCorrect), engine.isActive: \(engine.isActive)")
         
         if result.isCorrect {
             // Success feedback
@@ -169,7 +171,8 @@ class SessionViewModel: ObservableObject {
     
     /// Ends the session and saves stats
     func endSession() {
-        if engine.isActive {
+        // We allow ending if active OR if it just finished (to capture the last record)
+        if engine.isActive || engine.state == .finished {
             let record = SessionRecord(
                 id: UUID(),
                 date: Date(),
@@ -181,14 +184,12 @@ class SessionViewModel: ObservableObject {
                 durationSeconds: engine.elapsedTime,
                 digitsPerMinute: engine.digitsPerMinute
             )
-            // Note: Saving session record now requires StatsStore reference or a callback.
-            // Since we decoupled StatsStore, we should ideally use a closure or delegate.
-            // For now, to minimize impact, we can expose a 'onSaveSession' callback.
+            
             onSaveSession?(record)
             
-            // Critical: Notify observers before mutating the engine reference type
-            objectWillChange.send()
-            engine.reset()
+            // Note: We don't call engine.reset() here anymore because the UI 
+            // needs the engine data (attempts, bestStreak) to show the summary.
+            // A new engine will be created in startSession() for the next run.
             HapticService.shared.stop()
         }
     }

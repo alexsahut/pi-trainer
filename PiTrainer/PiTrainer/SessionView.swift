@@ -106,7 +106,7 @@ struct SessionView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding()
                                         .background(DesignSystem.Colors.cyanElectric)
-                                        .cornerRadius(12)
+                                        .cornerRadius(20)
                                 }
                                 
                                 Button {
@@ -119,7 +119,7 @@ struct SessionView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding()
                                         .background(Color.white.opacity(0.1))
-                                        .cornerRadius(12)
+                                        .cornerRadius(20)
                                 }
                             }
                             .padding(.horizontal, 40)

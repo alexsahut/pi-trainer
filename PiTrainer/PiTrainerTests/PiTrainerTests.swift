@@ -28,6 +28,13 @@ final class PiTrainerTests: XCTestCase {
         func getHighestIndex(for constantKey: String) -> Int {
             return highestIndexToReturn
         }
+        
+        func saveStats(_ stats: [Constant: ConstantStats]) {}
+        func loadStats() -> [Constant: ConstantStats]? { return nil }
+        func saveKeypadLayout(_ layout: String) {}
+        func loadKeypadLayout() -> String? { return nil }
+        func saveSelectedConstant(_ constant: String) {}
+        func loadSelectedConstant() -> String? { return nil }
     }
     
     // MARK: - FileDigitsProvider Tests

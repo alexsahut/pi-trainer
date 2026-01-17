@@ -14,10 +14,10 @@ struct ZenPrimaryButton: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 80)
                 .background(DesignSystem.Colors.cyanElectric)
-                .cornerRadius(0)
+                .cornerRadius(20)
                 .overlay(
-                    Rectangle()
-                        .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white.opacity(0.3), lineWidth: 1)
                 )
         }
         .buttonStyle(PlainButtonStyle())

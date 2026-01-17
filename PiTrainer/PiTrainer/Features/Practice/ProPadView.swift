@@ -83,12 +83,12 @@ struct ProPadButton: View {
         }) {
             ZStack {
                 // Background Frame
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 20)
                     .fill(DesignSystem.Colors.blackOLED.opacity(0.3)) // Use DesignSystem token
                     .frame(height: 60)
                     .frame(minWidth: 44, minHeight: 44) // NFR5: Touch Target
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 20)
                             .stroke(Color.white.opacity(0.1), lineWidth: 1)
                     )
                 
@@ -99,7 +99,7 @@ struct ProPadButton: View {
                 
                 // Flash Overlay (Cyan)
                 if isFlashing {
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 20)
                         .fill(DesignSystem.Colors.cyanElectric)
                         .opacity(0.6)
                 }

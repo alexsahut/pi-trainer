@@ -30,17 +30,18 @@ struct ZenSegmentedControl<T: Hashable & CustomStringConvertible>: View {
                             )
                     }
                     .overlay(
-                        Rectangle()
-                            .stroke(DesignSystem.Colors.textSecondary.opacity(0.3), lineWidth: 0.5)
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(DesignSystem.Colors.textSecondary.opacity(0.2), lineWidth: 0.5)
                     )
+                    .cornerRadius(20)
                 }
             }
             .background(DesignSystem.Colors.blackOLED)
             .overlay(
-                RoundedRectangle(cornerRadius: 0)
-                    .stroke(DesignSystem.Colors.cyanElectric.opacity(0.5), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(DesignSystem.Colors.cyanElectric.opacity(0.4), lineWidth: 1)
             )
-            .cornerRadius(4)
+            .cornerRadius(20)
         }
     }
 }

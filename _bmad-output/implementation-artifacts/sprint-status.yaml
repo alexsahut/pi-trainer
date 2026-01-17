@@ -54,19 +54,20 @@ development_status:
   2-4-mode-ghost-opacite-dynamique-du-clavier: done
   epic-2-retrospective: done
 
-  epic-3: in-progress
+  epic-3: done
   3-0-architecture-navigation-home-design: done
   3-1-selection-de-la-constante-mathematique: done
   3-2-lancement-et-controle-de-session-zen-mode: done
   3-3-implementation-du-mode-strict: done
   3-4-integrite-du-build-verification-des-ressources: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
-  epic-4: backlog
-  4-1-systeme-de-persistance-hybride-records-histoire: backlog
-  4-2-dashboard-des-records-personnels-pb: backlog
-  4-3-historique-detaille-des-performances: backlog
-  epic-4-retrospective: optional
+  epic-4: done
+  4-1-systeme-de-persistance-hybride      4.1-P-Records-Histoire: done
+  4-2-dashboard-des-records-personnels-pb: done
+  4-3-historique-detaille-des-performances: done
+  epic-4-retrospective: done
+  ux-ui-review-retrospective: done
 
   epic-5: backlog
   5-1-gestion-du-daily-streak-utilisation-consecutive: backlog

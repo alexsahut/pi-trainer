@@ -22,138 +22,133 @@ struct StatsView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Picker("stats.constant_picker", selection: $selectedConstantForStats) {
-                        ForEach(Constant.allCases) { constant in
-                            Text(constant.symbol).tag(constant)
+            ZStack {
+                DesignSystem.Colors.blackOLED.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 32) {
+                        // 1. Epic 4 Record Dashboard (Global Overview)
+                        RecordDashboardView(statsStore: statsStore)
+                            .padding(.top, 20)
+                        
+                        // 2. Constant Selector
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("stats.constant_picker")
+                                .font(DesignSystem.Fonts.monospaced(size: 14, weight: .black))
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                                .textCase(.uppercase)
+                                .padding(.horizontal, 20)
+                            
+                            ZenSegmentedControl(
+                                title: "",
+                                options: Constant.allCases,
+                                selection: $selectedConstantForStats
+                            )
+                            .padding(.horizontal, 20)
                         }
-                    }
-                    .pickerStyle(.segmented)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                }
-                .listRowSeparator(.hidden)
-                
-                let currentStats = statsStore.stats(for: selectedConstantForStats)
-                let learningState = learningStore.state(for: selectedConstantForStats)
-                
-                // NEW: Learning Section
-                Section(header: Text("home.learn_module")) {
-                     HStack {
-                         VStack(alignment: .leading) {
-                             Text("learning.mastered_count")
-                                 .font(.caption)
-                                 .foregroundColor(.secondary)
-                             Text("\(learningState.masteredCount)")
-                                 .font(.title2)
-                                 .fontWeight(.bold)
-                         }
-                         Spacer()
-                         VStack(alignment: .center) {
-                             Text("learning.in_learning_count")
-                                 .font(.caption)
-                                 .foregroundColor(.secondary)
-                             Text("\(learningState.inLearningCount)")
-                                 .font(.title2)
-                                 .fontWeight(.bold)
-                         }
-                         Spacer()
-                         VStack(alignment: .trailing) {
-                             Text("Due")
-                                 .font(.caption)
-                                 .foregroundColor(.secondary)
-                             Text("\(learningStore.dueChunks(for: selectedConstantForStats).count)")
-                                 .font(.title2)
-                                 .fontWeight(.bold)
-                                 .foregroundColor(.orange)
-                         }
-                     }
-                }
-                
-                Section(header: Text("stats.global_records")) {
-                    HStack {
-                        Text("stats.best_streak")
-                        Spacer()
-                        Text("\(currentStats.bestStreak)")
-                            .fontWeight(.bold)
-                            .foregroundColor(.gold)
-                    }
-                }
-                
-                if let last = currentStats.lastSession {
-                    Section(header: Text("stats.last_session")) {
-                        StatRow(label: String(localized: "stats.attempts"), value: String(localized: "stats.attempts_count \(last.attempts)"))
-                        StatRow(label: String(localized: "stats.errors"), value: String(localized: "session.errors_count \(last.errors)"), color: .red)
-                        StatRow(label: String(localized: "stats.best_streak"), value: "\(last.bestStreakInSession)", color: .green)
                         
-                        let speedValue = last.digitsPerMinute.formatted(.number.precision(.fractionLength(...1)))
-                        let speedFormat = String(localized: "stats.speed.value")
-                        let speedText = String(format: speedFormat, speedValue)
-                        StatRow(label: String(localized: "stats.speed.title"), value: speedText)
+                        let currentStats = statsStore.stats(for: selectedConstantForStats)
                         
-                        StatRow(label: String(localized: "stats.time"), value: formatTime(last.durationSeconds))
-                        StatRow(label: String(localized: "stats.date"), value: formatDate(last.date))
-                    }
-                } else {
-                    Section {
-                        Text("stats.no_sessions")
-                            .foregroundColor(.secondary)
-                    }
-                }
-                
-                if !currentStats.sessionHistory.isEmpty {
-                    Section(header: Text("stats.history")) {
-                        ForEach(currentStats.sessionHistory.prefix(20)) { session in
-                            NavigationLink(destination: SessionDetailView(session: session)) {
-                                HStack {
-                                    VStack(alignment: .leading) {
-                                        Text(session.date, style: .date)
-                                        Text(formatMode(session.mode))
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    Spacer()
-                                    VStack(alignment: .trailing) {
-                                        Text("\(session.bestStreakInSession)")
-                                            .foregroundColor(.green)
-                                            .fontWeight(.bold)
-                                        Text(String(format: String(localized: "stats.errors_short %@"), "\(session.errors)"))
-                                            .font(.caption)
-                                            .foregroundColor(.red)
-                                    }
+                        // 3. Current Constant Detail (Zen Card)
+                        VStack(spacing: 24) {
+                            // Primary Stat: Best Streak
+                            VStack(spacing: 4) {
+                                Text("stats.best_streak")
+                                    .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                Text("\(currentStats.bestStreak)")
+                                    .font(DesignSystem.Fonts.monospaced(size: 64, weight: .black))
+                                    .foregroundColor(DesignSystem.Colors.cyanElectric)
+                            }
+                            
+                            if let last = currentStats.lastSession {
+                                // Last Session Quick Stats Row
+                                HStack(spacing: 30) {
+                                    QuickStat(label: "CPS", value: String(format: "%.1f", last.digitsPerMinute))
+                                    QuickStat(label: "ERR", value: "\(last.errors)", color: last.errors > 0 ? .red : .white)
+                                    QuickStat(label: "TIME", value: formatTime(last.durationSeconds))
                                 }
+                                .padding(.top, 10)
                             }
                         }
-                    }
-                    
-                    Section {
-                        Button(role: .destructive) {
-                            showClearHistoryConfirmation = true
-                        } label: {
-                            Text("stats.clear_history")
+                        .padding(30)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.white.opacity(0.05))
+                        .cornerRadius(20)
+                        .padding(.horizontal, 20)
+                        
+                        // 4. Session History (Professional List)
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("stats.history")
+                                .font(DesignSystem.Fonts.monospaced(size: 14, weight: .black))
+                                .foregroundColor(DesignSystem.Colors.textSecondary)
+                                .textCase(.uppercase)
+                                .padding(.horizontal, 20)
+                            
+                            let sessionHistory = statsStore.history(for: selectedConstantForStats)
+                            
+                            if statsStore.isHistoryLoading && sessionHistory.isEmpty {
+                                ProgressView()
+                                    .tint(DesignSystem.Colors.cyanElectric)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                            } else if !sessionHistory.isEmpty {
+                                VStack(spacing: 0) {
+                                    ForEach(sessionHistory.prefix(200)) { session in
+                                        NavigationLink(destination: SessionDetailView(session: session)) {
+                                            HistoryRow(session: session)
+                                                .padding(.horizontal, 20)
+                                                .padding(.vertical, 12)
+                                                .background(Color.white.opacity(0.02))
+                                        }
+                                        Divider().background(Color.white.opacity(0.1))
+                                    }
+                                }
+                                .cornerRadius(20)
+                                .padding(.horizontal, 20)
+                                
+                                // History Actions
+                                Button(role: .destructive) {
+                                    showClearHistoryConfirmation = true
+                                } label: {
+                                    Text("stats.clear_history")
+                                        .font(DesignSystem.Fonts.monospaced(size: 13, weight: .bold))
+                                        .foregroundColor(.red.opacity(0.7))
+                                        .padding()
+                                }
+                                .frame(maxWidth: .infinity)
+                            } else {
+                                Text("stats.no_history")
+                                    .font(DesignSystem.Fonts.monospaced(size: 14, weight: .regular))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    .padding(.horizontal, 20)
+                            }
                         }
-                    }
-                } else {
-                    Section(header: Text("stats.history")) {
-                         Text("stats.no_history")
-                             .foregroundColor(.secondary)
-                    }
-                }
-                
-                Section {
-                    Button(role: .destructive) {
-                        showResetConfirmation = true
-                    } label: {
-                        Text("stats.reset_all")
+                        
+                        // 5. Danger Zone
+                        Button(role: .destructive) {
+                            showResetConfirmation = true
+                        } label: {
+                            Text("stats.reset_all")
+                                .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
+                                .foregroundColor(.red)
+                                .padding(.vertical, 40)
+                        }
                     }
                 }
             }
-            .navigationTitle("stats.title")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("stats.title")
+                        .font(DesignSystem.Fonts.monospaced(size: 16, weight: .black))
+                        .foregroundColor(.white)
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("stats.done") {
-                        dismiss()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
             }
@@ -173,6 +168,11 @@ struct StatsView: View {
                 }
             } message: {
                 Text("stats.clear_history.message")
+            }
+            .onChange(of: selectedConstantForStats) { oldVal, newVal in
+                Task {
+                    await statsStore.loadHistory(for: newVal)
+                }
             }
         }
     }
@@ -203,24 +203,21 @@ struct StatsView: View {
     }
 }
 
-struct StatRow: View {
+struct QuickStat: View {
     let label: String
     let value: String
-    var color: Color = .primary
+    var color: Color = .white
     
     var body: some View {
-        HStack {
-            Text(verbatim: label)
-            Spacer()
-            Text(verbatim: value)
-                .fontWeight(.semibold)
+        VStack(spacing: 4) {
+            Text(label)
+                .font(DesignSystem.Fonts.monospaced(size: 10, weight: .bold))
+                .foregroundColor(DesignSystem.Colors.textSecondary)
+            Text(value)
+                .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
                 .foregroundColor(color)
         }
     }
-}
-
-extension Color {
-    static let gold = Color(red: 1.0, green: 0.84, blue: 0.0)
 }
 
 #Preview {
