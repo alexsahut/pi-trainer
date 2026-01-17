@@ -202,16 +202,12 @@ class PracticeEngine {
                 let interval = now.timeIntervalSince(last)
                 if interval > 0 {
                     let instantCPS = 1.0 / interval
-                    if instantCPS < minCPS { minCPS = instantCPS }
-                    if instantCPS > maxCPS { maxCPS = instantCPS }
-                }
-            } else if let start = startTime {
-                // First digit speed relative to start
-                let interval = now.timeIntervalSince(start)
-                if interval > 0 {
-                    let instantCPS = 1.0 / interval
-                    if instantCPS < minCPS { minCPS = instantCPS }
-                    if instantCPS > maxCPS { maxCPS = instantCPS }
+                    // Filter out impossible speeds (e.g. > 20 CPS which is > 1200 CPM)
+                    // This prevents glitches from non-human input speed detection failures
+                    if instantCPS < 20.0 {
+                        if instantCPS < minCPS { minCPS = instantCPS }
+                        if instantCPS > maxCPS { maxCPS = instantCPS }
+                    }
                 }
             }
             lastCorrectInputTime = now
