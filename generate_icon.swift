@@ -12,13 +12,13 @@ func generateIcon(size: CGFloat, filename: String, idiom: String) {
         return
     }
 
-    // Background: Gradient (Purple to Blue) - OPAQUE
+    // Background: Black (OLED) - Zen Athlete
     let colors = [
-        NSColor(red: 0.4, green: 0.3, blue: 0.8, alpha: 1.0).cgColor,
-        NSColor(red: 0.2, green: 0.5, blue: 0.9, alpha: 1.0).cgColor
+        NSColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1.0).cgColor,
+        NSColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0).cgColor
     ] as CFArray
     let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0])!
-    context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: 0), end: CGPoint(x: size, y: size), options: [])
+    context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size), end: CGPoint(x: size, y: 0), options: [])
 
     // Pi Symbol
     let piString = "π"
@@ -26,7 +26,7 @@ func generateIcon(size: CGFloat, filename: String, idiom: String) {
     let font = NSFont.systemFont(ofSize: fontSize, weight: .bold)
     let attributes: [NSAttributedString.Key: Any] = [
         .font: font,
-        .foregroundColor: NSColor.white
+        .foregroundColor: NSColor(red: 0.0, green: 0.949, blue: 1.0, alpha: 1.0) // Cyan #00F2FF
     ]
     let attributedString = NSAttributedString(string: piString, attributes: attributes)
     let stringSize = attributedString.size()

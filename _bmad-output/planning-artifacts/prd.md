@@ -1,5 +1,5 @@
 ---
-stepsCompleted: ['step-01-init', 'step-02-discovery', 'step-03-success', 'step-04-journeys', 'step-05-domain', 'step-06-innovation', 'step-07-project-type', 'step-08-scoping', 'step-09-functional', 'step-10-nonfunctional', 'step-11-polish']
+stepsCompleted: ['step-e-01-discovery', 'step-e-02-review', 'step-e-03-edit']
 inputDocuments:
   - '_bmad-output/project-knowledge/architecture.md'
   - '_bmad-output/project-knowledge/data-models-root.md'
@@ -24,8 +24,10 @@ elicitationInsights:
     - 'Visualisation: groupement par blocs de 10 décimales'
     - 'Feedback: compteur de position de la décimale en cours'
 workflowType: 'prd'
-lastEdited: '2026-01-15T22:56:00+01:00'
+lastEdited: '2026-01-17T20:00:00+01:00'
 editHistory:
+  - date: '2026-01-17T20:00:00+01:00'
+    changes: 'Restructuration majeure : adoption du triptyque Learn/Practice/Play. Ajout des spécifications pour le Game Mode (Ghost, Horizon), le Learn Mode (Overlay) et le système de Rétention (Daily Challenges).'
   - date: '2026-01-15T22:56:00+01:00'
     changes: 'Ajout des contraintes App Store, des permissions système et des corrections de mesurabilité.'
 ---
@@ -33,75 +35,85 @@ editHistory:
 ## Executive Summary
 
 **Product Vision:** 
-Pi-Trainer est une application mobile iOS native conçue pour transformer la mémorisation des constantes mathématiques en un défi addictif. Le produit mise sur une interface ultra-minimaliste et performante, centrée sur le plaisir de la récitation rapide.
+Pi-Trainer est une application mobile iOS native conçue pour transformer la mémorisation des constantes mathématiques en un défi addictif et structuré. Le produit s'articule autour de trois piliers fondamentaux : **Apprendre (Learn)**, **S'entraîner (Practice)** et **Jouer (Play)**, le tout servi par une interface ultra-minimaliste "Zen" qui favorise l'état de flow.
 
 **Core Differentiator:** 
-L'application se distingue par son **Streak Flow**, une expérience immersive où l'interface réagit dynamiquement à la vitesse et à la précision de la saisie, créant un état de concentration intense ("flow").
+L'application se distingue par son approche **"Zen Gamification"** : une architecture de jeu qui récompense la performance par des feedbacks atmosphériques et haptiques subtils, sans polluer l'interface visuelle. Le mode **Game** introduit une course contre soi-même (Ghost) matérialisée par une simple ligne d'horizon.
 
 **Target Audience:** 
-Compétiteurs de mémoire, étudiants passionnés et tout utilisateur souhaitant entraîner sa mémoire musculaire et cognitive de manière ludique et universelle.
+Compétiteurs de mémoire, étudiants passionnés et tout utilisateur souhaitant entraîner sa mémoire musculaire et cognitive, du débutant absolu (Learn) au champion (Play).
 
 ---
 
 ## Success Criteria
 
 ### User Success
-- **Moment "Aha!" :** Atteindre un record personnel ("Personal Best") ou améliorer son temps de réponse moyen.
-- **Session Idéale :** Réaliser plus de décimales en moins de temps par rapport à la session précédente.
-- **Engagement :** Plaisir ressenti lors du challenge, poussant à une utilisation régulière (ex: entraînement quotidien).
+- **Moment "Aha!" :** Atteindre un record personnel ("Personal Best") ou réussir sa première série sans erreur grâce au Ghost.
+- **Session Idéale :** Alterner entre l'apprentissage d'un nouveau bloc (Learn) et sa validation en jeu (Play).
+- **Engagement :** Retour quotidien pour le "Daily Challenge" et maintien du Streak.
 
 ### Business & Product Success
-- **Positionnement :** Le produit est perçu comme un outil de maîtrise et de défi, et non comme un simple support éducatif passif.
-- **Rétention :** Les utilisateurs reviennent quotidiennement pour maintenir leur "Daily Streak".
+- **Positionnement :** L'outil de référence alliant pédagogie (Learn) et compétition (Play).
+- **Rétention :** Les utilisateurs sont motivés par la progression de leur Grade et les défis quotidiens.
 
 ### Technical & Quality Success
 - **Précision :** Zero erreur tolérée dans la base de données des constantes mathématiques.
 - **Fluidité :** Latence de saisie imperceptible (16ms) pour supporter une récitation ultra-rapide.
-- **Conformité App Store :** Zéro rejet lors de la soumission liée aux Human Interface Guidelines (HIG) ou aux politiques de confidentialité.
+- **Conformité App Store :** Zéro rejet lors de la soumission.
 
 ---
 
 ## Product Scope & Strategy
 
 ### MVP Strategy (Phase 1)
-L'approche MVP se concentre sur le cœur du challenge : la précision et la fluidité.
-- **Must-Have :** Streak Flow v1, Mode Strict (arrêt à l'erreur), compteur de position, groupement par 10, et base de constantes validée.
-- **Sacrifice :** Le mode apprentissage et les thèmes visuels sont reportés en phase 2 pour garantir la perfection du moteur de saisie.
+L'approche MVP instaure la structure tripolaire de l'application :
+- **Mode Learn (Nouveau) :** Module d'apprentissage par répétition avec calque de transparence (saisie par-dessus le modèle) sur des segments personnalisés (début/fin).
+- **Mode Practice (Existant) :** L'entraînement libre actuel (Zen Mode standard).
+- **Mode Play :**
+    - **Compétition (Ex-Strict) :** Arrêt immédiat à l'erreur.
+    - **Game Mode (Nouveau) :** Course contre le Ghost, Ligne d'Horizon 1px, Feedback atmosphérique, Tolérance d'erreur.
+- **Socle Technique :** Base de données validée, moteur haptique CoreHaptics.
 
-### Growth Features (Phase 2)
-- **Mode Apprentissage :** Gestion des erreurs et feedback pédagogique.
-- **Gamification complète :** Thèmes déblocables, badges d'accomplissement.
-- **Social :** Leaderboards locaux et partage de performances.
+### Growth Features (Phase 2 - Retention)
+- **Section Challenges :** Dashboard dédié aux récompenses et défis.
+- **Daily Challenge :** Défi quotidien généré procéduralement (ex: "Trouver la 167ème décimale", "Compléter la suite").
+- **Gamification Avancée :** Système complet de Grades et Trophées "Double Bang".
 
-### Vision (Phase 3)
-- **Adaptative Learning :** Analyse des patterns de mémorisation via IA pour parcours personnalisés.
-- **Multiplay :** Mode duel en temps réel.
+### Vision (Phase 3 - Social)
+- **Social Mnemonics :** Partage communautaire de mnémotechniques.
+- **AI Coach :** Suggestion de techniques par IA.
+- **Multiplay :** Duel temps réel.
 
 ---
 
 ## User Journeys
 
-### 1. Le "Moment Aha!" (Premier Lancement)
-*   **Contexte :** Léo ouvre l'application pour la première fois.
-*   **Parcours :** Ouverture → **Consentements Système** (Notifications, Haptics) → Sélection Pi → Lancement.
-*   **Climax :** L'interface s'illumine (Streak Flow) à la 20ème décimale.
-*   **Résolution :** Léo ressent une satisfaction immédiate et accepte de revenir demain via la notification programmée.
+### 1. L'Apprenti (Mode Learn)
+*   **Contexte :** Léo veut mémoriser les décimales de 50 à 100 de Pi.
+*   **Parcours :** Tab "Learn" → Sélection Segment (50-100) → **Mode Transparence** (Les chiffres apparaissent en filigrane).
+*   **Action :** Léo tape les chiffres en suivant le modèle. La répétition crée la mémoire musculaire.
+*   **Résolution :** Une fois confiant, Léo masque le modèle et valide le segment.
 
-### 2. Le Défi Express (Léo, l'Apprenti)
-*   **Contexte :** Léo veut battre son record sur Pi en 2 minutes.
-*   **Parcours :** Ouverture → Sélection Pi → Lancement.
-*   **Climax :** L'interface s'illumine (Streak Flow) à la 50ème décimale.
-*   **Résolution :** L'app affiche la bonne réponse après l'erreur et félicite Léo pour son progrès.
+### 2. Le Gamer (Mode Play - Game)
+*   **Contexte :** Sarah veut battre son record personnel (PR) sans la pression du "Game Over".
+*   **Parcours :** Tab "Play" → Mode Game → Lancement.
+*   **Climax :**
+    *   **L'Horizon :** Sarah voit le point blanc (Ghost) avancer sur la ligne d'horizon en haut.
+    *   **Le Duel :** Elle accélère pour le doubler. Le fond d'écran se réchauffe (Ambre) indiquant qu'elle est en tête.
+    *   **Le Final :** Elle termine le segment avant le Ghost.
+*   **Résolution :** Animation "Double Bang" (Explosion de Grade + Éclairs de Vitesse).
 
-### 2. Le Test de Maîtrise (L'Expert)
-*   **Contexte :** Validation d'une mémorisation parfaite de "e".
-*   **Parcours :** Sélection "e" → Mode Strict → Concentration maximale.
-*   **Résolution :** Sortie volontaire après 100 décimales sans faute. Affichage de la vitesse moyenne.
+### 3. Le Compétiteur (Mode Play - Compétition)
+*   **Contexte :** Marc veut valider sa maîtrise parfaite pour le classement.
+*   **Parcours :** Tab "Play" → Mode Compétition (Ex-Strict).
+*   **Enjeu :** Une seule erreur arrête la session immédiatement.
+*   **Résolution :** Marc atteint 200 décimales. Score validé "Certifié". Adrénaline pure.
 
-### 3. La Récupération (Mémorisation ciblée)
-*   **Contexte :** Blocage récurrent sur une séquence spécifique.
-*   **Parcours :** Session Apprentissage → Erreur → Visualisation du bloc de 10 fautif.
-*   **Résolution :** Répétition immédiate de la séquence pour ancrer la mémorisation.
+### 4. La Routine Quotidienne (Retention)
+*   **Contexte :** Notification "Challenge du jour : Suite Logique".
+*   **Parcours :** Ouverture App → Tab "Profil/Challenges" → Défi "Complétez : 3.1415...".
+*   **Action :** Léo trouve les 5 chiffres manquants.
+*   **Résolution :** Gain d'XP pour le Grade global et prolongation du Daily Streak.
 
 ---
 
@@ -122,27 +134,35 @@ L'approche MVP se concentre sur le cœur du challenge : la précision et la flui
 
 ## Functional Requirements
 
-### 1. Entraînement & Challenge
-- **FR1 :** L'utilisateur peut sélectionner une constante mathématique (Pi, e, phi, etc.).
-- **FR2 :** L'utilisateur peut lancer une session en **Mode Strict** (arrêt immédiat à l'erreur).
-- **FR3 :** L'utilisateur peut saisir des décimales via un pavé numérique optimisé pour la vitesse.
-- **FR4 :** Le système valide la saisie en temps réel par rapport aux données mathématiques.
-- **FR5 :** Le système affiche un compteur de position en temps réel.
-- **FR6 :** Le système affiche les décimales saisies par blocs de 10.
-- **FR7 :** L'utilisateur peut consulter l'historique de ses 200 dernières performances (date, score, vitesse).
+### 1. Structure & Navigation (Nouveau)
+- **FR1 (Main Navigation) :** L'interface principale est divisée en 3 onglets (Tabs) : **Learn**, **Practice**, **Play**.
+- **FR2 (Sections) :**
+    - **Learn :** Outils d'apprentissage assisté.
+    - **Practice :** Zone d'entraînement libre (Zen Mode actuel).
+    - **Play :** Zone de défi avec choix entre "Compétition" et "Game".
 
-### 2. Expérience Utilisateur & Gamification
-- **FR8 :** Le système active le **Streak Flow** (animations visuelles) lors des séries de réussites.
-- **FR9 :** Le système fournit des retours haptiques et sonores lors de la saisie et des erreurs.
-- **FR10 :** Le système enregistre et affiche le record personnel (Personal Best) par constante.
-- **FR11 :** Le système suit et affiche le nombre de jours consécutifs d'utilisation (Daily Streak).
+### 2. Mode Learn (Apprentissage)
+- **FR3 (Segmentation) :** L'utilisateur peut définir un segment d'apprentissage (ex: décimales 50 à 100).
+- **FR4 (Visual Guide) :** Le système affiche les décimales cibles en transparence (overlay) par-dessus la zone de saisie.
+- **FR5 (Repetition Flow) :** L'utilisateur peut saisir les chiffres en suivant le guide visuel (comportement "calque").
 
-### 3. Conformité & Système
-- **FR12 :** Le système envoie des notifications locales de rappel journalier pour maintenir les séries.
-- **FR13 :** Le système persiste l'intégralité des données localement (hors-ligne complet).
-- **FR14 :** Le système demande explicitement le consentement de l'utilisateur pour les notifications locales dès le premier lancement.
-- **FR15 :** Le système permet d'activer/désactiver les retours haptiques dans les réglages de l'application.
-- **FR16 :** L'interface ajuste dynamiquement ses marges pour respecter les **Safe Areas** de tous les modèles d'iPhone supportés.
+### 3. Mode Play - Game (Nouveau)
+- **FR6 (Ghost System) :** Le système calcule et anime un "Ghost" (curseur) basé sur le Personal Best (PR) de l'utilisateur.
+- **FR7 (Horizon Line) :** Une barre de progression minimaliste (1px) en haut d'écran visualise la course entre le joueur (Point Blanc) et le Ghost (Point Gris).
+- **FR8 (Atmospheric Feedback) :** La couleur d'ambiance de l'écran évolue dynamiquement selon le delta Vitesse (Chaud = En avance, Froid = En retard).
+- **FR9 (Error Tolerance) :** Contrairement au mode strict, les erreurs sont signalées (Haptique/Visuel) mais n'arrêtent pas la session. Elles appliquent une pénalité de temps/score.
+
+### 4. Mode Play - Compétition (Ex-Strict)
+- **FR10 (Strict Rules) :** La session s'arrête immédiatement à la première erreur saisie.
+- **FR11 (Validity) :** Seuls les scores réalisés dans ce mode sont éligibles aux "Certifications" de maîtrise.
+
+### 5. Rétention & Gamification (Global)
+- **FR12 (Daily Challenge) :** Le système génère un défi quotidien unique (ex: "Trouver la n-ième décimale", "Compléter la suite").
+- **FR13 (Rewards System) :**
+    - **Grades :** Progression basée sur l'XP (Endurance).
+    - **Speed Bonus :** Récompense spécifique pour avoir battu le Ghost.
+    - **Double Bang :** Animation spéciale lors de l'obtention simultanée Grade + Speed Bonus.
+- **FR14 (Streak Flow) :** Le mécanisme de streak flow (animations visuelles de combo) est actif dans tous les modes (Learn/Practice/Play).
 
 ---
 
