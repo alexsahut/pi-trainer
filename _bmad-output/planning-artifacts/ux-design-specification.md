@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 'v2-extensions']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/prd-validation-report.md'
@@ -301,3 +301,166 @@ Nous utilisons les fondations de **SwiftUI** sans bibliothèque externe pour pr�
 - Validation sur VoiceOver pour le flux de saisie active.
 - Tests d'ergonomie "One-Hand" sur les différents formats d'iPhone.
 - Vérification du contraste WCAG sur les zones d'opacité du Ghost Mode.
+
+---
+
+## V2 Feature Extensions
+
+**Date:** 2026-01-17
+**Author:** Alex
+
+Cette section documente les extensions UX pour la version majeure V2, introduisant la structure tripolaire Learn/Practice/Play et le Game Mode avec Ghost.
+
+### V2.1 Navigation "Dual Selector"
+
+#### Pattern
+L'écran d'accueil adopte un pattern **Dual Selector** avec deux rangées de sélection :
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│       [π]  [e]  [φ]  [√2]          │  ← Constant Selector (existant)
+│                                     │
+│   [Learn] [Practice] [Game] [Strict]│  ← Mode Selector (NOUVEAU)
+│                                     │
+│          [ START SESSION ]          │  ← CTA Principal
+│                                     │
+│   🏆        📊        ⚙️            │  ← Bottom Bar
+│ Challenges  Records   Réglages      │
+└─────────────────────────────────────┘
+```
+
+#### Décisions
+| Aspect | Décision |
+|--------|----------|
+| **Style Mode Selector** | Identique au Constant Selector (pills/chips horizontaux) |
+| **Modes Disponibles** | Learn, Practice, Game, Strict |
+| **Mode par Défaut** | **Learn** (nouveau mode d'apprentissage) |
+| **Persistance** | Oui — le dernier mode utilisé est mémorisé |
+
+#### Bottom Bar Étendue
+- **Challenges** (à gauche) — Phase 2
+- **Records** (centre) — Existant
+- **Réglages** (droite) — Existant, simplifié (mode retiré car dans Home)
+
+---
+
+### V2.2 Mode Learn (Apprentissage Guidé)
+
+#### Concept
+Le Mode Learn est conçu pour l'apprentissage par répétition avec guidage visuel permanent. L'utilisateur tape les chiffres par-dessus un calque transparent affichant les décimales cibles.
+
+#### Décisions
+| Aspect | Décision |
+|--------|----------|
+| **Affichage Guide** | Comme le mode "Révélé" actuel (icône œil) — Bloc complet visible |
+| **Feedback Validation** | Identique au mode Practice — Cohérence inter-modes |
+| **Sélection Segment** | **Dual Slider** (début/fin) pour choisir le segment à apprendre |
+
+#### Principe Clé
+> L'utilisateur doit se sentir "chez lui" — UI cohérente entre Learn, Practice, Game, Strict.
+
+Le **Mode Learn** = Mode Practice **avec overlay forcé** (œil activé par défaut) + **segment personnalisable** (dual slider).
+
+---
+
+### V2.3 Mode Game (Ghost + Horizon Line)
+
+#### Concept
+Le Mode Game introduit une course contre soi-même matérialisée par un "Ghost" représentant le Personal Best (PR) de l'utilisateur. Une ligne d'horizon visualise la progression relative.
+
+#### Horizon Line
+| Aspect | Décision |
+|--------|----------|
+| **Position** | Au-dessus du Terminal Grid (sous les métadonnées) |
+| **Représentation** | Barre minimaliste 1px |
+| **Points** | **Blanc** (joueur) + **Gris** (Ghost) |
+
+#### Atmospheric Feedback
+| Aspect | Décision |
+|--------|----------|
+| **Intensité** | **Dynamique** — Proportionnelle à l'écart joueur/Ghost |
+| **Palette Froid (Retard)** | Cyan (`#00F2FF`) — Couleur signature de l'app |
+| **Palette Chaud (Avance)** | Orange Électrique (`#FF6B00`) |
+
+```
+En retard (Froid) ← ─────────────────── → En avance (Chaud)
+   Cyan (#00F2FF)                          Orange Électrique (#FF6B00)
+```
+
+Le **Cyan** est la baseline (couleur de l'app) = état neutre/à égalité avec le Ghost.
+Dépasser le Ghost réchauffe progressivement vers l'orange.
+
+---
+
+### V2.4 Gestion des Erreurs (Game Mode)
+
+#### Comportement
+Contrairement au Strict Mode, les erreurs **ne stoppent pas** la session en Game Mode.
+
+| Aspect | Décision |
+|--------|----------|
+| **Feedback Erreur** | Identique au mode Practice (flash/haptic standard) — Cohérence |
+| **Pénalité** | **-1 décimale effective** sur la position |
+| **Après Erreur** | Chiffre révélé en transparence, l'utilisateur doit le taper pour continuer |
+
+#### Calcul de Position
+```
+Position Joueur = Décimales Correctes - Nombre d'Erreurs
+```
+
+Exemple :
+- 50 chiffres tapés, 2 erreurs → Position effective = 48
+- Ghost à 47 → Joueur légèrement en avance (couleur chaude subtile)
+
+C'est un système **punissant mais non bloquant** — chaque erreur coûte du terrain sans stopper le flow.
+
+---
+
+### V2.5 Strict Mode (Compétition)
+
+| Aspect | Décision |
+|--------|----------|
+| **Comportement** | **Inchangé** — Implémentation existante conservée |
+| **Exposition** | Accessible via le Mode Selector sur Home (4ème option) |
+
+---
+
+### V2 Phasing
+
+#### MVP V2 (Priorité Immédiate)
+- ✅ Navigation Dual Selector (Constantes + Modes)
+- ✅ Mode Learn avec Overlay + Dual Slider
+- ✅ Mode Game avec Ghost + Horizon Line + Atmospheric Feedback
+- ✅ Gestion erreurs Game Mode (-1 décimale)
+- ✅ Strict Mode exposé dans Mode Selector
+
+#### Phase 2 (Différé)
+- 🔜 Challenges Section (bouton dans bottom bar)
+- 🔜 Daily Challenge (génération procédurale)
+- 🔜 Grades System (progression XP)
+- 🔜 Double Bang Animation (reward Grade + Speed Bonus)
+- 🔜 Speed Bonus
+
+---
+
+### V2 User Journey : Le Gamer (Mode Game)
+
+```mermaid
+graph TD
+    A[Home Screen] -->|Sélection Mode Game| B[START SESSION]
+    B --> C{Saisie Chiffre}
+    C -->|Correct| D[Position +1 sur Horizon]
+    D --> E{Comparaison Ghost}
+    E -->|En avance| F[Fond → Orange Électrique]
+    E -->|En retard| G[Fond → Cyan]
+    F --> C
+    G --> C
+    C -->|Erreur| H[Flash + Haptic]
+    H --> I[Position -1 + Révélation]
+    I --> J[User retape le chiffre]
+    J --> C
+    C -->|Fin Segment| K[Écran Résultats]
+    K -->|Battu Ghost?| L[Célébration Speed]
+    K -->|Ghost gagne| M[Affichage Écart]
+```

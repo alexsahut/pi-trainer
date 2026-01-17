@@ -391,6 +391,243 @@ So that évaluer mon degré d'autonomie dans la mémorisation.
 - **And** ce score est affiché dans le résumé de fin de session
 - **And** le nombre de "reveals" est persisté dans l'historique de la session.
 
+---
+
+## V2 Epics (Version Majeure)
+
+Les Epics suivantes couvrent les nouvelles fonctionnalités de la version 2 : structure tripolaire (Learn/Practice/Game/Strict), Game Mode avec Ghost, et améliorations du Learn Mode.
+
+### Epic 7: Structure de Navigation V2 & Mode Selector
+
+Implémenter la nouvelle architecture de navigation avec sélection du mode directement sur l'écran d'accueil.
+
+**FRs V2 covered:** FR1-V2 (Navigation), FR2-V2 (Mode Selector)
+
+#### Story 7.1: Mode Selector sur Home (Dual Selector Pattern)
+
+As a utilisateur,
+I want choisir mon mode de jeu (Learn, Practice, Game, Strict) directement sur l'écran d'accueil,
+So that lancer une session dans le mode souhaité en un minimum de taps.
+
+**Acceptance Criteria:**
+
+**Given** l'écran d'accueil
+**When** je visualise l'interface
+**Then** un sélecteur de mode apparaît sous le sélecteur de constantes
+**And** le style est identique au Constant Selector (pills/chips horizontaux)
+**And** les 4 modes sont affichés : Learn, Practice, Game, Strict
+**And** le mode Learn est sélectionné par défaut
+**And** le mode sélectionné est persisté entre les sessions.
+
+**Technical Notes:**
+- Créer `SessionMode.swift` avec l'enum et les computed properties
+- Créer `ModeSelector.swift` en réutilisant le pattern de `ConstantSelector`
+- Stocker dans `UserDefaults` via clé `selectedMode`
+
+#### Story 7.2: Suppression du Mode des Réglages
+
+As a utilisateur,
+I want que le choix du mode soit exclusivement sur l'écran d'accueil,
+So that l'interface soit cohérente et non redondante.
+
+**Acceptance Criteria:**
+
+**Given** l'écran des réglages
+**When** je consulte les options
+**Then** l'option de sélection du mode de jeu n'apparaît plus
+**And** tous les anciens accès au changement de mode redirigent vers Home.
+
+**Technical Notes:**
+- Supprimer `ModePicker` des Settings
+- Mettre à jour la documentation in-app si existante
+
+---
+
+### Epic 8: Mode Learn Amélioré (Segment Selection)
+
+Implémenter le nouveau Mode Learn avec sélection de segment personnalisée et overlay permanent.
+
+**FRs V2 covered:** FR3-V2 (Segmentation), FR4-V2 (Visual Guide), FR5-V2 (Repetition Flow)
+
+#### Story 8.1: Dual Slider pour Sélection de Segment
+
+As a apprenant,
+I want définir un segment précis à mémoriser (ex: décimales 50 à 100),
+So that cibler mon apprentissage sur une zone spécifique.
+
+**Acceptance Criteria:**
+
+**Given** le mode Learn sélectionné sur Home
+**When** je prépare ma session
+**Then** un Dual Slider apparaît permettant de définir le début et la fin du segment
+**And** les valeurs min/max sont contraintes (start < end)
+**And** les valeurs par défaut sont 0-50
+**And** les valeurs sélectionnées sont persistées entre les sessions.
+
+**Technical Notes:**
+- Créer `SegmentSlider.swift` dans Features/Home
+- Étendre `LearningStore` avec `segmentStart` et `segmentEnd`
+- Le slider n'apparaît QUE si mode == .learn
+
+#### Story 8.2: Overlay Permanent en Mode Learn
+
+As a apprenant,
+I want que les chiffres à taper soient toujours visibles en transparence,
+So that apprendre par répétition musculaire en suivant le modèle.
+
+**Acceptance Criteria:**
+
+**Given** une session en mode Learn
+**When** la session démarre
+**Then** l'overlay (mode révélé/œil) est activé automatiquement et non désactivable
+**And** seul le segment sélectionné (ex: 50-100) est affiché
+**And** l'utilisateur tape par-dessus les chiffres en filigrane
+**And** le comportement de validation reste identique au mode Practice (cohérence).
+
+**Technical Notes:**
+- Forcer `isRevealed = true` quand `mode == .learn`
+- Adapter `DigitsProvider` pour servir uniquement le segment sélectionné
+
+---
+
+### Epic 9: Mode Game (Ghost System & Atmospheric Feedback)
+
+Implémenter le Game Mode avec course contre le Ghost (Personal Best) et feedback atmosphérique dynamique.
+
+**FRs V2 covered:** FR6-V2 (Ghost), FR7-V2 (Horizon), FR8-V2 (Atmospheric), FR9-V2 (Error Tolerance)
+
+#### Story 9.1: GhostEngine & PersonalBest avec Timestamps
+
+As a gamer,
+I want courir contre ma meilleure performance passée,
+So that me dépasser progressivement.
+
+**Acceptance Criteria:**
+
+**Given** une session en mode Game
+**When** je lance la session
+**Then** le système charge mon Personal Best (PR) pour la constante sélectionnée
+**And** si un PR existe, un `GhostEngine` est initialisé avec les timestamps cumulés
+**And** si aucun PR n'existe, le Ghost reste à position 0 (premier essai)
+**And** le Ghost "avance" virtuellement basé sur le temps écoulé vs les temps du PR.
+
+**Technical Notes:**
+- Créer `GhostEngine.swift` dans Core/Engine
+- Créer/Étendre `PersonalBestRecord` avec `cumulativeTimes: [TimeInterval]`
+- Créer `PersonalBestStore.swift` pour la persistance des timestamps
+
+#### Story 9.2: Horizon Line (Visualisation de la Course)
+
+As a gamer,
+I want voir ma position relative par rapport au Ghost sur une ligne d'horizon,
+So that savoir instantanément si je suis en avance ou en retard.
+
+**Acceptance Criteria:**
+
+**Given** une session en mode Game
+**When** je suis en train de taper
+**Then** une ligne d'horizon 1px apparaît au-dessus du Terminal-Grid
+**And** un point blanc représente ma position effective (décimales - erreurs)
+**And** un point gris représente la position du Ghost
+**And** les points se déplacent fluidement à chaque input.
+
+**Technical Notes:**
+- Créer `HorizonLineView.swift` dans Features/Practice
+- Afficher uniquement si `mode == .game`
+- Position = ratio sur la largeur de l'écran
+
+#### Story 9.3: Atmospheric Feedback (Couleurs Dynamiques)
+
+As a gamer,
+I want ressentir visuellement si je suis en avance ou en retard,
+So that ajuster mon rythme sans regarder des chiffres.
+
+**Acceptance Criteria:**
+
+**Given** une session en mode Game
+**When** je suis en avance sur le Ghost
+**Then** le fond de l'écran se teinte légèrement d'Orange Électrique (#FF6B00)
+**When** je suis en retard sur le Ghost
+**Then** le fond se teinte légèrement de Cyan (#00F2FF)
+**And** l'intensité de la teinte est proportionnelle à l'écart (dynamique)
+**And** à égalité, le fond reste neutre (noir OLED).
+
+**Technical Notes:**
+- Créer `SessionViewModel+Game.swift` avec `atmosphericDelta` et `atmosphericColor`
+- Opacité : 5% (neutre) à 20% (écart max)
+
+#### Story 9.4: Gestion des Erreurs Game Mode (-1 Pénalité)
+
+As a gamer,
+I want que mes erreurs ne stoppent pas la session mais me pénalisent,
+So that continuer ma course tout en payant le prix de mes fautes.
+
+**Acceptance Criteria:**
+
+**Given** une session en mode Game
+**When** je tape un chiffre incorrect
+**Then** la session continue (pas d'arrêt)
+**And** un feedback d'erreur standard est déclenché (flash/haptic)
+**And** le chiffre correct est révélé en transparence
+**And** je dois taper le bon chiffre pour continuer
+**And** ma position effective sur l'Horizon est décrémentée de 1.
+
+**Technical Notes:**
+- Modifier `PracticeEngine.input()` pour retourner `.error(fatal: false)` en mode Game
+- Ajouter `errorCount` au moteur
+- Position effective = `correctCount - errorCount`
+
+#### Story 9.5: Enregistrement PR avec Timestamps
+
+As a gamer,
+I want que mon nouveau record enregistre mes temps par décimale,
+So that mon futur Ghost soit fidèle à ma vraie performance.
+
+**Acceptance Criteria:**
+
+**Given** une session terminée avec un nouveau PR
+**When** le score est enregistré
+**Then** les timestamps cumulés (temps à chaque décimale) sont sauvegardés
+**And** le nouveau PR remplace l'ancien dans `PersonalBestStore`
+**And** l'affichage classique du PB (juste le score) reste inchangé.
+
+**Technical Notes:**
+- Enregistrer `Date().timeIntervalSince(startTime)` à chaque input correct
+- Structure : `PersonalBestRecord { constant, digitCount, totalTime, cumulativeTimes }`
+
+---
+
+## V2 FR Coverage Map (Extension)
+
+| FR V2 | Epic/Story |
+|-------|------------|
+| FR1-V2 (Navigation) | 7.1 |
+| FR2-V2 (Mode Selector) | 7.1, 7.2 |
+| FR3-V2 (Segmentation) | 8.1 |
+| FR4-V2 (Visual Guide) | 8.2 |
+| FR5-V2 (Repetition) | 8.2 |
+| FR6-V2 (Ghost) | 9.1 |
+| FR7-V2 (Horizon) | 9.2 |
+| FR8-V2 (Atmospheric) | 9.3 |
+| FR9-V2 (Error Tolerance) | 9.4 |
+
+## V2 Implementation Order
+
+**Phase 1 (Fondations V2):**
+1. Story 7.1 — Mode Selector (bloque tout le reste)
+2. Story 7.2 — Cleanup Settings
+
+**Phase 2 (Learn Mode):**
+3. Story 8.1 — Dual Slider
+4. Story 8.2 — Overlay Permanent
+
+**Phase 3 (Game Mode):**
+5. Story 9.1 — GhostEngine
+6. Story 9.5 — Enregistrement PR (prérequis pour 9.2)
+7. Story 9.2 — Horizon Line
+8. Story 9.3 — Atmospheric Feedback
+9. Story 9.4 — Gestion Erreurs
+
 <!-- End story breakdown -->
 
 

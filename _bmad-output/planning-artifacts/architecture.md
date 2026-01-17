@@ -1,9 +1,9 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 'v2-extensions']
 workflowType: 'architecture'
-lastStep: 8
+lastStep: 'v2-extensions'
 status: 'complete'
-completedAt: '2026-01-16'
+completedAt: '2026-01-17'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
@@ -168,3 +168,345 @@ L'utilisation de `@Observable` minimise le travail de diffing de SwiftUI. C'est 
 - **Testing Framework :** XCTest pour les tests de performance (Unit & UI).
 - **Code Organization :** Feature-Sliced MVVM optimisé pour la vitesse.
 - **Development Experience :** SwiftUI Previews avec injection de données mock.
+
+---
+
+## V2 Architectural Extensions
+
+**Date:** 2026-01-17
+**Author:** Alex
+
+Cette section documente les extensions architecturales pour la version majeure V2, introduisant le système de modes (Learn/Practice/Game/Strict) et le Game Mode avec Ghost.
+
+### V2.1 Session Mode System
+
+#### Modèle de Données
+
+```swift
+// Shared/Models/SessionMode.swift
+enum SessionMode: String, CaseIterable, Codable {
+    case learn, practice, game, strict
+    
+    var allowsErrors: Bool {
+        switch self {
+        case .learn, .practice, .game: return true
+        case .strict: return false
+        }
+    }
+    
+    var showsOverlay: Bool {
+        self == .learn
+    }
+    
+    var hasGhost: Bool {
+        self == .game
+    }
+    
+    var penalizesErrors: Bool {
+        self == .game
+    }
+    
+    var displayName: String {
+        switch self {
+        case .learn: return "Learn"
+        case .practice: return "Practice"
+        case .game: return "Game"
+        case .strict: return "Strict"
+        }
+    }
+}
+```
+
+#### Persistance
+- Stockage dans `UserDefaults` via clé `selectedMode`
+- Valeur par défaut : `.learn` (nouveau comportement V2)
+
+#### Séparation des Responsabilités
+| Composant | Responsabilité |
+|-----------|----------------|
+| **PracticeEngine** | Logique de validation : arrêt en strict, pénalité en game, continuation en learn/practice |
+| **SessionViewModel** | UI : overlay (learn), couleurs atmosphériques (game), horizon line (game) |
+
+---
+
+### V2.2 Ghost System (Game Mode)
+
+#### GhostEngine
+
+```swift
+// Core/Engine/GhostEngine.swift
+@Observable
+final class GhostEngine {
+    private let personalBestTimes: [TimeInterval]  // Temps cumulés du PR
+    private let startTime: Date
+    
+    /// Position du Ghost basée sur le temps écoulé
+    var ghostPosition: Int {
+        let elapsed = Date().timeIntervalSince(startTime)
+        // Trouver l'index où le temps cumulé dépasse elapsed
+        return personalBestTimes.firstIndex { $0 > elapsed } ?? personalBestTimes.count
+    }
+    
+    init(personalBest: PersonalBestRecord) {
+        self.personalBestTimes = personalBest.cumulativeTimes
+        self.startTime = Date()
+    }
+}
+```
+
+#### Injection
+- `GhostEngine` est créé et injecté dans `SessionViewModel` **uniquement** quand `mode == .game`
+- Si aucun PR n'existe, le Ghost démarre à position 0 et n'avance pas (mode "premier essai")
+
+#### Données PR Requises
+Extension de `PersonalBestRecord` pour stocker les timestamps par décimale :
+```swift
+struct PersonalBestRecord: Codable {
+    let constant: Constant
+    let digitCount: Int
+    let totalTime: TimeInterval
+    let cumulativeTimes: [TimeInterval]  // NOUVEAU: temps à chaque décimale
+}
+```
+
+---
+
+### V2.3 Horizon Line & Atmospheric Feedback
+
+#### Calculs (SessionViewModel Extension)
+
+```swift
+// Features/Practice/SessionViewModel+Game.swift
+extension SessionViewModel {
+    /// Position effective du joueur (décimales - erreurs)
+    var playerEffectivePosition: Int {
+        engine.correctCount - engine.errorCount
+    }
+    
+    /// Position du Ghost (0 si pas de ghost)
+    var ghostPosition: Int {
+        ghostEngine?.ghostPosition ?? 0
+    }
+    
+    /// Delta normalisé : -1.0 (très en retard) à +1.0 (très en avance)
+    var atmosphericDelta: Double {
+        guard ghostPosition > 0 else { return 0 }
+        let delta = Double(playerEffectivePosition - ghostPosition)
+        let maxDelta = Double(max(ghostPosition, 10))  // Normaliser sur ~10 décimales
+        return max(-1.0, min(1.0, delta / maxDelta))
+    }
+    
+    /// Couleur atmosphérique interpolée
+    var atmosphericColor: Color {
+        if atmosphericDelta >= 0 {
+            // En avance → Orange Électrique
+            return Color(red: 1.0, green: 0.42, blue: 0.0)
+                .opacity(0.05 + atmosphericDelta * 0.15)
+        } else {
+            // En retard → Cyan (couleur signature)
+            return Color(red: 0.0, green: 0.95, blue: 1.0)
+                .opacity(0.05 + abs(atmosphericDelta) * 0.15)
+        }
+    }
+}
+```
+
+#### HorizonLineView
+
+```swift
+// Features/Practice/HorizonLineView.swift
+struct HorizonLineView: View {
+    let playerPosition: Int
+    let ghostPosition: Int
+    let totalTarget: Int  // Longueur totale du segment
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                // Ligne de base 1px
+                Rectangle()
+                    .fill(Color.white.opacity(0.2))
+                    .frame(height: 1)
+                
+                // Point Ghost (gris)
+                Circle()
+                    .fill(Color.gray)
+                    .frame(width: 6, height: 6)
+                    .offset(x: ghostOffset(in: geo.size.width))
+                
+                // Point Joueur (blanc)
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 8, height: 8)
+                    .offset(x: playerOffset(in: geo.size.width))
+            }
+        }
+        .frame(height: 10)
+    }
+    
+    private func ghostOffset(in width: CGFloat) -> CGFloat {
+        CGFloat(ghostPosition) / CGFloat(max(totalTarget, 1)) * width
+    }
+    
+    private func playerOffset(in width: CGFloat) -> CGFloat {
+        CGFloat(playerPosition) / CGFloat(max(totalTarget, 1)) * width
+    }
+}
+```
+
+---
+
+### V2.4 Learn Mode — Segment Selection
+
+#### Extension LearningStore
+
+```swift
+// Core/Persistence/LearningStore.swift (extension)
+extension LearningStore {
+    private static let segmentStartKey = "learnSegmentStart"
+    private static let segmentEndKey = "learnSegmentEnd"
+    
+    var segmentStart: Int {
+        get { UserDefaults.standard.integer(forKey: Self.segmentStartKey) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.segmentStartKey) }
+    }
+    
+    var segmentEnd: Int {
+        get { 
+            let value = UserDefaults.standard.integer(forKey: Self.segmentEndKey)
+            return value > 0 ? value : 50  // Défaut: 50 décimales
+        }
+        set { UserDefaults.standard.set(newValue, forKey: Self.segmentEndKey) }
+    }
+}
+```
+
+#### Dual Slider Component
+
+```swift
+// Features/Home/SegmentSlider.swift
+struct SegmentSlider: View {
+    @Binding var start: Int
+    @Binding var end: Int
+    let maxValue: Int  // Nombre total de décimales disponibles
+    
+    // Implémentation du slider dual avec contrainte start < end
+}
+```
+
+---
+
+### V2.5 Gestion des Erreurs (Game Mode)
+
+#### Modification PracticeEngine
+
+```swift
+// Core/Engine/PracticeEngine.swift (modification)
+func input(_ digit: Character) -> InputResult {
+    // ... validation existante ...
+    
+    if isCorrect {
+        correctCount += 1
+        return .correct
+    } else {
+        errorCount += 1
+        
+        switch currentMode {
+        case .strict:
+            state = .finished(reason: .error)
+            return .error(fatal: true)
+        case .game:
+            // Pénalité: -1 sur position effective (géré par le compteur errorCount)
+            return .error(fatal: false, revealCorrect: true)
+        case .learn, .practice:
+            return .error(fatal: false, revealCorrect: true)
+        }
+    }
+}
+```
+
+#### InputResult étendu
+
+```swift
+enum InputResult {
+    case correct
+    case error(fatal: Bool, revealCorrect: Bool = false)
+}
+```
+
+---
+
+### V2.6 Structure de Fichiers Étendue
+
+```text
+PiTrainer/
+├── Core/
+│   ├── Engine/
+│   │   ├── PracticeEngine.swift      # Modifié: mode handling
+│   │   └── GhostEngine.swift         # NOUVEAU
+│   └── Persistence/
+│       ├── LearningStore.swift       # Étendu: segment start/end
+│       └── PersonalBestStore.swift   # NOUVEAU: stockage des temps PR
+├── Features/
+│   ├── Practice/
+│   │   ├── SessionViewModel.swift    # Étendu: Ghost/Atmospheric
+│   │   ├── SessionViewModel+Game.swift  # NOUVEAU: extension Game
+│   │   └── HorizonLineView.swift     # NOUVEAU
+│   └── Home/
+│       ├── ModeSelector.swift        # NOUVEAU
+│       └── SegmentSlider.swift       # NOUVEAU
+└── Shared/
+    └── Models/
+        ├── SessionMode.swift         # NOUVEAU
+        └── PersonalBestRecord.swift  # NOUVEAU/Étendu
+```
+
+---
+
+### V2.7 Diagramme de Flux (Game Mode)
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant SessionView
+    participant SessionVM
+    participant PracticeEngine
+    participant GhostEngine
+    
+    User->>SessionView: Sélectionne Game Mode
+    SessionView->>SessionVM: startSession(mode: .game)
+    SessionVM->>GhostEngine: init(personalBest)
+    SessionVM->>PracticeEngine: start(mode: .game)
+    
+    loop Chaque Frame (60 FPS)
+        SessionView->>SessionVM: atmosphericColor
+        SessionVM->>GhostEngine: ghostPosition
+        SessionVM-->>SessionView: Color interpolée
+    end
+    
+    User->>SessionView: Tape un chiffre
+    SessionView->>SessionVM: input(digit)
+    SessionVM->>PracticeEngine: input(digit)
+    
+    alt Correct
+        PracticeEngine-->>SessionVM: .correct
+        SessionVM->>SessionVM: playerEffectivePosition += 1
+    else Erreur
+        PracticeEngine-->>SessionVM: .error(fatal: false)
+        SessionVM->>SessionVM: errorCount += 1 (position -1 effective)
+    end
+    
+    SessionVM-->>SessionView: Update HorizonLine + Atmospheric
+```
+
+---
+
+### V2 Validation
+
+| Critère | Statut |
+|---------|--------|
+| **Performance 16ms** | ✅ Calculs lazy, pas de timers |
+| **Cohérence Architecture** | ✅ Extension du pattern existant |
+| **Testabilité** | ✅ GhostEngine injectable, mockable |
+| **Séparation Concerns** | ✅ Engine = logique, VM = présentation |
+

@@ -91,3 +91,36 @@ Avant de dire “c’est terminé” :
   - “Je vais faire X”
   - “J’ai fait X (preuve ci-dessous)”
 - En cas d’incertitude : vérifier via commandes plutôt que supposer.
+
+## 7) Gestion des branches de développement
+
+### 7.1 Branches protégées (CI/CD actif)
+- `main` : Branche de production, déclenche Xcode Cloud → TestFlight
+- **Ne jamais pusher directement sur `main`** pendant le développement V2
+- Les merges vers `main` doivent être validés et testés
+
+### 7.2 Branches de développement (CI/CD désactivé)
+- `v2-development` : Développement V2 en isolation complète
+- Aucun push sur cette branche ne déclenche de build TestFlight
+- Permet de commiter librement sans impacter les utilisateurs V1
+
+### 7.3 Workflow de développement V2
+1. Travailler sur `v2-development`
+2. Tester en local (simulateur uniquement)
+3. Commiter régulièrement pour traçabilité
+4. Optionnel : pusher vers `origin/v2-development` pour backup
+5. Merger vers `main` uniquement quand V2 est prête ET V1 validée
+
+### 7.4 Commandes utiles
+```bash
+# Vérifier la branche courante
+git branch --show-current
+
+# Basculer entre branches
+git checkout main           # Pour hotfixes V1
+git checkout v2-development # Pour développement V2
+
+# Synchroniser V2 avec les derniers changements V1
+git checkout v2-development
+git merge main
+```
