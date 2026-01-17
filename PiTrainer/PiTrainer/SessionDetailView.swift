@@ -19,7 +19,7 @@ struct SessionDetailView: View {
             }
             
             Section(header: Text("stats.performance")) {
-                DetailRow(label: "stats.attempts", value: "\(session.attempts)")
+                DetailRow(label: "stats.decimals", value: "\(session.attempts)")
                 DetailRow(label: "stats.errors", value: "\(session.errors)", color: session.errors > 0 ? .red : .primary)
                 DetailRow(label: "stats.best_streak", value: "\(session.bestStreakInSession)", color: DesignSystem.Colors.cyanElectric)
                 
@@ -28,25 +28,23 @@ struct SessionDetailView: View {
                 }
             }
             
-            Section(header: Text("session.summary.speed")) {
-                // CPS Group
-                DetailRow(label: "CPS AVG", value: String(format: "%.1f", session.cps))
-                if let min = session.minCPS {
-                    DetailRow(label: "CPS MIN", value: String(format: "%.1f", min))
+            Section(header: Text("stats.speed.per_second")) {
+                DetailRow(label: "AVG", value: String(format: "%.1f", session.cps))
+                if let min = session.minCPS, min > 0 {
+                    DetailRow(label: "MIN", value: String(format: "%.1f", min))
                 }
-                if let max = session.maxCPS {
-                    DetailRow(label: "CPS MAX", value: String(format: "%.1f", max))
+                if let max = session.maxCPS, max > 0 {
+                    DetailRow(label: "MAX", value: String(format: "%.1f", max))
                 }
-                
-                Divider()
-                
-                // CPM Group
-                DetailRow(label: "CPM AVG", value: String(format: "%.1f", session.digitsPerMinute))
-                if let min = session.minCPS {
-                    DetailRow(label: "CPM MIN", value: String(format: "%.1f", min * 60.0))
+            }
+            
+            Section(header: Text("stats.speed.per_minute")) {
+                DetailRow(label: "AVG", value: String(format: "%.1f", session.digitsPerMinute))
+                if let min = session.minCPS, min > 0 {
+                    DetailRow(label: "MIN", value: String(format: "%.1f", min * 60.0))
                 }
-                if let max = session.maxCPS {
-                    DetailRow(label: "CPM MAX", value: String(format: "%.1f", max * 60.0))
+                if let max = session.maxCPS, max > 0 {
+                    DetailRow(label: "MAX", value: String(format: "%.1f", max * 60.0))
                 }
             }
         }
