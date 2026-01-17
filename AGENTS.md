@@ -92,35 +92,178 @@ Avant de dire “c’est terminé” :
   - “J’ai fait X (preuve ci-dessous)”
 - En cas d’incertitude : vérifier via commandes plutôt que supposer.
 
-## 7) Gestion des branches de développement
+## 7) Gestion des branches V1 / V2
 
-### 7.1 Branches protégées (CI/CD actif)
-- `main` : Branche de production, déclenche Xcode Cloud → TestFlight
-- **Ne jamais pusher directement sur `main`** pendant le développement V2
-- Les merges vers `main` doivent être validés et testés
+> ⚠️ **LECTURE OBLIGATOIRE** : Tout agent DOIT lire cette section AVANT de modifier du code.
 
-### 7.2 Branches de développement (CI/CD désactivé)
-- `v2-development` : Développement V2 en isolation complète
-- Aucun push sur cette branche ne déclenche de build TestFlight
-- Permet de commiter librement sans impacter les utilisateurs V1
+### 7.1 Vue d'ensemble des branches
 
-### 7.3 Workflow de développement V2
-1. Travailler sur `v2-development`
-2. Tester en local (simulateur uniquement)
-3. Commiter régulièrement pour traçabilité
-4. Optionnel : pusher vers `origin/v2-development` pour backup
-5. Merger vers `main` uniquement quand V2 est prête ET V1 validée
+| Branche | Version | CI/CD | TestFlight | Usage |
+|---------|---------|-------|------------|-------|
+| `main` | V1 | ✅ Actif | ✅ Oui | Production, hotfixes critiques |
+| `v2-development` | V2 | ❌ Désactivé | ❌ Non | Développement nouvelles fonctionnalités |
 
-### 7.4 Commandes utiles
+### 7.2 🚨 VÉRIFICATION OBLIGATOIRE AU DÉMARRAGE
+
+**AVANT toute modification de code, exécuter :**
 ```bash
-# Vérifier la branche courante
+git branch --show-current
+git status
+```
+
+**Interpréter le résultat :**
+- Si `main` → Tu es sur V1 (production)
+- Si `v2-development` → Tu es sur V2 (développement)
+- Si autre chose → STOP et demander clarification à l'utilisateur
+
+---
+
+## 📋 PROCÉDURE A : Correction V1 (Hotfix Production)
+
+> **Quand utiliser** : L'utilisateur demande de "corriger la V1", "fix V1", "hotfix", ou mentionne un bug en production/TestFlight.
+
+### Étape A.1 — Préparer l'environnement V1
+```bash
+# 1. Sauvegarder le travail V2 en cours (si applicable)
+git stash push -m "WIP-V2-avant-hotfix-V1"
+
+# 2. Basculer sur main
+git checkout main
+
+# 3. S'assurer d'être à jour
+git pull origin main
+
+# 4. Vérifier l'état
+git status
+git log -1 --oneline --decorate
+```
+
+### Étape A.2 — Appliquer le correctif
+1. Modifier le code nécessaire
+2. Exécuter les tests : `xcodebuild test -scheme PiTrainer -destination 'platform=iOS Simulator,name=iPhone 16e' -only-testing:PiTrainerTests`
+3. Vérifier que tous les tests passent
+
+### Étape A.3 — Commiter et pusher (avec validation utilisateur)
+```bash
+git add .
+git commit -m "fix(v1): [description du fix]"
+git push origin main
+```
+**⚠️ Ce push déclenche automatiquement Xcode Cloud → TestFlight**
+
+### Étape A.4 — Fournir les preuves (obligatoire)
+```bash
+git rev-parse HEAD
+git ls-remote origin refs/heads/main
+# Les deux SHA doivent correspondre
+```
+
+### Étape A.5 — Synchroniser V2 avec le fix V1
+```bash
+# Retourner sur V2
+git checkout v2-development
+
+# Récupérer le stash si applicable
+git stash pop
+
+# Merger le fix V1 dans V2
+git merge main -m "merge: sync V2 with V1 hotfix"
+```
+
+---
+
+## 📋 PROCÉDURE B : Développement V2
+
+> **Quand utiliser** : L'utilisateur demande de "travailler sur V2", "nouvelle fonctionnalité", "développement", ou fait référence aux epics/stories V2.
+
+### Étape B.1 — Vérifier la branche courante
+```bash
+git branch --show-current
+```
+
+**Si résultat = `main`** → Basculer sur V2 :
+```bash
+git checkout v2-development
+```
+
+**Si résultat = `v2-development`** → ✅ Continuer
+
+### Étape B.2 — Vérifier si V1 a des changements récents
+```bash
+git log main --oneline -3
+git log v2-development --oneline -3
+```
+
+**Si `main` a des commits plus récents que le dernier merge** → Synchroniser d'abord :
+```bash
+git merge main -m "merge: sync V2 with latest V1"
+```
+
+### Étape B.3 — Développer normalement
+1. Modifier le code
+2. Tester en local (simulateur uniquement)
+3. Commiter régulièrement sur `v2-development`
+
+### Étape B.4 — Commiter (avec validation utilisateur)
+```bash
+git add .
+git commit -m "feat(v2): [description]"
+```
+
+**Note** : Pas de push obligatoire. Push optionnel vers `origin/v2-development` pour backup (ne déclenche PAS TestFlight).
+
+---
+
+## 📋 PROCÉDURE C : Gérer une interruption V1 pendant le travail V2
+
+> **Quand utiliser** : Tu travailles sur V2 et l'utilisateur demande un fix V1 urgent.
+
+### Étape C.1 — Sauvegarder le travail V2
+```bash
+# Vérifier les modifications en cours
+git status
+
+# Option 1 : Commiter le travail en cours
+git add .
+git commit -m "wip(v2): sauvegarde avant hotfix V1"
+
+# Option 2 : Stash si pas prêt à commiter
+git stash push -m "WIP-V2-interruption-hotfix"
+```
+
+### Étape C.2 — Exécuter PROCÉDURE A (Correction V1)
+
+### Étape C.3 — Reprendre le travail V2
+```bash
+git checkout v2-development
+git merge main -m "merge: sync V2 after V1 hotfix"
+
+# Si stash utilisé :
+git stash pop
+```
+
+---
+
+## 🔒 Règles de sécurité
+
+1. **JAMAIS de push sur `main`** sans validation explicite de l'utilisateur
+2. **JAMAIS de merge V2 → main** sans validation utilisateur ET tests complets
+3. **TOUJOURS** vérifier la branche courante avant de modifier du code
+4. **TOUJOURS** synchroniser V2 après un hotfix V1
+
+## 📊 Commandes de diagnostic rapide
+
+```bash
+# Où suis-je ?
 git branch --show-current
 
-# Basculer entre branches
-git checkout main           # Pour hotfixes V1
-git checkout v2-development # Pour développement V2
+# État des deux branches
+git log main --oneline -1
+git log v2-development --oneline -1
 
-# Synchroniser V2 avec les derniers changements V1
-git checkout v2-development
-git merge main
+# Différences entre V1 et V2
+git log main..v2-development --oneline
+
+# Y a-t-il des changements V1 non mergés dans V2 ?
+git log v2-development..main --oneline
 ```
