@@ -222,12 +222,13 @@ class SessionViewModel: ObservableObject {
             if record.attempts >= 5 {
                 NotificationService.shared.requestAuthorization()
             }
-            
-            // Story 5.2 Patch: Stop and dismiss only if explicitly requested
-            if shouldDismiss {
-                engine.reset()
-                self.shouldDismiss = true
-            }
+        }
+        
+        // Story 5.2 Patch: Stop and dismiss only if explicitly requested
+        // Moved outside the if condition to allow exiting even if session hasn't started (Bug Fix)
+        if shouldDismiss {
+            engine.reset()
+            self.shouldDismiss = true
         }
     }
 }

@@ -178,7 +178,10 @@ class SessionHistoryTests: XCTestCase {
             errors: errors,
             bestStreakInSession: 10,
             durationSeconds: 60,
-            digitsPerMinute: 30.0
+            digitsPerMinute: 30.0,
+            revealsUsed: 0,
+            minCPS: nil,
+            maxCPS: 0
         )
     }
 }

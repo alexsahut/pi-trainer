@@ -29,6 +29,10 @@ final class MockDigitsProvider: DigitsProvider {
     var totalDigits: Int = 100
     var digits: [Int] = [1, 4, 1, 5, 9, 2, 6, 5, 3, 5] // First few digits of Pi
     
+    var allDigitsString: String {
+        return digits.map { String($0) }.joined()
+    }
+    
     func getDigit(at index: Int) -> Int? {
         guard index < totalDigits else { return nil }
         return digits[index % digits.count]

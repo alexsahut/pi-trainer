@@ -102,7 +102,10 @@ final class StatsPerConstantTests: XCTestCase {
             errors: 0,
             bestStreakInSession: 50,
             durationSeconds: 120,
-            digitsPerMinute: 30
+            digitsPerMinute: 30,
+            revealsUsed: 0,
+            minCPS: nil,
+            maxCPS: 0
         )
         
         // When saving
@@ -123,7 +126,10 @@ final class StatsPerConstantTests: XCTestCase {
             errors: 5,
             bestStreakInSession: 5,
             durationSeconds: 20,
-            digitsPerMinute: 10
+            digitsPerMinute: 10,
+            revealsUsed: 0,
+            minCPS: nil,
+            maxCPS: 0
         )
         statsStore.addSessionRecord(worseRecord)
         
