@@ -59,6 +59,9 @@ struct TerminalGridView: View {
     /// Whether to show error flash on the last digit
     var showError: Bool = false
     
+    /// Wrong digit entered by user (displayed in red at cursor position)
+    var wrongInputDigit: Int? = nil
+    
     /// Index of the last correctly typed digit (for active highlight)
     var activeIndex: Int? = nil
     
@@ -165,6 +168,9 @@ struct TerminalGridView: View {
                         let isLast = globalIndex == typedDigits.count - 1
                         let state = digitState(globalIndex: globalIndex, isLast: isLast)
                         digitView(digit: row.digits[digitIndex], state: state)
+                    } else if globalIndex == typedDigits.count, let wrongDigit = wrongInputDigit {
+                        // Show the wrong input in red at cursor position
+                        digitView(digit: wrongDigit, state: .error)
                     } else if digitIndex < revealedInRow {
                         // Ghost Reveal Pattern (Story 6.1)
                         if let ghostChar = fullDigits.count > globalIndex ? fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)] : nil,

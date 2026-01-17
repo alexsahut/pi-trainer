@@ -20,6 +20,7 @@ class SessionViewModel: ObservableObject {
     @Published private(set) var showErrorFlash: Bool = false
     @Published private(set) var lastCorrectDigit: Int?
     @Published private(set) var expectedDigit: Int? // For learning mode feedback
+    @Published private(set) var lastWrongInput: Int? // For visual feedback of wrong entry
     @Published var errorState: String? // Critical error preventing session start
     @Published var shouldDismiss: Bool = false // Signal to View to dismiss itself
     @Published var revealsUsed: Int = 0 // Track assistance used (Story 6.2)
@@ -147,6 +148,7 @@ class SessionViewModel: ObservableObject {
         } else {
             // Error feedback
             expectedDigit = result.expectedDigit
+            lastWrongInput = digit
             HapticService.shared.playError()
             
             withAnimation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true)) {
@@ -156,12 +158,11 @@ class SessionViewModel: ObservableObject {
             // Reset flash after a short delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.showErrorFlash = false
+                self.lastWrongInput = nil
             }
             
-            if engine.mode == .learning {
-                // In learning mode, we still advance
-                typedDigits.append(String(result.expectedDigit))
-            }
+            // Note: In learning mode, we no longer auto-advance (Story correction)
+            // The user must correct the mistake or use a hint.
         }
         
         // Critical Fix: Check if engine finished (e.g. Strict Mode failure)

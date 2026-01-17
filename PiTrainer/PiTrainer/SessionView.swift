@@ -94,7 +94,8 @@ struct SessionView: View {
                     onReveal: { count in
                         viewModel.reveal(count: count)
                     },
-                    showError: viewModel.showErrorFlash
+                    showError: viewModel.showErrorFlash,
+                    wrongInputDigit: viewModel.lastWrongInput
                 )
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 200)

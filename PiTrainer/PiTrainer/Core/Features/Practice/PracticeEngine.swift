@@ -225,9 +225,8 @@ class PracticeEngine {
                 indexAdvanced = false
                 
             case .learning:
-                // Reveal answer and advance to keep flow
-                currentIndex += 1
-                indexAdvanced = true
+                // Stay on current index to allow retry
+                indexAdvanced = false
             }
         }
         
