@@ -53,6 +53,10 @@ struct FileDigitsProvider: DigitsProvider {
         return digits.count
     }
     
+    var allDigitsString: String {
+        return digits.map { String($0) }.joined()
+    }
+    
     mutating func loadDigits() throws {
         // If already loaded, return
         if !digits.isEmpty { return }

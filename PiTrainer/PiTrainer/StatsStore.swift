@@ -19,12 +19,45 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     let bestStreakInSession: Int
     let durationSeconds: TimeInterval
     let digitsPerMinute: Double
+    let revealsUsed: Int
     
     var cps: Double {
         digitsPerMinute / 60.0
     }
     
-    // Legacy support init (if needed) or convenience
+    // Custom decoder for backward compatibility (Story 6.2)
+    enum CodingKeys: String, CodingKey {
+        case id, date, constant, mode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        date = try container.decode(Date.self, forKey: .date)
+        constant = try container.decode(Constant.self, forKey: .constant)
+        mode = try container.decode(PracticeEngine.Mode.self, forKey: .mode)
+        attempts = try container.decode(Int.self, forKey: .attempts)
+        errors = try container.decode(Int.self, forKey: .errors)
+        bestStreakInSession = try container.decode(Int.self, forKey: .bestStreakInSession)
+        durationSeconds = try container.decode(TimeInterval.self, forKey: .durationSeconds)
+        digitsPerMinute = try container.decode(Double.self, forKey: .digitsPerMinute)
+        // Default to 0 for records created before Epic 6
+        revealsUsed = try container.decodeIfPresent(Int.self, forKey: .revealsUsed) ?? 0
+    }
+    
+    // Memberwise initializer for convenience
+    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int) {
+        self.id = id
+        self.date = date
+        self.constant = constant
+        self.mode = mode
+        self.attempts = attempts
+        self.errors = errors
+        self.bestStreakInSession = bestStreakInSession
+        self.durationSeconds = durationSeconds
+        self.digitsPerMinute = digitsPerMinute
+        self.revealsUsed = revealsUsed
+    }
 }
 
 /// Statistics specific to a single constant
@@ -313,7 +346,8 @@ class StatsStore: ObservableObject {
                     errors: session.errors,
                     bestStreakInSession: session.bestStreak,
                     durationSeconds: session.elapsedTime,
-                    digitsPerMinute: session.digitsPerMinute
+                    digitsPerMinute: session.digitsPerMinute,
+                    revealsUsed: 0
                 )
             }
             

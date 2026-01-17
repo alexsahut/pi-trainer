@@ -21,6 +21,8 @@ class SessionViewModel: ObservableObject {
     @Published private(set) var lastCorrectDigit: Int?
     @Published private(set) var expectedDigit: Int? // For learning mode feedback
     @Published var errorState: String? // Critical error preventing session start
+    @Published var shouldDismiss: Bool = false // Signal to View to dismiss itself
+    @Published var revealsUsed: Int = 0 // Track assistance used (Story 6.2)
     
     // UI selection state
     @Published var selectedMode: PracticeEngine.Mode = .strict
@@ -60,6 +62,10 @@ class SessionViewModel: ObservableObject {
     
     var constantSymbol: String {
         return selectedConstant.symbol
+    }
+    
+    var fullDigitsString: String {
+        return engine.allDigitsString
     }
     
     // MARK: - Initialization
@@ -108,6 +114,8 @@ class SessionViewModel: ObservableObject {
             showErrorFlash = false
             lastCorrectDigit = nil
             expectedDigit = nil
+            shouldDismiss = false
+            revealsUsed = 0
             print("debug: session started for \(constant) in \(selectedMode) mode")
             
         } catch {
@@ -178,8 +186,14 @@ class SessionViewModel: ObservableObject {
         startSession()
     }
     
+    /// Reveals the current line (increments help counter)
+    func revealCurrentLine() {
+        revealsUsed += 1
+        HapticService.shared.playSuccess() // Light feedback
+    }
+    
     /// Ends the session and saves stats
-    func endSession() {
+    func endSession(shouldDismiss: Bool = false) {
         // We allow ending if active OR if it just finished (to capture the last record)
         if engine.isActive || engine.state == .finished {
             let record = SessionRecord(
@@ -191,7 +205,8 @@ class SessionViewModel: ObservableObject {
                 errors: engine.errors,
                 bestStreakInSession: engine.bestStreak,
                 durationSeconds: engine.elapsedTime,
-                digitsPerMinute: engine.digitsPerMinute
+                digitsPerMinute: engine.digitsPerMinute,
+                revealsUsed: revealsUsed
             )
             
             onSaveSession?(record)
@@ -204,6 +219,12 @@ class SessionViewModel: ObservableObject {
             // Story 5.2: Request notification consent after the first "meaningful" session
             if record.attempts >= 5 {
                 NotificationService.shared.requestAuthorization()
+            }
+            
+            // Story 5.2 Patch: Stop and dismiss only if explicitly requested
+            if shouldDismiss {
+                engine.reset()
+                self.shouldDismiss = true
             }
         }
     }

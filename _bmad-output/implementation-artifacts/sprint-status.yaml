@@ -69,8 +69,13 @@ development_status:
   epic-4-retrospective: done
   ux-ui-review-retrospective: done
 
-  epic-5: backlog
-  5-1-gestion-du-daily-streak-utilisation-consecutive: backlog
-  5-2-systeme-de-consentement-notifications-locales: backlog
-  5-3-notifications-de-rappel-journalier: backlog
-  epic-5-retrospective: optional
+  epic-5: done
+  5-1-gestion-du-daily-streak-utilisation-consecutive: done
+  5-2-systeme-de-consentement-notifications-locales: done
+  5-3-notifications-de-rappel-journalier: done
+  epic-5-retrospective: done
+
+  epic-6: done
+  6-1-assistance-juste-a-temps-ghost-reveal: done
+  6-2-statistiques-d-assistance-reveal-counter: done
+  epic-6-retrospective: done

@@ -47,6 +47,15 @@ struct TerminalGridView: View {
     /// The integer part of the constant (e.g., "3" for Pi)
     let integerPart: String
     
+    /// Full digits string for ghost reveal (Story 6.1)
+    let fullDigits: String
+    
+    /// Whether the session is in learning mode (Story 6.1)
+    var isLearnMode: Bool = false
+    
+    /// Callback when a row is revealed
+    var onReveal: ((Int) -> Void)? = nil
+    
     /// Whether to show error flash on the last digit
     var showError: Bool = false
     
@@ -59,17 +68,27 @@ struct TerminalGridView: View {
         let digits = typedDigits.compactMap { Int(String($0)) }
         var result: [TerminalRow] = []
         
-        // Create rows of 10 digits each
-        var index = 0
-        while index < digits.count {
-            let endIndex = min(index + 10, digits.count)
-            let rowDigits = Array(digits[index..<endIndex])
-            result.append(TerminalRow(index: result.count, digits: rowDigits))
-            index += 10
+        let rowCount = (digits.count / 10) + 1
+        
+        for i in 0..<rowCount {
+            let startIndex = i * 10
+            let endIndex = min(startIndex + 10, digits.count)
+            
+            let rowDigits: [Int]
+            if startIndex < digits.count {
+                rowDigits = Array(digits[startIndex..<endIndex])
+            } else {
+                rowDigits = []
+            }
+            
+            result.append(TerminalRow(index: i, digits: rowDigits))
         }
         
         return result
     }
+    
+    
+    @State private var revealedRows: Set<Int> = []
     
     // MARK: - Body
     
@@ -138,17 +157,23 @@ struct TerminalGridView: View {
             
             // Digits in this row
             HStack(spacing: 2) {
-                ForEach(0..<row.digits.count, id: \.self) { digitIndex in
+                ForEach(0..<10, id: \.self) { digitIndex in
                     let globalIndex = row.id * 10 + digitIndex
-                    let isLast = globalIndex == typedDigits.count - 1
-                    let state = digitState(globalIndex: globalIndex, isLast: isLast)
                     
-                    digitView(digit: row.digits[digitIndex], state: state)
-                }
-                
-                // Placeholder for incomplete rows
-                if !row.isComplete {
-                    ForEach(row.digits.count..<10, id: \.self) { _ in
+                    if digitIndex < row.digits.count {
+                        let isLast = globalIndex == typedDigits.count - 1
+                        let state = digitState(globalIndex: globalIndex, isLast: isLast)
+                        digitView(digit: row.digits[digitIndex], state: state)
+                    } else if revealedRows.contains(row.id) {
+                        // Ghost Reveal Pattern (Story 6.1)
+                        if let ghostChar = fullDigits.count > globalIndex ? fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)] : nil,
+                           let digit = Int(String(ghostChar)) {
+                            digitView(digit: digit, state: .normal)
+                                .opacity(0.15) // Ghostly transparency
+                        } else {
+                            placeholderView
+                        }
+                    } else {
                         placeholderView
                     }
                 }
@@ -178,6 +203,23 @@ struct TerminalGridView: View {
                 Text("\(row.lineNumber) >")
                     .font(.system(size: 12, weight: .regular, design: .monospaced))
                     .foregroundColor(.gray.opacity(0.5))
+            } else if isLearnMode && !revealedRows.contains(row.id) {
+                // Reveal Button (Story 6.1)
+                Button {
+                    withAnimation(.spring()) {
+                        revealedRows.insert(row.id)
+                    }
+                    onReveal?(row.id)
+                } label: {
+                    Image(systemName: "eye.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.6))
+                        .frame(width: 24, height: 24)
+                        .background(DesignSystem.Colors.cyanElectric.opacity(0.1))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(PlainButtonStyle())
+                .accessibilityLabel(String(localized: "Révéler la ligne"))
             } else {
                 Text("   ")
                     .font(.system(size: 12, weight: .regular, design: .monospaced))
@@ -244,21 +286,25 @@ struct TerminalGridView: View {
 #Preview("Empty") {
     TerminalGridView(
         typedDigits: "",
-        integerPart: "3"
+        integerPart: "3",
+        fullDigits: "1415",
+        isLearnMode: true
     )
 }
 
 #Preview("10 Digits") {
     TerminalGridView(
         typedDigits: "1415926535",
-        integerPart: "3"
+        integerPart: "3",
+        fullDigits: "1415926535"
     )
 }
 
 #Preview("50 Digits") {
     TerminalGridView(
         typedDigits: "14159265358979323846264338327950288419716939937510",
-        integerPart: "3"
+        integerPart: "3",
+        fullDigits: "14159265358979323846264338327950288419716939937510"
     )
 }
 
@@ -269,7 +315,8 @@ struct TerminalGridView: View {
                  "48111745028410270193852110555964462294895493038196"
     TerminalGridView(
         typedDigits: digits,
-        integerPart: "3"
+        integerPart: "3",
+        fullDigits: digits
     )
 }
 
@@ -277,6 +324,7 @@ struct TerminalGridView: View {
     TerminalGridView(
         typedDigits: "141592653",
         integerPart: "3",
+        fullDigits: "1415926535",
         showError: true
     )
 }

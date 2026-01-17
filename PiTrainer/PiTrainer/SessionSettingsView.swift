@@ -99,7 +99,7 @@ struct SessionSettingsView: View {
                             }
                             
                             Button(action: { 
-                                viewModel.endSession()
+                                viewModel.endSession(shouldDismiss: true)
                                 dismiss()
                             }) {
                                 HStack {

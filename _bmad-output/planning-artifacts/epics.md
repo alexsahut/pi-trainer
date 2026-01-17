@@ -362,6 +362,35 @@ So that sauver ma série (streak) en cours.
 **Then** une notification locale est envoyée avec un message mentionnant le streak actuel
 **And** la notification est annulée si une session est réalisée avant l'heure du rappel.
 
+### Epic 6: Apprentissage Contextuel (Mode Reveal)
+
+Améliorer le mode Apprentissage en permettant une assistance ponctuelle directement dans la grille de saisie, tout en suivant l'utilisation de cette aide.
+
+#### Story 6.1: Assistance "Juste-à-Temps" (Ghost Reveal)
+As a utilisateur bloqué lors d'une session,
+I want pouvoir afficher discrètement les chiffres manquants d'une ligne,
+So that débloquer ma mémorisation et continuer ma progression sans quitter la session.
+
+**Acceptance Criteria:**
+- **Given** une session en mode **LEARN**
+- **When** une ligne de 10 chiffres n'est pas encore complétée
+- **Then** un bouton discret (icône d'œil ou similaire) apparaît à gauche de la ligne
+- **When** j'appuie sur ce bouton
+- **Then** les chiffres restants de la ligne s'affichent de manière translucide (transparence ~20%)
+- **And** je peux taper par-dessus ces chiffres "fantômes".
+
+#### Story 6.2: Statistiques d'Assistance (Reveal Counter)
+As a utilisateur cherchant à mesurer ma progression réelle,
+I want savoir combien de fois j'ai utilisé l'assistance lors d'une session,
+So that évaluer mon degré d'autonomie dans la mémorisation.
+
+**Acceptance Criteria:**
+- **Given** une session active
+- **When** j'utilise le bouton de "Reveal"
+- **Then** un compteur `revealsUsed` est incrémenté pour la session en cours
+- **And** ce score est affiché dans le résumé de fin de session
+- **And** le nombre de "reveals" est persisté dans l'historique de la session.
+
 <!-- End story breakdown -->
 
 

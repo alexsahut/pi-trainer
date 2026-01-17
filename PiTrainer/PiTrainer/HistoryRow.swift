@@ -85,7 +85,8 @@ struct HistoryRow: View {
                 errors: 0,
                 bestStreakInSession: 85,
                 durationSeconds: 120,
-                digitsPerMinute: 42
+                digitsPerMinute: 42,
+                revealsUsed: 0
             ))
             
             HistoryRow(session: SessionRecord(
@@ -97,7 +98,8 @@ struct HistoryRow: View {
                 errors: 3,
                 bestStreakInSession: 12,
                 durationSeconds: 60,
-                digitsPerMinute: 25
+                digitsPerMinute: 25,
+                revealsUsed: 3
             ))
         }
     }

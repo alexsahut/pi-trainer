@@ -89,6 +89,11 @@ struct SessionView: View {
                 TerminalGridView(
                     typedDigits: viewModel.typedDigits,
                     integerPart: viewModel.integerPart,
+                    fullDigits: viewModel.fullDigitsString,
+                    isLearnMode: viewModel.selectedMode == .learning,
+                    onReveal: { _ in
+                        viewModel.revealCurrentLine()
+                    },
                     showError: viewModel.showErrorFlash
                 )
                 .frame(maxWidth: .infinity)
@@ -125,6 +130,17 @@ struct SessionView: View {
                                     Text(String(format: "%.1f", viewModel.engine.digitsPerMinute))
                                         .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
                                         .foregroundColor(.white)
+                                }
+                                
+                                if viewModel.revealsUsed > 0 {
+                                    VStack(spacing: 4) {
+                                        Text(String(localized: "REVEALS"))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        Text("\(viewModel.revealsUsed)")
+                                            .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
+                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                    }
                                 }
                             }
                             .padding(.bottom, 10)
@@ -195,6 +211,11 @@ struct SessionView: View {
         .animation(.default, value: viewModel.isActive)
         .sheet(isPresented: $showOptions) {
             SessionSettingsView(viewModel: viewModel, statsStore: statsStore)
+        }
+        .onChange(of: viewModel.shouldDismiss) { _, newValue in
+            if newValue {
+                dismiss()
+            }
         }
     }
     

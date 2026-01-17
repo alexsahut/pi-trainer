@@ -12,6 +12,9 @@ protocol DigitsProvider {
     /// Total number of available digits
     var totalDigits: Int { get }
     
+    /// All digits as a string (for visual assistance / ghost reveal)
+    var allDigitsString: String { get }
+    
     /// Gets a specific digit at the given index
     /// - Parameter index: Zero-based index (0 = first digit after decimal point)
     /// - Returns: The digit (0-9) at the specified index, or nil if out of bounds

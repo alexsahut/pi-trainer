@@ -14,6 +14,7 @@ class SessionMockDigitsProvider: DigitsProvider {
     private var digits: [UInt8] = []
     
     var totalDigits: Int { digits.count }
+    var allDigitsString: String { digits.map { String($0) }.joined() }
     
     init(constant: Constant = .pi) { 
         self.constant = constant
@@ -179,5 +180,31 @@ final class SessionViewModelTests: XCTestCase {
         viewModel.processInput(9) // Incorrect
         
         wait(for: [saveExpectation2], timeout: 1.0)
+    }
+    
+    func testRevealCurrentLine_TracksUsage() {
+        // When: Call reveal twice
+        viewModel.revealCurrentLine()
+        viewModel.revealCurrentLine()
+        
+        // Then: Counter should be 2
+        XCTAssertEqual(viewModel.revealsUsed, 2)
+    }
+    
+    func testEndSession_IncludesRevealsUsed() {
+        // Given: assistance used
+        viewModel.startSession()
+        viewModel.revealCurrentLine()
+        
+        // When: End session
+        let expectation = XCTestExpectation(description: "Saves record with revealsUsed")
+        viewModel.onSaveSession = { record in
+            XCTAssertEqual(record.revealsUsed, 1)
+            expectation.fulfill()
+        }
+        viewModel.endSession()
+        
+        // Then: verify
+        wait(for: [expectation], timeout: 1.0)
     }
 }

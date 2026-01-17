@@ -76,6 +76,11 @@ class PracticeEngine {
         return state == .ready || state == .running
     }
     
+    /// Returns the full string of digits for the current constant
+    var allDigitsString: String {
+        return digitsProvider.allDigitsString
+    }
+    
     // Time tracking
     private(set) var startTime: Date?
     private var elapsedTimeInternal: TimeInterval = 0
