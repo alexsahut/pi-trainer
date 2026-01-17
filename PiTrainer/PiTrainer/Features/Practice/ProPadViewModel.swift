@@ -5,6 +5,7 @@ final class ProPadViewModel {
     
     var opacity: Double = 0.2
     var inactivityThreshold: TimeInterval = 3.0 // Configurable for testing
+    private var isGhostModeEnabled: Bool = true
     private var currentStreak: Int = 0
     private var lastInputTime: Date = Date()
     private var inactivityTimer: Timer?
@@ -22,6 +23,7 @@ final class ProPadViewModel {
     
     /// Computed property to determine target opacity based on streak and activity
     private var targetOpacity: Double {
+        guard isGhostModeEnabled else { return 1.0 }
         guard currentStreak >= 20 else { return 0.2 }
         
         // Check if inactive for threshold seconds
@@ -37,6 +39,11 @@ final class ProPadViewModel {
     
     func onPrepare() {
         haptics.prepare()
+    }
+    
+    func updateGhostMode(_ enabled: Bool) {
+        isGhostModeEnabled = enabled
+        updateOpacity(animated: true, fastTransition: true)
     }
     
     /// Update current streak and adjust opacity accordingly

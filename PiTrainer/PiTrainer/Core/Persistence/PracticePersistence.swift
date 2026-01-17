@@ -14,7 +14,7 @@ protocol PracticePersistenceProtocol {
     /// Retrieves the highest index reached for a specific constant.
     func getHighestIndex(for constantKey: String) -> Int
     
-    /// Records Persistence (PBs and metadata)
+    /// Records Persistence (PRs and metadata)
     func saveStats(_ stats: [Constant: ConstantStats])
     func loadStats() -> [Constant: ConstantStats]?
     

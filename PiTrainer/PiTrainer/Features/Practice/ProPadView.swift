@@ -11,6 +11,9 @@ struct ProPadView: View {
     // Current session state
     var isActive: Bool = true
     
+    // Feature Flag: Ghost Mode (optionality from Story 2.4/Epic 4)
+    var isGhostModeEnabled: Bool = true
+    
     // Callbacks
     var onDigit: (Int) -> Void
     var onBackspace: () -> Void
@@ -58,10 +61,14 @@ struct ProPadView: View {
         .opacity(isActive ? viewModel.opacity : 0.3)
         .disabled(!isActive)
         .onAppear {
+            viewModel.updateGhostMode(isGhostModeEnabled)
             viewModel.onPrepare()
         }
         .onChange(of: currentStreak) { _, newStreak in
             viewModel.updateStreak(newStreak)
+        }
+        .onChange(of: isGhostModeEnabled) { _, newValue in
+            viewModel.updateGhostMode(newValue)
         }
         .animation(.easeInOut(duration: 1.0), value: viewModel.opacity)
         // Optimization: Render as texture if complex

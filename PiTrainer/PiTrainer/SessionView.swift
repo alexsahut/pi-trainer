@@ -10,46 +10,79 @@ import SwiftUI
 struct SessionView: View {
     
     @ObservedObject var viewModel: SessionViewModel
+    @ObservedObject var statsStore: StatsStore
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
         VStack(spacing: 0) {
-            // Header showing stats
-            HStack {
-                VStack(alignment: .leading) {
-                    let modeName = viewModel.selectedMode == .strict ? 
-                        String(localized: "home.strict") : 
-                        String(localized: "home.learning")
+            // Header showing stats (Zen-Athlete 3.0 - Symmetrical Edition)
+            HStack(alignment: .center) {
+                // LEFT COLUMN
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text("\(viewModel.engine.currentStreak)")
+                            .font(DesignSystem.Fonts.monospaced(size: 24, weight: .black))
+                        Text(String(localized: "session.header.streak"))
+                            .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
                     
-                    (Text(modeName) + Text("   ") + Text(viewModel.constantSymbol).font(.body).fontWeight(.black))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Text(String(localized: "session.streak \(viewModel.engine.currentStreak)"))
-                        .font(.headline)
-                    
-                    // Position Tracker - displays current digit index (1-based for UX)
-                    Text(String(localized: "session.decimal_position \(viewModel.engine.currentIndex + 1)"))
-                        .font(.caption.monospacedDigit())
-                        .foregroundColor(.secondary)
-                        .accessibilityLabel(String(localized: "session.decimal_position.accessibility \(viewModel.engine.currentIndex + 1)"))
-                        .accessibilityAddTraits(.updatesFrequently)
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text("\(viewModel.bestStreak)")
+                            .font(DesignSystem.Fonts.monospaced(size: 24, weight: .black))
+                            .foregroundColor(.white.opacity(0.3))
+                        Text("PR")
+                            .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                    }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-                Spacer()
-                
-                VStack(alignment: .trailing) {
-                    Text(String(localized: "session.errors_count \(viewModel.errors)"))
-                        .font(.headline)
-                        .foregroundColor(viewModel.errors > 0 ? .red : .primary)
+                // CENTER COLUMN
+                VStack(alignment: .center, spacing: 4) {
+                    Text(viewModel.constantSymbol)
+                        .font(.system(size: 36, weight: .black))
+                        .foregroundColor(DesignSystem.Colors.cyanElectric)
+                        .shadow(color: DesignSystem.Colors.cyanElectric.opacity(0.3), radius: 10)
                     
-                    Text(String(localized: "session.best_streak \(viewModel.bestStreak)"))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text(viewModel.selectedMode.description)
+                        .font(DesignSystem.Fonts.monospaced(size: 9, weight: .black))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .tracking(2)
                 }
+                .frame(maxWidth: .infinity, alignment: .center)
+                
+                // RIGHT COLUMN
+                VStack(alignment: .trailing, spacing: 12) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(String(localized: "session.header.decimal"))
+                            .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                        Text("\(viewModel.engine.currentIndex)")
+                            .font(DesignSystem.Fonts.monospaced(size: 24, weight: .black))
+                            .contentTransition(.numericText())
+                    }
+                    
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(String(localized: "session.header.errors"))
+                            .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                        Text("\(viewModel.errors)")
+                            .font(DesignSystem.Fonts.monospaced(size: 24, weight: .black))
+                            .foregroundColor(viewModel.errors > 0 ? .red : .white.opacity(0.1))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding()
-            .background(Color(uiColor: .secondarySystemBackground))
+            .padding(.horizontal, 24)
+            .padding(.vertical, 16)
+            .background(DesignSystem.Colors.blackOLED)
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundColor(Color.white.opacity(0.05)),
+                alignment: .bottom
+            )
             
             // Terminal-Grid Display Area (blocks of 10 digits)
             ZStack {
@@ -134,9 +167,10 @@ struct SessionView: View {
             
             // ProPad (Numeric Keypad)
             ProPadView(
-                layout: viewModel.keypadLayout,
+                layout: statsStore.keypadLayout,
                 currentStreak: viewModel.engine.currentStreak,
                 isActive: viewModel.isInputAllowed, // Allow input when Ready or Running
+                isGhostModeEnabled: statsStore.isGhostModeEnabled,
                 onDigit: { digit in
                     if viewModel.isInputAllowed {
                         viewModel.processInput(digit)
@@ -160,42 +194,7 @@ struct SessionView: View {
         }
         .animation(.default, value: viewModel.isActive)
         .sheet(isPresented: $showOptions) {
-            NavigationStack {
-                List {
-                    Section {
-                        Toggle(String(localized: "settings.haptics"), isOn: $hapticsEnabled)
-                            .onChange(of: hapticsEnabled) { newValue in
-                                HapticService.shared.isEnabled = newValue
-                            }
-                    }
-                    
-                    Section {
-                        Button(role: .destructive) {
-                            showOptions = false
-                            viewModel.reset()
-                        } label: {
-                            Label(String(localized: "keypad.reset"), systemImage: "arrow.counterclockwise")
-                        }
-                        
-                        Button(role: .destructive) {
-                            showOptions = false
-                            viewModel.endSession()
-                            dismiss()
-                        } label: {
-                            Label(String(localized: "keypad.quit"), systemImage: "xmark.circle")
-                        }
-                    }
-                }
-                .navigationTitle(String(localized: "session.options"))
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(String(localized: "common.close")) {
-                            showOptions = false
-                        }
-                    }
-                }
-                .presentationDetents([.medium])
-            }
+            SessionSettingsView(viewModel: viewModel, statsStore: statsStore)
         }
     }
     
@@ -205,6 +204,6 @@ struct SessionView: View {
 
 #Preview {
     NavigationStack {
-        SessionView(viewModel: SessionViewModel())
+        SessionView(viewModel: SessionViewModel(), statsStore: StatsStore())
     }
 }

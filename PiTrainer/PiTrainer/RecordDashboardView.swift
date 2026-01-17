@@ -59,13 +59,19 @@ struct RecordCard: View {
                     .font(DesignSystem.Fonts.monospaced(size: 28, weight: .bold))
                     .foregroundColor(.white)
                 
-                Text("stats.dashboard.digits_count \(stats.bestStreak)")
-                    .font(DesignSystem.Fonts.monospaced(size: 10, weight: .bold))
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                if let best = stats.bestSession {
+                    Text(formatTime(best.durationSeconds))
+                        .font(DesignSystem.Fonts.monospaced(size: 10, weight: .bold))
+                        .foregroundColor(DesignSystem.Colors.cyanElectric)
+                } else {
+                    Text("stats.dashboard.no_time")
+                        .font(DesignSystem.Fonts.monospaced(size: 10, weight: .bold))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
             }
             
-            if let lastSession = stats.lastSession {
-                Text(lastSession.date.formatted(.dateTime.day().month().year()).uppercased())
+            if let best = stats.bestSession {
+                Text(best.date.formatted(.dateTime.day().month().year()).uppercased())
                     .font(DesignSystem.Fonts.monospaced(size: 9, weight: .regular))
                     .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.7))
             } else {
@@ -87,6 +93,12 @@ struct RecordCard: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(constant.rawValue): \(stats.bestStreak) digits")
         .accessibilityIdentifier("stats.dashboard.card.\(constant.rawValue)")
+    }
+    
+    private func formatTime(_ seconds: TimeInterval) -> String {
+        let minutes = Int(seconds) / 60
+        let remainingSeconds = Int(seconds) % 60
+        return String(format: "%01d:%02d", minutes, remainingSeconds)
     }
 }
 

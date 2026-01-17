@@ -24,7 +24,9 @@ class SessionViewModel: ObservableObject {
     
     // UI selection state
     @Published var selectedMode: PracticeEngine.Mode = .strict
+    @Published var selectedConstant: Constant = .pi
     @Published var keypadLayout: KeypadLayout = .phone
+    @Published var isGhostModeEnabled: Bool = true
     
     // MARK: - Properties
     
@@ -32,7 +34,6 @@ class SessionViewModel: ObservableObject {
     private let providerFactory: (Constant) -> any DigitsProvider
     
     // Configuration for the current session
-    var selectedConstant: Constant = .pi
     var onSaveSession: ((SessionRecord) -> Void)?
 
     
@@ -75,6 +76,14 @@ class SessionViewModel: ObservableObject {
     }
     
     // MARK: - Public Methods
+    
+    /// Synchronizes settings from the global store
+    func syncSettings(from store: StatsStore) {
+        self.keypadLayout = store.keypadLayout
+        self.selectedConstant = store.selectedConstant
+        self.isGhostModeEnabled = store.isGhostModeEnabled
+        self.selectedMode = store.selectedMode
+    }
     
     /// Starts a new session with the selected mode
     func startSession() {
@@ -191,6 +200,11 @@ class SessionViewModel: ObservableObject {
             // needs the engine data (attempts, bestStreak) to show the summary.
             // A new engine will be created in startSession() for the next run.
             HapticService.shared.stop()
+            
+            // Story 5.2: Request notification consent after the first "meaningful" session
+            if record.attempts >= 5 {
+                NotificationService.shared.requestAuthorization()
+            }
         }
     }
 }

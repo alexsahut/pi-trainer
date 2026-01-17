@@ -30,10 +30,11 @@ struct SessionRecord: Codable, Identifiable, Equatable {
 /// Statistics specific to a single constant
 struct ConstantStats: Codable, Equatable {
     var bestStreak: Int
+    var bestSession: SessionRecord? // Added to track PR metadata (time, date, etc.)
     var lastSession: SessionRecord?
     // sessionHistory is now managed by SessionHistoryStore
     
-    static let empty = ConstantStats(bestStreak: 0, lastSession: nil)
+    static let empty = ConstantStats(bestStreak: 0, bestSession: nil, lastSession: nil)
 }
 
 /// Manages persistence of statistics and global records
@@ -48,6 +49,8 @@ class StatsStore: ObservableObject {
     
     private let keypadLayoutKey = "com.alexandre.pitrainer.keypadLayout"
     private let selectedConstantKey = "com.alexandre.pitrainer.selectedConstant"
+    private let ghostModeKey = "com.alexandre.pitrainer.ghostMode"
+    private let selectedModeKey = "com.alexandre.pitrainer.selectedMode"
     
     // MARK: - Published Properties
     
@@ -76,10 +79,23 @@ class StatsStore: ObservableObject {
         }
     }
     
+    @Published var isGhostModeEnabled: Bool = true {
+        didSet {
+            UserDefaults.standard.set(isGhostModeEnabled, forKey: ghostModeKey)
+        }
+    }
+    
+    @Published var selectedMode: PracticeEngine.Mode = .strict {
+        didSet {
+            UserDefaults.standard.set(selectedMode.rawValue, forKey: selectedModeKey)
+        }
+    }
+    
     // MARK: - Private Properties
     
     private let persistence: PracticePersistenceProtocol
     private let historyStore: SessionHistoryStore
+    let streakStore: StreakStore
     
     // MARK: - Initialization
     
@@ -101,6 +117,8 @@ class StatsStore: ObservableObject {
                 self.historyStore = try! SessionHistoryStore(customDirectory: FileManager.default.temporaryDirectory)
             }
         }
+        
+        self.streakStore = StreakStore()
         
         loadStats()
         loadHistoryEagerly(for: selectedConstant)
@@ -163,9 +181,14 @@ class StatsStore: ObservableObject {
         // Update last session
         currentStats.lastSession = record
         
-        // Update best streak if needed
+        // Update best streak and BEST session if needed
         if record.bestStreakInSession > currentStats.bestStreak {
             currentStats.bestStreak = record.bestStreakInSession
+            currentStats.bestSession = record
+        } else if record.bestStreakInSession == currentStats.bestStreak {
+            // Optional: If same streak, keep the faster one or the most recent?
+            // Let's keep the most recent for now to update metadata.
+            currentStats.bestSession = record
         }
         
         stats[record.constant] = currentStats
@@ -176,6 +199,12 @@ class StatsStore: ObservableObject {
             do {
                 let updatedHistory = try await historyStore.appendRecord(record, for: record.constant)
                 self.historyCache[record.constant] = updatedHistory
+                
+                // Story 5.1: Update Daily Streak
+                streakStore.recordSession()
+                
+                // Story 5.3: Update Daily Reminder
+                NotificationService.shared.scheduleDailyReminder(streak: streakStore.currentStreak)
             } catch {
                 // Log error or handle
                 print("Failed to append record: \(error)")
@@ -206,6 +235,8 @@ class StatsStore: ObservableObject {
         Task { @MainActor in
             try? await historyStore.clearAllHistory()
             self.historyCache = [:]
+            streakStore.reset()
+            NotificationService.shared.cancelPendingReminders()
         }
     }
     
@@ -225,6 +256,20 @@ class StatsStore: ObservableObject {
             selectedConstant = constant
         } else {
             selectedConstant = .pi
+        }
+        
+        // Ghost Mode (Story 2.4/Epic 4) - default true
+        if UserDefaults.standard.object(forKey: ghostModeKey) != nil {
+            isGhostModeEnabled = UserDefaults.standard.bool(forKey: ghostModeKey)
+        } else {
+            isGhostModeEnabled = true
+        }
+        
+        if let modeString = UserDefaults.standard.string(forKey: selectedModeKey),
+           let mode = PracticeEngine.Mode(rawValue: modeString) {
+            selectedMode = mode
+        } else {
+            selectedMode = .strict
         }
         
         // 2. Load Stats
