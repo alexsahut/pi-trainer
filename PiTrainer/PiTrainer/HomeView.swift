@@ -1,4 +1,3 @@
-
 //
 //  HomeView.swift
 //  PiTrainer
@@ -12,11 +11,12 @@ struct HomeView: View {
     @StateObject private var statsStore = StatsStore()
     @StateObject private var sessionViewModel = SessionViewModel()
     
+    // Story 8.1: Learning Store for segment management
+    @StateObject private var segmentStore = SegmentStore()
+    
     @Environment(NavigationCoordinator.self) private var coordinator
     @State private var showingStats = false
     @State private var showingSettings = false
-    
-    // No explicit init needed anymore!
     
     var body: some View {
         ZStack {
@@ -81,6 +81,26 @@ struct HomeView: View {
                         options: Constant.allCases,
                         selection: $statsStore.selectedConstant
                     )
+                    
+                    // Story 7.1: Mode Selector
+                    ModeSelector(selectedMode: Binding(
+                        get: { statsStore.selectedMode },
+                        set: { newValue in
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                statsStore.selectedMode = newValue
+                            }
+                        }
+                    ))
+                    
+                    // Story 8.1: Segment Selection (Only for LEARN mode)
+                    if statsStore.selectedMode == .learn {
+                        SegmentSlider(
+                            start: $segmentStore.segmentStart,
+                            end: $segmentStore.segmentEnd,
+                            range: 0...1000 // Reasonable default for learn mode focus
+                        )
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
                 }
                 .padding(.horizontal, 20)
                 
@@ -89,11 +109,7 @@ struct HomeView: View {
                 // Start Button (Action Pivot)
                 ZenPrimaryButton(title: "START SESSION", accessibilityIdentifier: "home.start_button") {
                     // Configure ViewModel with latest settings
-                    sessionViewModel.syncSettings(from: statsStore)
-                    sessionViewModel.onSaveSession = { record in
-                        statsStore.addSessionRecord(record)
-                    }
-                    
+                    configureSession()
                     coordinator.push(.session(mode: sessionViewModel.selectedMode))
                 }
                 .padding(.horizontal, 20)
@@ -139,10 +155,18 @@ struct HomeView: View {
             StatsView(statsStore: statsStore)
         }
         .sheet(isPresented: $showingSettings) {
-             SettingsView(sessionViewModel: sessionViewModel, statsStore: statsStore)
+             SettingsView(statsStore: statsStore)
         }
         .onAppear {
-            sessionViewModel.syncSettings(from: statsStore)
+            // Initial sync
+            configureSession()
+        }
+    }
+    
+    private func configureSession() {
+        sessionViewModel.syncSettings(from: statsStore, segmentStore: segmentStore)
+        sessionViewModel.onSaveSession = { record in
+            statsStore.addSessionRecord(record)
         }
     }
     
@@ -152,20 +176,6 @@ struct HomeView: View {
         case .e: return "E TRAINER"
         case .sqrt2: return "SQRT2 TRAINER"
         case .phi: return "PHI TRAINER"
-        }
-    }
-}
-
-// Extensions for CustomStringConvertible to make ZenSegmentedControl happy
-extension Constant: CustomStringConvertible {
-    var description: String { symbol }
-}
-
-extension KeypadLayout: CustomStringConvertible {
-    var description: String {
-        switch self {
-        case .phone: return "PHONE"
-        case .pc: return "PC"
         }
     }
 }

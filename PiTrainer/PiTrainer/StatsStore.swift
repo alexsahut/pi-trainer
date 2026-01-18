@@ -14,6 +14,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     let date: Date
     let constant: Constant
     let mode: PracticeEngine.Mode
+    let sessionMode: SessionMode // Story 8.5: Accurate mode tracking
     let attempts: Int
     let errors: Int
     let bestStreakInSession: Int
@@ -23,13 +24,18 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     let minCPS: Double?
     let maxCPS: Double?
     
+    // Story 8.6: Enhanced Learn Mode tracking
+    let segmentStart: Int?
+    let segmentEnd: Int?
+    let loops: Int
+    
     var cps: Double {
         digitsPerMinute / 60.0
     }
     
-    // Custom decoder for backward compatibility (Story 6.2)
+    // Custom decoder for backward compatibility (Story 6.2 & 8.5)
     enum CodingKeys: String, CodingKey {
-        case id, date, constant, mode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed, minCPS, maxCPS
+        case id, date, constant, mode, sessionMode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed, minCPS, maxCPS, segmentStart, segmentEnd, loops
     }
     
     init(from decoder: Decoder) throws {
@@ -38,6 +44,14 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         date = try container.decode(Date.self, forKey: .date)
         constant = try container.decode(Constant.self, forKey: .constant)
         mode = try container.decode(PracticeEngine.Mode.self, forKey: .mode)
+        
+        // Story 8.5: If sessionMode is missing, infer it from legacy mode
+        if let sMode = try container.decodeIfPresent(SessionMode.self, forKey: .sessionMode) {
+            sessionMode = sMode
+        } else {
+            sessionMode = (mode == .test) ? .test : .learn
+        }
+        
         attempts = try container.decode(Int.self, forKey: .attempts)
         errors = try container.decode(Int.self, forKey: .errors)
         bestStreakInSession = try container.decode(Int.self, forKey: .bestStreakInSession)
@@ -47,14 +61,19 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         revealsUsed = try container.decodeIfPresent(Int.self, forKey: .revealsUsed) ?? 0
         minCPS = try container.decodeIfPresent(Double.self, forKey: .minCPS)
         maxCPS = try container.decodeIfPresent(Double.self, forKey: .maxCPS)
+        
+        // Story 8.6: Default values for legacy records
+        segmentStart = try container.decodeIfPresent(Int.self, forKey: .segmentStart)
+        segmentEnd = try container.decodeIfPresent(Int.self, forKey: .segmentEnd)
+        loops = try container.decodeIfPresent(Int.self, forKey: .loops) ?? 0
     }
     
-    // Memberwise initializer for convenience
-    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int, minCPS: Double? = nil, maxCPS: Double? = nil) {
+    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, sessionMode: SessionMode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int = 0, minCPS: Double? = nil, maxCPS: Double? = nil, segmentStart: Int? = nil, segmentEnd: Int? = nil, loops: Int = 0) {
         self.id = id
         self.date = date
         self.constant = constant
         self.mode = mode
+        self.sessionMode = sessionMode
         self.attempts = attempts
         self.errors = errors
         self.bestStreakInSession = bestStreakInSession
@@ -63,6 +82,9 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         self.revealsUsed = revealsUsed
         self.minCPS = minCPS
         self.maxCPS = maxCPS
+        self.segmentStart = segmentStart
+        self.segmentEnd = segmentEnd
+        self.loops = loops
     }
 }
 
@@ -77,21 +99,8 @@ struct ConstantStats: Codable, Equatable {
 }
 
 /// Manages persistence of statistics and global records
+@MainActor
 class StatsStore: ObservableObject {
-    
-    // MARK: - Constants
-    
-    private let statsKey = "com.alexandre.pitrainer.stats"
-    // Legacy keys for migration
-    private let legacyGlobalBestStreakKey = "com.alexandre.pitrainer.globalBestStreak"
-    private let legacyLastSessionKey = "com.alexandre.pitrainer.lastSession"
-    
-    private let keypadLayoutKey = "com.alexandre.pitrainer.keypadLayout"
-    private let selectedConstantKey = "com.alexandre.pitrainer.selectedConstant"
-    private let ghostModeKey = "com.alexandre.pitrainer.ghostMode"
-    private let selectedModeKey = "com.alexandre.pitrainer.selectedMode"
-    
-    // MARK: - Published Properties
     
     // MARK: - Published Properties
     
@@ -110,6 +119,9 @@ class StatsStore: ObservableObject {
         }
     }
     
+    func hello() { print("DEBUG: StatsStore hello") }
+    
+    
     @Published var selectedConstant: Constant = .pi {
         didSet {
             persistence.saveSelectedConstant(selectedConstant.rawValue)
@@ -118,15 +130,11 @@ class StatsStore: ObservableObject {
         }
     }
     
-    @Published var isGhostModeEnabled: Bool = true {
-        didSet {
-            UserDefaults.standard.set(isGhostModeEnabled, forKey: ghostModeKey)
-        }
-    }
+
     
-    @Published var selectedMode: PracticeEngine.Mode = .strict {
+    @Published var selectedMode: SessionMode = .learn {
         didSet {
-            UserDefaults.standard.set(selectedMode.rawValue, forKey: selectedModeKey)
+            persistence.saveSelectedMode(selectedMode.rawValue)
         }
     }
     
@@ -150,17 +158,23 @@ class StatsStore: ObservableObject {
                 self.historyStore = try SessionHistoryStore()
             } catch {
                 // FALLBACK: Log error but do NOT crash. 
-                // Using an "unsafe" or empty store is better than a crash on startup.
-                // We'll try to re-init with a fallback dir or just let it be.
                 print("⚠️ CRITICAL: Failed to initialize SessionHistoryStore: \(error)")
-                self.historyStore = try! SessionHistoryStore(customDirectory: FileManager.default.temporaryDirectory)
+                // Create a temporary store as fallback without try!
+                let fallbackURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+                try? FileManager.default.createDirectory(at: fallbackURL, withIntermediateDirectories: true)
+                self.historyStore = (try? SessionHistoryStore(customDirectory: fallbackURL)) ?? (try! SessionHistoryStore(customDirectory: fallbackURL)) 
             }
         }
         
-        self.streakStore = StreakStore()
+        self.streakStore = StreakStore(userDefaults: persistence.userDefaults)
         
         loadStats()
         loadHistoryEagerly(for: selectedConstant)
+        
+        // Story 8.5: Recovery check - Ensure stats are in sync with history
+        Task { @MainActor in
+            await repairStatsFromHistory()
+        }
     }
     
     // MARK: - Public Methods
@@ -215,6 +229,7 @@ class StatsStore: ObservableObject {
     
     /// Adds a new session record to history and updates stats
     func addSessionRecord(_ record: SessionRecord) {
+        print("debug: StatsStore adding record for \(record.constant) - streak: \(record.bestStreakInSession), loops: \(record.loops), segment: \(record.segmentStart ?? -1)-\(record.segmentEnd ?? -1)")
         var currentStats = stats(for: record.constant)
         
         // Update last session
@@ -222,6 +237,7 @@ class StatsStore: ObservableObject {
         
         // Update best streak and BEST session if needed
         if record.bestStreakInSession > currentStats.bestStreak {
+            print("debug: new record streak! \(record.bestStreakInSession) > \(currentStats.bestStreak)")
             currentStats.bestStreak = record.bestStreakInSession
             currentStats.bestSession = record
         } else if record.bestStreakInSession == currentStats.bestStreak {
@@ -238,6 +254,7 @@ class StatsStore: ObservableObject {
             do {
                 let updatedHistory = try await historyStore.appendRecord(record, for: record.constant)
                 self.historyCache[record.constant] = updatedHistory
+                print("debug: history updated, new count for \(record.constant): \(updatedHistory.count)")
                 
                 // Story 5.1: Update Daily Streak
                 streakStore.recordSession()
@@ -297,18 +314,14 @@ class StatsStore: ObservableObject {
             selectedConstant = .pi
         }
         
-        // Ghost Mode (Story 2.4/Epic 4) - default true
-        if UserDefaults.standard.object(forKey: ghostModeKey) != nil {
-            isGhostModeEnabled = UserDefaults.standard.bool(forKey: ghostModeKey)
-        } else {
-            isGhostModeEnabled = true
-        }
+
         
-        if let modeString = UserDefaults.standard.string(forKey: selectedModeKey),
-           let mode = PracticeEngine.Mode(rawValue: modeString) {
+        if let modeString = persistence.loadSelectedMode(),
+           let mode = SessionMode(rawValue: modeString) {
             selectedMode = mode
         } else {
-            selectedMode = .strict
+            // New V2 default is .learn
+            selectedMode = .learn
         }
         
         // 2. Load Stats
@@ -332,7 +345,7 @@ class StatsStore: ObservableObject {
         }
         
         // Check if legacy keys exist in UserDefaults directly (one last time)
-        let legacyUserDefaults = UserDefaults.standard
+        let legacyUserDefaults = persistence.userDefaults
         let hasLegacyData = legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.globalBestStreak") != nil ||
                            legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.lastSession") != nil
         
@@ -343,18 +356,19 @@ class StatsStore: ObservableObject {
             if let sessionData = legacyUserDefaults.data(forKey: "com.alexandre.pitrainer.lastSession"),
                let session = try? JSONDecoder().decode(LegacySessionSnapshot.self, from: sessionData) {
                 
-                legacySessionRecord = SessionRecord(
-                    id: UUID(),
-                    date: session.date,
-                    constant: .pi,
-                    mode: .strict,
-                    attempts: session.attempts,
-                    errors: session.errors,
-                    bestStreakInSession: session.bestStreak,
-                    durationSeconds: session.elapsedTime,
-                    digitsPerMinute: session.digitsPerMinute,
-                    revealsUsed: 0
-                )
+                    legacySessionRecord = SessionRecord(
+                        id: UUID(),
+                        date: session.date,
+                        constant: .pi,
+                        mode: .test,
+                        sessionMode: .test,
+                        attempts: session.attempts,
+                        errors: session.errors,
+                        bestStreakInSession: session.bestStreak,
+                        durationSeconds: session.elapsedTime,
+                        digitsPerMinute: session.digitsPerMinute,
+                        revealsUsed: 0
+                    )
             }
             
             var piStats = ConstantStats.empty
@@ -376,7 +390,65 @@ class StatsStore: ObservableObject {
         }
     }
     
+    /// Story 8.5: Rebuilds best streaks and session records from the history files
+    /// This is a safety mechanism in case UserDefaults stats are lost or corrupted.
+    @MainActor
+    func repairStatsFromHistory() async {
+        print("debug: StatsStore starting stats repair from history...")
+        var needsUpdate = false
+        
+        for constant in Constant.allCases {
+            let records: [SessionRecord]
+            if let cached = historyCache[constant] {
+                records = cached
+            } else {
+                records = (try? await historyStore.loadHistory(for: constant)) ?? []
+            }
+            
+            if !records.isEmpty {
+                var currentStats = stats[constant] ?? .empty
+                
+                // 1. Repair Best Streak & Best Session
+                let bestInHistory = records.max(by: { $0.bestStreakInSession < $1.bestStreakInSession })
+                if let best = bestInHistory {
+                    // We repair if the history has a better streak than what's in stats,
+                    // or if stats were empty for this constant.
+                    if best.bestStreakInSession > currentStats.bestStreak || currentStats.bestSession == nil {
+                        print("debug: repairing best streak for \(constant): \(best.bestStreakInSession)")
+                        currentStats.bestStreak = best.bestStreakInSession
+                        currentStats.bestSession = best
+                        needsUpdate = true
+                    }
+                }
+                
+                // 2. Repair Last Session
+                if currentStats.lastSession == nil, let last = records.first {
+                    print("debug: repairing last session for \(constant)")
+                    currentStats.lastSession = last
+                    needsUpdate = true
+                }
+                
+                if needsUpdate {
+                    stats[constant] = currentStats
+                }
+            }
+        }
+        
+        if needsUpdate {
+            persistStats()
+            print("debug: stats repair completed and persisted.")
+        } else {
+            print("debug: no stats repair needed.")
+        }
+    }
+    
     private func persistStats() {
         persistence.saveStats(stats)
     }
 }
+// MARK: - Learning Store (Consolidated)
+
+
+
+// LearningStore removed: Moved to SegmentStore.swift
+

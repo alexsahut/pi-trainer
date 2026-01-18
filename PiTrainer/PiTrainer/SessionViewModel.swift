@@ -24,17 +24,21 @@ class SessionViewModel: ObservableObject {
     @Published var errorState: String? // Critical error preventing session start
     @Published var shouldDismiss: Bool = false // Signal to View to dismiss itself
     @Published var revealsUsed: Int = 0 // Track assistance used (Story 6.2)
+    @Published var loops: Int = 0 // Story 8.6: Track segment completions
+    private var isSessionSaved: Bool = false // Story 8.5: Prevent double saving
     
     // UI selection state
-    @Published var selectedMode: PracticeEngine.Mode = .strict
+    @Published var selectedMode: SessionMode = .learn
     @Published var selectedConstant: Constant = .pi
     @Published var keypadLayout: KeypadLayout = .phone
-    @Published var isGhostModeEnabled: Bool = true
-    
+
     // MARK: - Properties
     
     private let persistence: PracticePersistenceProtocol
     private let providerFactory: (Constant) -> any DigitsProvider
+    
+    // Story 8.1: Learning Store
+    private var segmentStore: SegmentStore
     
     // Configuration for the current session
     var onSaveSession: ((SessionRecord) -> Void)?
@@ -69,27 +73,55 @@ class SessionViewModel: ObservableObject {
         return engine.allDigitsString
     }
     
+    /// Returns the current segment start offset (Story 8.3)
+    /// Used by TerminalGridView to correctly number lines and fetch ghost digits
+    var currentSegmentOffset: Int {
+        return selectedMode == .learn ? segmentStore.segmentStart : 0
+    }
+    
+    /// Returns the target length of the segment (Story 8.4)
+    /// Used by TerminalGridView to show the full "Ghost" block
+    var currentSegmentLength: Int {
+        return selectedMode == .learn ? (segmentStore.segmentEnd - segmentStore.segmentStart) : 0
+    }
+    
+    var showsPermanentOverlay: Bool {
+        selectedMode.showsPermanentOverlay
+    }
+    
+    var allowsReveal: Bool {
+        selectedMode.allowsReveal
+    }
+    
     // MARK: - Initialization
     
-    init(persistence: PracticePersistenceProtocol = PracticePersistence(),
-         providerFactory: @escaping (Constant) -> any DigitsProvider = { FileDigitsProvider(constant: $0) }) {
-        self.persistence = persistence
-        self.providerFactory = providerFactory
+    init(persistence: PracticePersistenceProtocol? = nil,
+         providerFactory: ((Constant) -> any DigitsProvider)? = nil,
+         segmentStore: SegmentStore? = nil) {
+        let actualPersistence = persistence ?? PracticePersistence()
+        let actualFactory = providerFactory ?? { FileDigitsProvider(constant: $0) }
+        
+        self.persistence = actualPersistence
+        self.providerFactory = actualFactory
+        self.segmentStore = segmentStore ?? SegmentStore()
         
         // Initialize with default (pi) - will be updated before start
         let constant = Constant.pi
-        let provider = providerFactory(constant)
-        self.engine = PracticeEngine(constant: constant, provider: provider, persistence: persistence)
+        let provider = actualFactory(constant)
+        self.engine = PracticeEngine(constant: constant, provider: provider, persistence: actualPersistence)
     }
     
     // MARK: - Public Methods
     
-    /// Synchronizes settings from the global store
-    func syncSettings(from store: StatsStore) {
+    /// Synchronizes settings from the global stores
+    func syncSettings(from store: StatsStore, segmentStore: SegmentStore) {
         self.keypadLayout = store.keypadLayout
         self.selectedConstant = store.selectedConstant
-        self.isGhostModeEnabled = store.isGhostModeEnabled
+
         self.selectedMode = store.selectedMode
+        
+        // Story 8.1 Fix: Use the segment store from HomeView
+        self.segmentStore = segmentStore
     }
     
     /// Starts a new session with the selected mode
@@ -105,10 +137,29 @@ class SessionViewModel: ObservableObject {
             try provider.loadDigits()
             print("debug: provider loaded \(provider.totalDigits) digits")
             self.engine = PracticeEngine(constant: constant, provider: provider, persistence: persistence)
-            engine.start(mode: selectedMode)
+            
+            // Story 8.1: Apply segment if in Learn mode
+            if selectedMode == .learn {
+                engine.start(mode: selectedMode.practiceEngineMode, startIndex: segmentStore.segmentStart, endIndex: segmentStore.segmentEnd)
+                
+                // Story 8.4: Training Mode Configuration
+                // Fix Bug: Learn Mode is now non-blocking (allowErrors = true)
+                // We handle UI Sync in processInput by checking indexAdvanced
+                engine.allowErrors = true
+                engine.autoRestart = true
+            } else {
+                engine.start(mode: selectedMode.practiceEngineMode)
+            }
             
             // Pre-warm the haptic engine only on success
             HapticService.shared.prewarm()
+            
+            // Validate Engine State
+            if !engine.isActive && engine.state == .finished {
+                // Engine finished immediately? This means start failed (e.g. loaded digits 0)
+                self.errorState = "Failed to initialize practice engine. No digits available."
+                return
+            }
             
             // Reset UI state
             typedDigits = ""
@@ -117,6 +168,8 @@ class SessionViewModel: ObservableObject {
             expectedDigit = nil
             shouldDismiss = false
             revealsUsed = 0
+            loops = 0
+            isSessionSaved = false
             print("debug: session started for \(constant) in \(selectedMode) mode")
             
         } catch {
@@ -135,13 +188,16 @@ class SessionViewModel: ObservableObject {
         let result = engine.input(digit: digit)
         print("debug: input \(digit), isCorrect: \(result.isCorrect), engine.isActive: \(engine.isActive)")
         
+        // Critical Fix for Story 8.4: Sync UI with Engine state
+        // If the engine advanced (whether correct or allowed error), update the UI string
+        if result.indexAdvanced {
+             typedDigits.append(String(digit))
+        }
+        
         if result.isCorrect {
             // Success feedback
             lastCorrectDigit = digit
             expectedDigit = nil
-            
-            // Update displayed digits
-            typedDigits.append(String(digit))
             
             // Light haptic for success (instant)
             HapticService.shared.playSuccess()
@@ -161,14 +217,28 @@ class SessionViewModel: ObservableObject {
                 self.lastWrongInput = nil
             }
             
-            // Note: In learning mode, we no longer auto-advance (Story correction)
-            // The user must correct the mistake or use a hint.
+            // Note: In learning mode (if allowErrors=true), we continue.
+            // If test, engine state is now finished.
         }
         
-        // Critical Fix: Check if engine finished (e.g. Strict Mode failure)
-        // If engine finished internally, we MUST trigger persistence and cleanup
-        if !engine.isActive {
-            endSession()
+        // Story 8.4: Handle Engine Events (Looping)
+        if let event = result.event {
+            switch event {
+            case .looped:
+                // Loop detected: Clear typed digits and play reinforcement
+                typedDigits = ""
+                loops += 1
+                HapticService.shared.playSuccess() // Loop Feedback
+                // Optional: Visual flash for loop?
+                
+            case .finished:
+                 endSession()
+            }
+        } else {
+            // Legacy/Standard Check
+            if !engine.isActive {
+                endSession()
+            }
         }
     }
     
@@ -193,15 +263,25 @@ class SessionViewModel: ObservableObject {
         HapticService.shared.playSuccess() // Light feedback
     }
     
+    /// Toggles the permanent reveal state (Story 8.2)
+    func toggleReveal() {
+        // No longer used as a toggle in standard modes as per user request
+    }
+    
     /// Ends the session and saves stats
     func endSession(shouldDismiss: Bool = false) {
-        // We allow ending if active OR if it just finished (to capture the last record)
-        if engine.isActive || engine.state == .finished {
+        print("debug: endSession called. attempts: \(engine.attempts), isSessionSaved: \(isSessionSaved), shouldDismiss: \(shouldDismiss)")
+        // We allow ending if there were attempts made, regardless of engine state
+        // This ensures we save sessions that are manually quit.
+        // Story 8.5: Protection against double saving
+        if engine.attempts > 0 && !isSessionSaved {
+            print("debug: creating SessionRecord for \(selectedConstant) (mode: \(selectedMode))")
             let record = SessionRecord(
                 id: UUID(),
                 date: Date(),
                 constant: selectedConstant,
-                mode: selectedMode,
+                mode: selectedMode.practiceEngineMode,
+                sessionMode: selectedMode, // Story 8.5: Accurate mode tracking
                 attempts: engine.attempts,
                 errors: engine.errors,
                 bestStreakInSession: engine.bestStreak,
@@ -209,10 +289,19 @@ class SessionViewModel: ObservableObject {
                 digitsPerMinute: engine.digitsPerMinute,
                 revealsUsed: revealsUsed,
                 minCPS: engine.minCPS == .infinity ? nil : engine.minCPS,
-                maxCPS: engine.maxCPS
+                maxCPS: engine.maxCPS,
+                segmentStart: selectedMode == .learn ? segmentStore.segmentStart : nil,
+                segmentEnd: selectedMode == .learn ? segmentStore.segmentEnd : nil,
+                loops: loops
             )
             
-            onSaveSession?(record)
+            isSessionSaved = true
+            if let onSaveSession = onSaveSession {
+                print("debug: invoking onSaveSession closure")
+                onSaveSession(record)
+            } else {
+                print("⚠️ WARNING: onSaveSession is NIL! Session will not be saved.")
+            }
             
             // Note: We don't call engine.reset() here anymore because the UI 
             // needs the engine data (attempts, bestStreak) to show the summary.
