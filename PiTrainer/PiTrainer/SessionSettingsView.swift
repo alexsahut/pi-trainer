@@ -19,15 +19,7 @@ struct SessionSettingsView: View {
                         VStack(spacing: 24) {
                             // Note: Constant selection is intentionally omitted to prevent changing it mid-session.
                             
-                            ZenSegmentedControl(
-                                title: String(localized: "MODE DE PRATIQUE"),
-                                options: SessionMode.allCases,
-                                selection: $statsStore.selectedMode
-                            )
-                            .onChange(of: statsStore.selectedMode) { _, newValue in
-                                viewModel.selectedMode = newValue
-                                viewModel.reset()
-                            }
+
                             
                             ZenSegmentedControl(
                                 title: String(localized: "DISPOSITION CLAVIER"),

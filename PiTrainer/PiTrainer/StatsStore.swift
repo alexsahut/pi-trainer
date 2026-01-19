@@ -49,7 +49,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         if let sMode = try container.decodeIfPresent(SessionMode.self, forKey: .sessionMode) {
             sessionMode = sMode
         } else {
-            sessionMode = (mode == .strict) ? .test : .learn
+            sessionMode = (mode == .strict) ? .test : .practice
         }
         
         attempts = try container.decode(Int.self, forKey: .attempts)
@@ -207,8 +207,12 @@ class StatsStore: ObservableObject {
         isHistoryLoading = true
         defer { isHistoryLoading = false }
         
-        if let records = try? await historyStore.loadHistory(for: constant) {
+        do {
+            let records = try await historyStore.loadHistory(for: constant)
             self.historyCache[constant] = records
+            print("debug: loaded \(records.count) records for \(constant)")
+        } catch {
+            print("❌ Error loading history for \(constant): \(error)")
         }
     }
     
@@ -237,15 +241,19 @@ class StatsStore: ObservableObject {
         currentStats.lastSession = record
         
         // Update best streak and BEST session if needed
-        if record.bestStreakInSession > currentStats.bestStreak {
-            print("debug: new record streak! \(record.bestStreakInSession) > \(currentStats.bestStreak)")
-            currentStats.bestStreak = record.bestStreakInSession
-            currentStats.bestSession = record
-        } else if record.bestStreakInSession == currentStats.bestStreak {
-            // Optional: If same streak, keep the faster one or the most recent?
-            // Let's keep the most recent for now to update metadata.
-            currentStats.bestSession = record
+        // Fix for Story 8.5: Exclude Learn Mode from Best Streak calculation
+        if record.sessionMode != .learn {
+            if record.bestStreakInSession > currentStats.bestStreak {
+                print("debug: new record streak! \(record.bestStreakInSession) > \(currentStats.bestStreak)")
+                currentStats.bestStreak = record.bestStreakInSession
+                currentStats.bestSession = record
+            } else if record.bestStreakInSession == currentStats.bestStreak {
+                // Optional: If same streak, keep the faster one or the most recent?
+                // Let's keep the most recent for now to update metadata.
+                currentStats.bestSession = record
+            }
         }
+
         
         stats[record.constant] = currentStats
         persistStats()
@@ -411,14 +419,30 @@ class StatsStore: ObservableObject {
                 var currentStats = stats[constant] ?? .empty
                 
                 // 1. Repair Best Streak & Best Session
-                let bestInHistory = records.max(by: { $0.bestStreakInSession < $1.bestStreakInSession })
+                // 1. Repair Best Streak & Best Session
+                // Treat History as the Source of Truth.
+                // If the history file shows a best streak of X, then the stats must show X.
+                // This fixes issues where a phantom high score persists after history corruption/deletion.
+                //
+                // Fix for Story 8.5: Exclude Learn Mode from Best Streak calculation
+                // Learn Mode defines 'streak' as loops or segment completions, which is not comparable to Practice/Test/Game.
+                let eligibleRecords = records.filter { $0.sessionMode != .learn }
+                let bestInHistory = eligibleRecords.max(by: { $0.bestStreakInSession < $1.bestStreakInSession })
+                
                 if let best = bestInHistory {
-                    // We repair if the history has a better streak than what's in stats,
-                    // or if stats were empty for this constant.
-                    if best.bestStreakInSession > currentStats.bestStreak || currentStats.bestSession == nil {
-                        print("debug: repairing best streak for \(constant): \(best.bestStreakInSession)")
-                        currentStats.bestStreak = best.bestStreakInSession
-                        currentStats.bestSession = best
+                    // Update if there is a mismatch (either higher OR lower)
+                    if currentStats.bestStreak != best.bestStreakInSession || currentStats.bestSession?.id != best.id {
+                         print("debug: syncing best streak for \(constant). Old: \(currentStats.bestStreak), New: \(best.bestStreakInSession)")
+                         currentStats.bestStreak = best.bestStreakInSession
+                         currentStats.bestSession = best
+                         needsUpdate = true
+                    }
+                } else {
+                    // If no eligible history (or all learn mode), result should be 0.
+                    if currentStats.bestStreak > 0 {
+                        print("debug: no eligible history for \(constant) (maybe all learn mode?), resetting best streak to 0.")
+                        currentStats.bestStreak = 0
+                        currentStats.bestSession = nil
                         needsUpdate = true
                     }
                 }

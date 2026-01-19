@@ -23,6 +23,11 @@ class MockPracticePersistence: PracticePersistenceProtocol {
     func loadKeypadLayout() -> String? { return nil }
     func saveSelectedConstant(_ constant: String) {}
     func loadSelectedConstant() -> String? { return nil }
+    
+    // Added for Protocol Conformance
+    var userDefaults: UserDefaults { return .standard } // Mock return
+    func saveSelectedMode(_ mode: String) {}
+    func loadSelectedMode() -> String? { return nil }
 }
 
 final class MockDigitsProvider: DigitsProvider {

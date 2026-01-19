@@ -44,6 +44,11 @@ class SessionMockPracticePersistence: PracticePersistenceProtocol {
     func loadKeypadLayout() -> String? { return nil }
     func saveSelectedConstant(_ constant: String) {}
     func loadSelectedConstant() -> String? { return nil }
+    
+    // Added for Protocol Conformance
+    var userDefaults: UserDefaults { return .standard } // Mock return
+    func saveSelectedMode(_ mode: String) {}
+    func loadSelectedMode() -> String? { return nil }
 }
 
 @MainActor
@@ -130,7 +135,7 @@ final class SessionViewModelTests: XCTestCase {
 
     func testStrictMode_EndsSessionImmediatelyOnError() {
         // Given: Strict mode session
-        viewModel.selectedMode = .strict
+        viewModel.selectedMode = .test
         viewModel.startSession()
         
         // Verify start conditions
@@ -155,7 +160,7 @@ final class SessionViewModelTests: XCTestCase {
         // 4. Session data should be saved
         let saveExpectation = XCTestExpectation(description: "Session persistence should be triggered")
         viewModel.onSaveSession = { record in
-            XCTAssertEqual(record.mode, .strict)
+            XCTAssertEqual(record.sessionMode, .test)
             XCTAssertEqual(record.errors, 1)
             saveExpectation.fulfill()
         }
@@ -166,12 +171,12 @@ final class SessionViewModelTests: XCTestCase {
         
         // Let's restart the flow for clarity:
         viewModel.reset()
-        viewModel.selectedMode = .strict
+        viewModel.selectedMode = .test
         
         // Setup expectation BEFORE input
         let saveExpectation2 = XCTestExpectation(description: "Session persistence must be triggered on strict failure")
         viewModel.onSaveSession = { record in
-            XCTAssertEqual(record.mode, .strict)
+            XCTAssertEqual(record.sessionMode, .test)
             XCTAssertEqual(record.errors, 1) // 1 error causes end
             saveExpectation2.fulfill()
         }

@@ -9,6 +9,7 @@ import XCTest
 import Combine
 @testable import PiTrainer
 
+@MainActor
 class SessionHistoryTests: XCTestCase {
     
     var statsStore: StatsStore!
@@ -53,7 +54,8 @@ class SessionHistoryTests: XCTestCase {
     
     func testAddSessionRecord() async throws {
         // Given
-        let record = createRecord(constant: .pi, mode: .strict, date: Date())
+        // createRecord now uses .test as default sessionMode via helper
+        let record = createRecord(constant: .pi, date: Date())
         
         // When
         statsStore.addSessionRecord(record)
@@ -164,7 +166,7 @@ class SessionHistoryTests: XCTestCase {
     
     private func createRecord(
         constant: Constant = .pi,
-        mode: PracticeEngine.Mode = .strict,
+        mode: PracticeEngine.Mode = .strict, // This refers to Engine mode, let's keep it if PracticeEngine.Mode has strict
         date: Date = Date(),
         id: UUID = UUID(),
         errors: Int = 0
@@ -174,6 +176,7 @@ class SessionHistoryTests: XCTestCase {
             date: date,
             constant: constant,
             mode: mode,
+            sessionMode: .test, // Use .test as default simulation for strict mode
             attempts: 10 + errors,
             errors: errors,
             bestStreakInSession: 10,

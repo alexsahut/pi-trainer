@@ -27,11 +27,8 @@ struct StatsView: View {
                 
                 ScrollView {
                     VStack(spacing: 32) {
-                        // 1. Epic 4 Record Dashboard (Global Overview)
-                        RecordDashboardView(statsStore: statsStore)
-                            .padding(.top, 20)
                         
-                        // 2. Constant Selector
+                        // 1. Constant Selector (Moved to top)
                         VStack(alignment: .leading, spacing: 12) {
                             Text("stats.constant_picker")
                                 .font(DesignSystem.Fonts.monospaced(size: 14, weight: .black))
@@ -46,6 +43,7 @@ struct StatsView: View {
                             )
                             .padding(.horizontal, 20)
                         }
+                        .padding(.top, 20) // Add top padding since Dashboard is gone
                         
                         let currentStats = statsStore.stats(for: selectedConstantForStats)
                         
@@ -173,6 +171,10 @@ struct StatsView: View {
                 Task {
                     await statsStore.loadHistory(for: newVal)
                 }
+            }
+            .task {
+                // Ensure history is loaded for the initially selected constant
+                await statsStore.loadHistory(for: selectedConstantForStats)
             }
         }
     }

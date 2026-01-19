@@ -14,7 +14,12 @@ struct SessionDetailView: View {
         Form {
             Section(header: Text("stats.session_details")) {
                 DetailRow(label: "stats.date", value: formatDate(session.date))
-                DetailRow(label: "stats.mode", value: formatMode(session.mode))
+                DetailRow(label: "stats.mode", value: session.sessionMode.displayName)
+                
+                if let start = session.segmentStart, let end = session.segmentEnd {
+                    DetailRow(label: "stats.segment", value: "\(start) - \(end)")
+                }
+                
                 DetailRow(label: "stats.duration", value: formatTime(session.durationSeconds))
             }
             
@@ -22,6 +27,10 @@ struct SessionDetailView: View {
                 DetailRow(label: "stats.decimals", value: "\(session.attempts)")
                 DetailRow(label: "stats.errors", value: "\(session.errors)", color: session.errors > 0 ? .red : .primary)
                 DetailRow(label: "stats.best_streak", value: "\(session.bestStreakInSession)", color: DesignSystem.Colors.cyanElectric)
+                
+                if session.sessionMode == .learn {
+                     DetailRow(label: "stats.loops", value: "\(session.loops)", color: DesignSystem.Colors.cyanElectric)
+                }
                 
                 if session.revealsUsed > 0 {
                     DetailRow(label: "session.summary.reveals", value: "\(session.revealsUsed)", color: DesignSystem.Colors.cyanElectric)

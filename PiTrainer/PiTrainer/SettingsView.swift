@@ -41,15 +41,7 @@ struct SettingsView: View {
                 
                 ScrollView {
                     VStack(spacing: 32) {
-                        ZenSegmentedControl(
-                            title: "MODE DE PRATIQUE",
-                            options: SessionMode.allCases,
-                            selection: $statsStore.selectedMode
-                        )
-                        .onChange(of: statsStore.selectedMode) { _, newValue in
-                            sessionViewModel.selectedMode = newValue
-                        }
-                        
+
                         ZenSegmentedControl(
                             title: "DISPOSITION CLAVIER",
                             options: KeypadLayout.allCases,

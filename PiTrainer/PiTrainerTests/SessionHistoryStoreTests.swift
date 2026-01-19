@@ -112,6 +112,7 @@ final class SessionHistoryStoreTests: XCTestCase {
             date: date,
             constant: constant,
             mode: mode,
+            sessionMode: .test, // Added missing parameter
             attempts: 10 + errors,
             errors: errors,
             bestStreakInSession: 10,

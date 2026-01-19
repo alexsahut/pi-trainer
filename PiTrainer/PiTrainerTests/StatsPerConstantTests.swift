@@ -8,6 +8,7 @@
 import XCTest
 @testable import PiTrainer
 
+@MainActor
 final class StatsPerConstantTests: XCTestCase {
     
     var userDefaults: UserDefaults!
@@ -98,6 +99,7 @@ final class StatsPerConstantTests: XCTestCase {
             date: Date(),
             constant: .phi,
             mode: .strict,
+            sessionMode: .test, // Added missing parameter
             attempts: 100,
             errors: 0,
             bestStreakInSession: 50,
@@ -122,6 +124,7 @@ final class StatsPerConstantTests: XCTestCase {
             date: Date(),
             constant: .phi,
             mode: .strict,
+            sessionMode: .test, // Added missing parameter
             attempts: 10,
             errors: 5,
             bestStreakInSession: 5,

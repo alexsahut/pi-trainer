@@ -19,10 +19,10 @@ struct HistoryRow: View {
                     .foregroundColor(.white)
                 
                 HStack(spacing: 6) {
-                    Image(systemName: session.mode == .strict ? "bolt.fill" : "book.fill")
+                    Image(systemName: iconForMode(session.sessionMode))
                         .font(.system(size: 8))
                     
-                    Text(formatMode(session.mode))
+                    Text(session.sessionMode.displayName)
                         .font(DesignSystem.Fonts.monospaced(size: 9, weight: .bold))
                 }
                 .foregroundColor(DesignSystem.Colors.textSecondary)
@@ -30,15 +30,25 @@ struct HistoryRow: View {
             
             Spacer()
             
-            // Middle: Streak
+            // Middle: Streak or Loops
             VStack(alignment: .trailing, spacing: 2) {
-                Text("\(session.bestStreakInSession)")
-                    .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
-                    .foregroundColor(DesignSystem.Colors.cyanElectric)
-                
-                Text("stats.history.record_label")
-                    .font(DesignSystem.Fonts.monospaced(size: 8, weight: .bold))
-                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                if session.sessionMode == .learn {
+                    Text("\(session.loops)")
+                        .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
+                        .foregroundColor(DesignSystem.Colors.cyanElectric)
+                    
+                    Text("stats.history.loops_label")
+                        .font(DesignSystem.Fonts.monospaced(size: 8, weight: .bold))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                } else {
+                    Text("\(session.bestStreakInSession)")
+                        .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
+                        .foregroundColor(DesignSystem.Colors.cyanElectric)
+                    
+                    Text("stats.history.record_label")
+                        .font(DesignSystem.Fonts.monospaced(size: 8, weight: .bold))
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                }
             }
             .frame(width: 60)
             
@@ -66,6 +76,15 @@ struct HistoryRow: View {
     
     private func formatMode(_ mode: PracticeEngine.Mode) -> String {
         mode.description
+    }
+    
+    private func iconForMode(_ mode: SessionMode) -> String {
+        switch mode {
+        case .learn: return "book.fill"
+        case .practice: return "hammer.fill"
+        case .test: return "bolt.fill"
+        case .game: return "flag.checkered.2.crossed"
+        }
     }
 }
 

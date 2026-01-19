@@ -65,9 +65,10 @@ final class SessionHistoryStore {
                         let data = try Data(contentsOf: url)
                         records = try JSONDecoder().decode([SessionRecord].self, from: data)
                     } catch {
-                        // If file exists but is corrupted, we don't want to just wipe it if called atomically.
-                        continuation.resume(throwing: PersistenceError.decodingFailed)
-                        return
+                        // If file exists but is corrupted, we reset it to empty so we can continue saving new records.
+                        // This prevents a "permanent broken state" where no new stats can be saved.
+                        print("⚠️ Warning: History file corrupted for \(constant). Resetting. Error: \(error)")
+                        records = []
                     }
                 }
                 

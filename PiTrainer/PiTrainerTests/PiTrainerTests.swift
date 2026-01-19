@@ -35,6 +35,11 @@ final class PiTrainerTests: XCTestCase {
         func loadKeypadLayout() -> String? { return nil }
         func saveSelectedConstant(_ constant: String) {}
         func loadSelectedConstant() -> String? { return nil }
+        
+        // Added for Protocol Conformance
+        var userDefaults: UserDefaults { return .standard } // Mock return
+        func saveSelectedMode(_ mode: String) {}
+        func loadSelectedMode() -> String? { return nil }
     }
     
     // MARK: - FileDigitsProvider Tests

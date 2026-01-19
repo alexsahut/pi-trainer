@@ -91,6 +91,9 @@ struct SessionView: View {
                     integerPart: viewModel.integerPart,
                     fullDigits: viewModel.fullDigitsString,
                     isLearnMode: viewModel.selectedMode == .learn,
+                    allowsReveal: viewModel.selectedMode.allowsReveal, // Pass allow reveal (Learn + Practice)
+                    startOffset: viewModel.currentSegmentOffset,
+                    segmentLength: viewModel.currentSegmentLength,
                     onReveal: { count in
                         viewModel.reveal(count: count)
                     },
@@ -99,7 +102,7 @@ struct SessionView: View {
                 )
                 .frame(maxWidth: .infinity)
                 .frame(minHeight: 200)
-                .modifier(StreakFlowEffect(streak: viewModel.engine.currentStreak))
+                .modifier(StreakFlowEffect(streak: viewModel.selectedMode == .learn ? 0 : viewModel.engine.currentStreak))
                 .modifier(ShakeEffect(animatableData: viewModel.showErrorFlash ? 1 : 0))
                 
                 // Retry / Quit Overlay when session ends

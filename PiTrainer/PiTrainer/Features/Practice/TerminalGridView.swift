@@ -25,9 +25,9 @@ struct TerminalRow: Identifiable, Equatable {
     let digits: [Int]
     let isComplete: Bool
     
-    init(index: Int, digits: [Int]) {
+    init(index: Int, digits: [Int], startOffset: Int = 0) {
         self.id = index
-        self.lineNumber = (index + 1) * 10
+        self.lineNumber = startOffset + (index + 1) * 10
         self.digits = digits
         self.isComplete = digits.count == 10
     }
@@ -53,6 +53,15 @@ struct TerminalGridView: View {
     /// Whether the session is in learning mode (Story 6.1)
     var isLearnMode: Bool = false
     
+    /// Whether the reveal button (Eye) is allowed (Story 7.1)
+    var allowsReveal: Bool = false
+    
+    /// Offset for the starting index (e.g., 50 if segment starts at 50)
+    var startOffset: Int = 0
+    
+    /// Length of the segment to display (if in Learn Mode)
+    var segmentLength: Int? = nil
+    
     /// Callback when a row is revealed
     var onReveal: ((Int) -> Void)? = nil
     
@@ -71,7 +80,23 @@ struct TerminalGridView: View {
         let digits = typedDigits.compactMap { Int(String($0)) }
         var result: [TerminalRow] = []
         
-        let rowCount = (digits.count / 10) + 1
+        // In Learn Mode, we show the full segment (using segmentLength if available, else fullDigits)
+        // In Practice/Test/Game, we show rows based on typed digits + 1 potential empty row for the "cursor"
+        let rowCount: Int
+        
+        if isLearnMode {
+            // Learn Mode: Fixed size based on segment
+            let sourceCount = segmentLength ?? fullDigits.count
+            let effectiveCount = max(sourceCount, 1)
+            rowCount = (effectiveCount + 9) / 10
+        } else {
+            // Practice Mode: Dynamic growth
+            // We always want to show the row where the next digit will be typed.
+            // If digits.count is 10, next digit is at index 10 (Row 1).
+            // Formula: (count / 10) + 1
+            // e.g. 0 -> 1, 9 -> 1, 10 -> 2, 11 -> 2
+            rowCount = (digits.count / 10) + 1
+        }
         
         for i in 0..<rowCount {
             let startIndex = i * 10
@@ -84,7 +109,8 @@ struct TerminalGridView: View {
                 rowDigits = []
             }
             
-            result.append(TerminalRow(index: i, digits: rowDigits))
+            // Pass the startOffset to the row for correct line numbering
+            result.append(TerminalRow(index: i, digits: rowDigits, startOffset: startOffset))
         }
         
         return result
@@ -93,160 +119,138 @@ struct TerminalGridView: View {
     
     @State private var revealedDigitsPerRow: [Int: Int] = [:]
     
-    // MARK: - Body
-    
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(alignment: .leading, spacing: 4) {
-                    // Header row with integer part
-                    headerRow
-                    
-                    // Digit rows
-                    ForEach(rows) { row in
-                        rowView(row: row)
-                            .id(row.id)
+                VStack(alignment: .leading, spacing: 0) {
+                    // Integer part (e.g., "3.") - Only show if starting from 0
+                    if startOffset == 0 {
+                        HStack(spacing: 0) {
+                            Color.clear.frame(width: 58, height: 1) // 50 + 8 offset
+                            Text(integerPart + ".")
+                                .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
+                                .foregroundColor(.white)
+                                .id("integerPart")
+                        }
                     }
                     
-                    // Cursor placeholder for auto-scroll target
-                    Color.clear
-                        .frame(height: 1)
-                        .id("cursor")
+                    ForEach(rows) { row in
+                        HStack(alignment: .top, spacing: 0) {
+                            // Line number and reveal button container
+                            HStack(spacing: 0) {
+                                // Logic:
+                                // If Row Complete -> Show Line Number
+                                // If Row Incomplete:
+                                //   - If Practice (allowsReveal) -> Show Eye
+                                //   - If Learn (!allowsReveal) -> Show Nothing (or placeholder) - User said "Eye is useless... digits revealed"
+                                //   - User also said "Segment could be displayed prettier with a > aligned"
+                                
+                                if row.isComplete {
+                                    // Completed Line: Show Index (e.g. "060")
+                                    Text(String(format: "%03d", row.lineNumber))
+                                        .font(.system(size: 12, weight: .regular, design: .monospaced))
+                                        .foregroundColor(.gray)
+                                        .frame(width: 30, alignment: .trailing)
+                                    
+                                    // Completion Indicator
+                                    Text(">")
+                                        .font(.system(size: 12, weight: .regular, design: .monospaced))
+                                        .foregroundColor(.gray.opacity(0.5))
+                                        .frame(width: 20, height: 24)
+                                } else {
+                                    // Incomplete Line
+                                    // Placeholder for Line Number (Empty)
+                                    Color.clear.frame(width: 30, height: 24)
+                                    
+                                    if allowsReveal && !isLearnMode && (revealedDigitsPerRow[row.id] ?? 0) < 10 {
+                                        // Practice Mode: Show Eye (Tap = 1, Long Press = All)
+                                        Image(systemName: "eye.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                            .frame(width: 20, height: 24)
+                                            .contentShape(Rectangle()) // Easier touch target
+                                            .onTapGesture {
+                                                // Short Tap: Reveal ONE digit
+                                                let currentTyped = row.digits.count
+                                                let currentRevealed = revealedDigitsPerRow[row.id] ?? currentTyped
+                                                let baseIndex = max(currentTyped, currentRevealed)
+                                                
+                                                let next = min(10, baseIndex + 1)
+                                                if next > baseIndex {
+                                                    revealedDigitsPerRow[row.id] = next
+                                                    onReveal?(1)
+                                                }
+                                            }
+                                            .onLongPressGesture(minimumDuration: 0.5) {
+                                                // Long Press: Reveal REST of line
+                                                let currentTyped = row.digits.count
+                                                let currentRevealed = revealedDigitsPerRow[row.id] ?? currentTyped
+                                                let baseIndex = max(currentTyped, currentRevealed)
+                                                
+                                                let next = 10
+                                                if next > baseIndex {
+                                                    let newlyRevealed = next - baseIndex
+                                                    revealedDigitsPerRow[row.id] = next
+                                                    onReveal?(newlyRevealed)
+                                                }
+                                            }
+                                            .accessibilityLabel(String(localized: "Révéler la ligne"))
+                                    } else {
+                                        // Learn Mode or standard incomplete: Show ">" aligned
+                                        Text(">")
+                                            .font(.system(size: 12, weight: .regular, design: .monospaced))
+                                            .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.8))
+                                            .frame(width: 20, height: 24)
+                                    }
+                                }
+                            }
+                            .frame(width: 50, alignment: .trailing)
+                            
+                            // Spacer
+                            Color.clear.frame(width: 8, height: 1)
+                            
+                            // Digits
+                            HStack(spacing: 0) {
+                                ForEach(0..<10) { i in
+                                    if i < row.digits.count {
+                                        let digit = row.digits[i]
+                                        let isLastDigitInRow = (row.id == rows.last?.id && i == row.digits.count - 1)
+                                        digitView(digit: digit, state: digitState(localIndex: i, isLast: isLastDigitInRow))
+                                    } else if i < (revealedDigitsPerRow[row.id] ?? 0) || isLearnMode {
+                                        // Ghost digits
+                                        // FIX: Add startOffset to globalIndex calculation!
+                                        let globalIndex = startOffset + (row.id * 10) + i
+                                        if globalIndex < fullDigits.count {
+                                            let ghostDigit = Int(String(fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)])) ?? 0
+                                            digitView(digit: ghostDigit, state: .normal)
+                                                .opacity(0.3)
+                                        } else {
+                                            placeholderView
+                                        }
+                                    } else {
+                                        placeholderView
+                                    }
+                                    
+                                    // Add space after every 5 digits
+                                    if (i + 1) % 5 == 0 && i < 9 {
+                                        Spacer().frame(width: 16)
+                                    }
+                                }
+                            }
+                            .id(row.id)
+                        }
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
             }
+            .background(DesignSystem.Colors.blackOLED)
             .onChange(of: typedDigits.count) { oldValue, newValue in
                 withAnimation(.easeOut(duration: 0.15)) {
                     proxy.scrollTo("cursor", anchor: .bottom)
                 }
             }
         }
-        .background(DesignSystem.Colors.blackOLED)
-        // GPU-accelerated rendering for 60 FPS
-        // .drawingGroup()
-    }
-    
-    // MARK: - Subviews
-    
-    /// Header row showing the integer part (e.g., "3.")
-    private var headerRow: some View {
-        HStack(spacing: 0) {
-            // Line indicator placeholder (empty for alignment)
-            Text("   ")
-                .font(.system(size: 12, weight: .regular, design: .monospaced))
-                .foregroundColor(.gray.opacity(0.5))
-                .frame(width: 40, alignment: .trailing)
-            
-            Text(" ")
-                .frame(width: 8)
-            
-            // Integer part with decimal point
-            Text("\(integerPart).")
-                .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
-                .foregroundColor(.white)
-                .accessibilityIdentifier("session.integer_part")
-        }
-    }
-    
-    /// A single row of up to 10 digits with line indicator
-    private func rowView(row: TerminalRow) -> some View {
-        HStack(spacing: 0) {
-            // Line indicator (shows after completing 10 digits, e.g., "10 >")
-            lineIndicator(for: row)
-            
-            Text(" ")
-                .frame(width: 8)
-            
-            // Digits in this row
-            HStack(spacing: 2) {
-                ForEach(0..<10, id: \.self) { digitIndex in
-                    let globalIndex = row.id * 10 + digitIndex
-                    let revealedInRow = revealedDigitsPerRow[row.id] ?? 0
-                    
-                    if digitIndex < row.digits.count {
-                        let isLast = globalIndex == typedDigits.count - 1
-                        let state = digitState(globalIndex: globalIndex, isLast: isLast)
-                        digitView(digit: row.digits[digitIndex], state: state)
-                    } else if globalIndex == typedDigits.count, let wrongDigit = wrongInputDigit {
-                        // Show the wrong input in red at cursor position
-                        digitView(digit: wrongDigit, state: .error)
-                    } else if digitIndex < revealedInRow {
-                        // Ghost Reveal Pattern (Story 6.1)
-                        if let ghostChar = fullDigits.count > globalIndex ? fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)] : nil,
-                           let digit = Int(String(ghostChar)) {
-                            digitView(digit: digit, state: .normal)
-                                .opacity(0.15) // Ghostly transparency
-                        } else {
-                            placeholderView
-                        }
-                    } else {
-                        placeholderView
-                    }
-                }
-            }
-        }
-        // VoiceOver: Announce each block of 10 as a logical unit
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabel(for: row))
-    }
-    
-    /// Generate VoiceOver label for a row
-    private func accessibilityLabel(for row: TerminalRow) -> String {
-        let digitsText = row.digits.map { String($0) }.joined(separator: " ")
-        if row.isComplete {
-            return String(localized: "Décimales \(row.lineNumber - 9) à \(row.lineNumber): \(digitsText)")
-        } else {
-            let start = row.id * 10 + 1
-            let end = start + row.digits.count - 1
-            return String(localized: "Décimales \(start) à \(end): \(digitsText)")
-        }
-    }
-    
-    /// Line indicator showing the cumulative digit count
-    private func lineIndicator(for row: TerminalRow) -> some View {
-        Group {
-            if row.isComplete {
-                Text("\(row.lineNumber) >")
-                    .font(.system(size: 12, weight: .regular, design: .monospaced))
-                    .foregroundColor(.gray.opacity(0.5))
-            } else if isLearnMode && (revealedDigitsPerRow[row.id] ?? 0) < 10 {
-                // Reveal Button (Story 6.1)
-                Image(systemName: "eye.fill")
-                    .font(.system(size: 12))
-                    .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.6))
-                    .frame(width: 24, height: 24)
-                    .background(DesignSystem.Colors.cyanElectric.opacity(0.1))
-                    .clipShape(Circle())
-                    .onTapGesture {
-                        withAnimation(.spring()) {
-                            let current = revealedDigitsPerRow[row.id] ?? row.digits.count
-                            let next = min(10, current + 1)
-                            if next > current {
-                                revealedDigitsPerRow[row.id] = next
-                                onReveal?(1) 
-                            }
-                        }
-                    }
-                    .onLongPressGesture {
-                        withAnimation(.spring()) {
-                            let current = revealedDigitsPerRow[row.id] ?? row.digits.count
-                            let next = 10
-                            if next > current {
-                                let newlyRevealed = next - current
-                                revealedDigitsPerRow[row.id] = next
-                                onReveal?(newlyRevealed)
-                            }
-                        }
-                    }
-                    .accessibilityLabel(String(localized: "Révéler la ligne"))
-            } else {
-                Text("   ")
-                    .font(.system(size: 12, weight: .regular, design: .monospaced))
-                    .foregroundColor(.clear)
-            }
-        }
-        .frame(width: 40, alignment: .trailing)
     }
     
     /// Single digit view with state-based styling
@@ -269,10 +273,10 @@ struct TerminalGridView: View {
     
     // MARK: - Helpers
     
-    private func digitState(globalIndex: Int, isLast: Bool) -> DigitState {
+    private func digitState(localIndex: Int, isLast: Bool) -> DigitState {
         if isLast && showError {
             return .error
-        } else if isLast || globalIndex == activeIndex {
+        } else if isLast || localIndex == activeIndex {
             return .active
         }
         return .normal
