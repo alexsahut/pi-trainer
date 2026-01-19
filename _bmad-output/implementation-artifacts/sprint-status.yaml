@@ -79,3 +79,17 @@ development_status:
   6-1-assistance-juste-a-temps-ghost-reveal: done
   6-2-statistiques-d-assistance-reveal-counter: done
   epic-6-retrospective: done
+
+  epic-7: done
+  7-1-mode-selector-home: done
+  epic-7-retrospective: done
+
+  epic-8: done
+  8-1-segment-selection-slider: done
+  8-2-permanent-overlay-learn: done
+  8-3-visualisation-segment-offset: done
+  8-4-refined-learn-ux: done
+  8-5-session-mode-persistence: done
+  8-6-stats-polish: done
+  8-7-learn-visuals-refinement: done
+  epic-8-retrospective: done
