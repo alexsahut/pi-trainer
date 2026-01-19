@@ -14,6 +14,8 @@ protocol PracticePersistenceProtocol {
     /// Retrieves the highest index reached for a specific constant.
     func getHighestIndex(for constantKey: String) -> Int
     
+    var userDefaults: UserDefaults { get }
+    
     /// Records Persistence (PRs and metadata)
     func saveStats(_ stats: [Constant: ConstantStats])
     func loadStats() -> [Constant: ConstantStats]?
@@ -24,16 +26,20 @@ protocol PracticePersistenceProtocol {
     
     func saveSelectedConstant(_ constant: String)
     func loadSelectedConstant() -> String?
+    
+    func saveSelectedMode(_ mode: String)
+    func loadSelectedMode() -> String?
 }
 
 /// Concrete implementation of PracticePersistence using UserDefaults.
 /// This class centralizes all small data persistence to guarantee <1ms access time.
 class PracticePersistence: PracticePersistenceProtocol {
-    private let userDefaults: UserDefaults
+    let userDefaults: UserDefaults
     private let highestIndexKeyPrefix = "practice_highest_index_"
     private let statsKey = "com.alexandre.pitrainer.stats"
     private let keypadLayoutKey = "com.alexandre.pitrainer.keypadLayout"
     private let selectedConstantKey = "com.alexandre.pitrainer.selectedConstant"
+    private let selectedModeKey = "com.alexandre.pitrainer.selectedMode"
     
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -86,5 +92,13 @@ class PracticePersistence: PracticePersistenceProtocol {
     
     func loadSelectedConstant() -> String? {
         return userDefaults.string(forKey: selectedConstantKey)
+    }
+    
+    func saveSelectedMode(_ mode: String) {
+        userDefaults.set(mode, forKey: selectedModeKey)
+    }
+    
+    func loadSelectedMode() -> String? {
+        return userDefaults.string(forKey: selectedModeKey)
     }
 }

@@ -45,12 +45,19 @@ class PracticeEngine {
         case finished  // Session ended (completed or failed)
     }
     
+    /// Events triggered by input
+    enum InputEvent {
+        case looped
+        case finished
+    }
+    
     /// Result of a digit input
     struct InputResult {
         let validationResult: ValidationResult
         let expectedDigit: Int
         let indexAdvanced: Bool
         let currentIndex: Int
+        var event: InputEvent? = nil
         
         var isCorrect: Bool {
             return validationResult == .correct
@@ -123,18 +130,32 @@ class PracticeEngine {
     
     // MARK: - Public Methods
     
+    // V2 Configuration
+    var allowErrors: Bool = false
+    var autoRestart: Bool = false
+    private(set) var startIndex: Int = 0
+    private(set) var endIndex: Int? = nil
+
+    // MARK: - Public Methods
+    
     /// Starts a new practice session
     /// - Parameter mode: The practice mode (strict or learning)
     func start(mode: Mode) {
+        start(mode: mode, startIndex: 0, endIndex: nil)
+    }
+
+    func start(mode: Mode, startIndex: Int, endIndex: Int?) {
         self.mode = mode
-        self.state = .ready // Ready to accept input, but timer hasn't started
+        self.state = .ready
+        self.startIndex = startIndex
+        self.endIndex = endIndex
         
-        self.currentIndex = 0
+        self.currentIndex = startIndex
         self.attempts = 0
         self.errors = 0
         self.currentStreak = 0
         self.bestStreak = 0
-        self.startTime = nil // clear start time
+        self.startTime = nil
         self.elapsedTimeInternal = 0
         
         self.minCPS = .infinity
@@ -181,6 +202,7 @@ class PracticeEngine {
         let isCorrect = digit == expectedDigit
         let validationResult: ValidationResult
         var indexAdvanced = false
+        var inputEvent: InputEvent? = nil
         
         if isCorrect {
             // Correct input
@@ -194,6 +216,24 @@ class PracticeEngine {
             persistence.saveHighestIndex(currentIndex, for: constant.id)
             
             currentIndex += 1
+            
+            // Story 8.1 & 8.6: Check against Segment End and Auto Restart
+            if let end = endIndex, currentIndex >= end {
+                if autoRestart {
+                    // Loop back to start
+                    currentIndex = startIndex
+                    inputEvent = .looped
+                    // Don't finish session
+                    
+                    // Optional: Maybe a special notification for loop completion?
+                    // For now implicit.
+                } else {
+                    // End of segment reached
+                    finishSession()
+                    inputEvent = .finished
+                }
+            }
+            
             indexAdvanced = true
             
             // Track speed for this digit
@@ -218,15 +258,23 @@ class PracticeEngine {
             currentStreak = 0
             
             // Mode-specific behavior
-            switch mode {
-            case .strict:
-                // Strict Mode = Sudden Death. End session immediately.
-                finishSession()
+            // Extended logic for V2: allowErrors override
+            if allowErrors {
+                // If errors allow, we don't finish.
+                // We stay on index (typical behavior for learn mode)
                 indexAdvanced = false
-                
-            case .learning:
-                // Stay on current index to allow retry
-                indexAdvanced = false
+            } else {
+                switch mode {
+                case .strict:
+                    // Strict Mode = Sudden Death. End session immediately.
+                    finishSession()
+                    indexAdvanced = false
+                    inputEvent = .finished
+                    
+                case .learning:
+                    // Stay on current index to allow retry
+                    indexAdvanced = false
+                }
             }
         }
         
@@ -234,7 +282,8 @@ class PracticeEngine {
             validationResult: validationResult,
             expectedDigit: expectedDigit,
             indexAdvanced: indexAdvanced,
-            currentIndex: currentIndex
+            currentIndex: currentIndex,
+            event: inputEvent
         )
     }
     

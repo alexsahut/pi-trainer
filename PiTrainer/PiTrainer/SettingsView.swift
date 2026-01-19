@@ -43,7 +43,7 @@ struct SettingsView: View {
                     VStack(spacing: 32) {
                         ZenSegmentedControl(
                             title: "MODE DE PRATIQUE",
-                            options: [PracticeEngine.Mode.strict, PracticeEngine.Mode.learning],
+                            options: SessionMode.allCases,
                             selection: $statsStore.selectedMode
                         )
                         .onChange(of: statsStore.selectedMode) { _, newValue in
@@ -57,26 +57,6 @@ struct SettingsView: View {
                         )
                         
                         // Ghost Mode
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("MODE FANTÔME")
-                                .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
-                                .foregroundColor(DesignSystem.Colors.textSecondary)
-                                .tracking(2)
-                            
-                            Toggle(isOn: $statsStore.isGhostModeEnabled) {
-                                Text("EFFACEMENT PROGRESSIF")
-                                    .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                            .tint(DesignSystem.Colors.cyanElectric)
-                            .padding()
-                            .background(DesignSystem.Colors.blackOLED.opacity(0.3))
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                            )
-                        }
                         
                         // Notifications & Haptics
                         VStack(alignment: .leading, spacing: 12) {

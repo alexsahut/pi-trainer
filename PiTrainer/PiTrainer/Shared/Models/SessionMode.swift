@@ -75,7 +75,7 @@ enum SessionMode: String, CaseIterable, Codable, CustomStringConvertible {
             // All non-test modes map to learning (errors allowed)
             return .learning
         case .test:
-            return .test
+            return .strict
         }
     }
     

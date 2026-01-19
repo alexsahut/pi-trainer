@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Constant: String, CaseIterable, Identifiable, Codable {
+enum Constant: String, CaseIterable, Identifiable, Codable, CustomStringConvertible {
     case pi
     case e
     case sqrt2
@@ -23,6 +23,8 @@ enum Constant: String, CaseIterable, Identifiable, Codable {
         case .phi: return "φ"
         }
     }
+    
+    var description: String { symbol }
     
     var localizedNameKey: String {
         switch self {

@@ -21,7 +21,7 @@ struct SessionSettingsView: View {
                             
                             ZenSegmentedControl(
                                 title: String(localized: "MODE DE PRATIQUE"),
-                                options: [PracticeEngine.Mode.strict, PracticeEngine.Mode.learning],
+                                options: SessionMode.allCases,
                                 selection: $statsStore.selectedMode
                             )
                             .onChange(of: statsStore.selectedMode) { _, newValue in
@@ -35,27 +35,6 @@ struct SessionSettingsView: View {
                                 selection: $statsStore.keypadLayout
                             )
                             
-                            // Ghost Mode Toggle
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(String(localized: "MODE FANTÔME"))
-                                    .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
-                                    .foregroundColor(DesignSystem.Colors.textSecondary)
-                                    .tracking(2)
-                                
-                                Toggle(isOn: $statsStore.isGhostModeEnabled) {
-                                    Text(String(localized: "EFFACEMENT PROGRESSIF"))
-                                        .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
-                                        .foregroundColor(.white)
-                                }
-                                .tint(DesignSystem.Colors.cyanElectric)
-                                .padding()
-                                .background(DesignSystem.Colors.blackOLED.opacity(0.3))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                                )
-                            }
                             
                             // Haptics Toggle
                             Toggle(isOn: $hapticsEnabled) {

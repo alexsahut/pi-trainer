@@ -49,7 +49,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         if let sMode = try container.decodeIfPresent(SessionMode.self, forKey: .sessionMode) {
             sessionMode = sMode
         } else {
-            sessionMode = (mode == .test) ? .test : .learn
+            sessionMode = (mode == .strict) ? .test : .learn
         }
         
         attempts = try container.decode(Int.self, forKey: .attempts)
@@ -134,7 +134,8 @@ class StatsStore: ObservableObject {
     
     @Published var selectedMode: SessionMode = .learn {
         didSet {
-            persistence.saveSelectedMode(selectedMode.rawValue)
+            // persistence.saveSelectedMode(selectedMode.rawValue)
+            UserDefaults.standard.set(selectedMode.rawValue, forKey: "selectedMode")
         }
     }
     
@@ -166,7 +167,7 @@ class StatsStore: ObservableObject {
             }
         }
         
-        self.streakStore = StreakStore(userDefaults: persistence.userDefaults)
+        self.streakStore = StreakStore()
         
         loadStats()
         loadHistoryEagerly(for: selectedConstant)
@@ -345,7 +346,8 @@ class StatsStore: ObservableObject {
         }
         
         // Check if legacy keys exist in UserDefaults directly (one last time)
-        let legacyUserDefaults = persistence.userDefaults
+        // Check if legacy keys exist in UserDefaults directly (one last time)
+        let legacyUserDefaults = UserDefaults.standard
         let hasLegacyData = legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.globalBestStreak") != nil ||
                            legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.lastSession") != nil
         
@@ -360,7 +362,7 @@ class StatsStore: ObservableObject {
                         id: UUID(),
                         date: session.date,
                         constant: .pi,
-                        mode: .test,
+                        mode: .strict, // Map .test back to .strict for legacy engine
                         sessionMode: .test,
                         attempts: session.attempts,
                         errors: session.errors,

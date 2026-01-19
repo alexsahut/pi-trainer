@@ -90,7 +90,7 @@ struct SessionView: View {
                     typedDigits: viewModel.typedDigits,
                     integerPart: viewModel.integerPart,
                     fullDigits: viewModel.fullDigitsString,
-                    isLearnMode: viewModel.selectedMode == .learning,
+                    isLearnMode: viewModel.selectedMode == .learn,
                     onReveal: { count in
                         viewModel.reveal(count: count)
                     },
@@ -212,7 +212,7 @@ struct SessionView: View {
                 layout: statsStore.keypadLayout,
                 currentStreak: viewModel.engine.currentStreak,
                 isActive: viewModel.isInputAllowed, // Allow input when Ready or Running
-                isGhostModeEnabled: statsStore.isGhostModeEnabled,
+                isGhostModeEnabled: statsStore.selectedMode.hasGhost,
                 onDigit: { digit in
                     if viewModel.isInputAllowed {
                         viewModel.processInput(digit)

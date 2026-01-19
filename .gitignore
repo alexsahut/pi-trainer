@@ -8,10 +8,18 @@ DerivedData/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
+build/
+*.build/
 
 # SwiftPM / build
 .build/
 .swiftpm/
+
+# Logs
+*.log
+final_errors.log
+final_errors_2.log
+build_errors.log
 
 # Xcode user-specific
 *.xcuserdata/

@@ -4,7 +4,6 @@ import SwiftUI
 @Observable class NavigationCoordinator {
     enum Destination: Hashable {
         case session(mode: PracticeEngine.Mode)
-        case learning
         case stats
     }
     

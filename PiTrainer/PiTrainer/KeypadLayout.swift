@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum KeypadLayout: String, Codable, CaseIterable {
+enum KeypadLayout: String, Codable, CaseIterable, CustomStringConvertible {
     case phone = "phone"
     case pc = "pc"
     
@@ -28,4 +28,7 @@ enum KeypadLayout: String, Codable, CaseIterable {
             return NSLocalizedString("settings.layout.pc", comment: "PC layout")
         }
     }
+    
+    var description: String { localizedName }
 }
+

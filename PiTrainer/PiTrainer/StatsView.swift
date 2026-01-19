@@ -9,7 +9,7 @@ import SwiftUI
 
 struct StatsView: View {
     @ObservedObject var statsStore: StatsStore
-    @StateObject private var learningStore = LearningStore() // Internal store for learning stats
+
     @Environment(\.dismiss) var dismiss
     
     @State private var selectedConstantForStats: Constant
@@ -156,7 +156,7 @@ struct StatsView: View {
                 Button("stats.cancel", role: .cancel) { }
                 Button("stats.reset_all", role: .destructive) {
                     statsStore.reset()
-                    learningStore.reset()
+
                 }
             } message: {
                 Text("stats.reset_confirmation.message")

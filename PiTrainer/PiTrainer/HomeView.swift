@@ -110,7 +110,8 @@ struct HomeView: View {
                 ZenPrimaryButton(title: "START SESSION", accessibilityIdentifier: "home.start_button") {
                     // Configure ViewModel with latest settings
                     configureSession()
-                    coordinator.push(.session(mode: sessionViewModel.selectedMode))
+                    configureSession()
+                    coordinator.push(.session(mode: sessionViewModel.selectedMode.practiceEngineMode))
                 }
                 .padding(.horizontal, 20)
                 
@@ -145,8 +146,9 @@ struct HomeView: View {
             case .session(_):
                 SessionView(viewModel: sessionViewModel, statsStore: statsStore)
                     .navigationBarBackButtonHidden(true)
-            case .learning:
-                LearningHomeView()
+            case .session(_):
+                SessionView(viewModel: sessionViewModel, statsStore: statsStore)
+                    .navigationBarBackButtonHidden(true)
             case .stats:
                 StatsView(statsStore: statsStore)
             }
@@ -155,7 +157,7 @@ struct HomeView: View {
             StatsView(statsStore: statsStore)
         }
         .sheet(isPresented: $showingSettings) {
-             SettingsView(statsStore: statsStore)
+             SettingsView(sessionViewModel: sessionViewModel, statsStore: statsStore)
         }
         .onAppear {
             // Initial sync
