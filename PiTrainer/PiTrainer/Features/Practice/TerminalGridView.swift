@@ -207,11 +207,6 @@ struct TerminalGridView: View {
                         .focusable(false)
                     }
                     
-                    // Invisible view for scrolling anchor
-                    Spacer()
-                        .frame(height: 1)
-                        .id("cursor")
-                        .accessibilityHidden(true)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
@@ -221,9 +216,11 @@ struct TerminalGridView: View {
             .accessibilityHidden(true)
             .background(DesignSystem.Colors.blackOLED)
             .onChange(of: typedDigits.count) { oldValue, newValue in
-                // Scroll to bottom when typing
+                // Scroll to active row when typing to track progress
+                // Formula: count / 10 gives the current visible row index (0, 1, 2...)
+                let activeRowIndex = typedDigits.count / 10
                 withAnimation(.easeOut(duration: 0.15)) {
-                    proxy.scrollTo("cursor", anchor: .bottom)
+                    proxy.scrollTo(activeRowIndex, anchor: .center)
                 }
             }
         }
