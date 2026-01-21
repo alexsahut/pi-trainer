@@ -28,6 +28,11 @@ so that ajuster mon rythme sans regarder des chiffres.
 - [x] **Verification & Testing** (AC: 1-6)
   - [x] Créer `AtmosphericFeedbackTests.swift` pour tester la logique de delta et de couleur dans `SessionViewModel`.
   - [x] Vérifier manuellement en Game Mode que le fond change de couleur selon la position relative.
+- [x] **Code Review Follow-ups (AI)**
+  - [x] [Low] Supprimer les magic numbers dans le calcul d'opacité.
+  - [x] [Low] Optimiser `TimelineView` pour ne rafraîchir qu'en mode Game.
+  - [x] [Low] Déplacer `SessionViewModel+Game.swift` vers `Core/Features/Practice/`.
+  - [x] [Medium] Documenter l'impact sur `StatsStore` et `SegmentStore` pour le fix du Reset.
 
 ## Dev Notes
 
@@ -57,5 +62,8 @@ so that ajuster mon rythme sans regarder des chiffres.
 ### Completion Notes List
 
 ### File List
-- `PiTrainer/PiTrainer/SessionViewModel+Game.swift` [MODIFY]
+- `PiTrainer/PiTrainer/Core/Features/Practice/SessionViewModel+Game.swift` [MODIFY] (Déplacé)
+- `PiTrainer/PiTrainer/SessionView.swift` [MODIFY]
+- `PiTrainer/PiTrainer/StatsStore.swift` [MODIFY] (Fix Reset bug)
+- `PiTrainer/PiTrainer/SegmentStore.swift` [MODIFY] (Fix Reset bug)
 - `PiTrainer/PiTrainerTests/AtmosphericFeedbackTests.swift` [NEW]

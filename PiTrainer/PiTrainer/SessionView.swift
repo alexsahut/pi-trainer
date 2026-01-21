@@ -18,13 +18,18 @@ struct SessionView: View {
     
     var body: some View {
         ZStack {
-            // Story 9.3: Atmospheric Feedback Background
-            TimelineView(.animation) { timeline in
+            if viewModel.selectedMode == .game {
+                // Story 9.3: Atmospheric Feedback Background
+                TimelineView(.animation) { timeline in
+                    DesignSystem.Colors.blackOLED
+                        .overlay(
+                            viewModel.atmosphericColor(at: timeline.date)
+                                .opacity(viewModel.atmosphericOpacity(at: timeline.date))
+                        )
+                        .ignoresSafeArea()
+                }
+            } else {
                 DesignSystem.Colors.blackOLED
-                    .overlay(
-                        viewModel.atmosphericColor(at: timeline.date)
-                            .opacity(viewModel.atmosphericOpacity(at: timeline.date))
-                    )
                     .ignoresSafeArea()
             }
 

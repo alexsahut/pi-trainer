@@ -47,6 +47,9 @@ extension SessionViewModel {
     
     // MARK: - Story 9.3: Atmospheric Feedback
     
+    /// Seuil de saturation pour l'effet d'opacité (en nombre de chiffres)
+    private var maxAtmosphericDelta: Double { 5.0 }
+    
     /// Calcule le delta entre le joueur et le ghost à un instant T
     /// Positif = Joueur en avance, Négatif = Joueur en retard
     func atmosphericDelta(at date: Date) -> Double {
@@ -57,6 +60,8 @@ extension SessionViewModel {
     
     /// Couleur atmosphérique basée sur le delta
     func atmosphericColor(at date: Date) -> Color {
+        guard selectedMode == .game else { return .clear }
+        
         let delta = atmosphericDelta(at: date)
         if delta > 0 {
             return DesignSystem.Colors.cyanElectric
@@ -69,12 +74,13 @@ extension SessionViewModel {
     
     /// Opacité atmosphérique (5% à 20%)
     func atmosphericOpacity(at date: Date) -> Double {
+        guard selectedMode == .game else { return 0 }
+        
         let delta = abs(atmosphericDelta(at: date))
         if delta < 0.001 { return 0 }
         
-        // Saturation de l'effet à 5 chiffres d'écart
-        let maxEcart = 5.0
-        let ratio = min(1.0, delta / maxEcart)
+        // Saturation de l'effet
+        let ratio = min(1.0, delta / maxAtmosphericDelta)
         return 0.05 + (ratio * 0.15) // Échelle de 0.05 (5%) à 0.20 (20%)
     }
 }
