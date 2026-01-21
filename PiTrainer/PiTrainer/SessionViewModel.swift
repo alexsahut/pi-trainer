@@ -27,6 +27,8 @@ class SessionViewModel: ObservableObject {
     @Published var loops: Int = 0 // Story 8.6: Track segment completions
     @Published var ghostEngine: GhostEngine? // Story 9.1: Replay opponent
     private var isSessionSaved: Bool = false // Story 8.5: Prevent double saving
+    private var isSuddenDeathVictory: Bool = false // Story 9.5 Patch: Error while ahead in Game Mode
+    private var isNewPR: Bool = false // Story 9.5 Patch: Accurate status feedback
     
     // UI selection state
     @Published var selectedMode: SessionMode = .learn
@@ -107,12 +109,12 @@ class SessionViewModel: ObservableObject {
         }
         
         let isStrictFinish = selectedMode == .game || selectedMode == .test
-        let isCertified = selectedMode != .learn && revealsUsed == 0 && engine.errors == 0
+        let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory)
         
-        if isCertified {
-             // Certified means we stopped voluntarily or had 1 fatal error but followed rules
-             // In Game Mode, this is effectively a "New Record" candidate or at least a "Solid Run"
+        if isNewPR {
              return ("NEW RECORD", DesignSystem.Colors.cyanElectric)
+        } else if isCertified {
+             return ("CERTIFIED", DesignSystem.Colors.cyanElectric)
         } else {
              // Not certified (too many errors or reveals)
              // Check if we are ahead of ghost?
@@ -138,13 +140,18 @@ class SessionViewModel: ObservableObject {
         self.providerFactory = actualFactory
         self.segmentStore = segmentStore ?? SegmentStore()
         self.personalBestProvider = personalBestProvider ?? { constant in
-            // Smart Selection: Prioritize Crown (Distance), fallback to Lightning (Speed)
-            if let crown = PersonalBestStore.shared.getRecord(for: constant, type: .crown) {
-                print("debug: found CROWN PB for \(constant): \(crown.digitCount) digits")
+            // Smart Selection: 
+            // 1. Try to find the record that matches the user's intent (not explicitly tracked yet, so we use a heuristic)
+            // 2. Fallback cascade: Crown -> Lightning
+            let crown = PersonalBestStore.shared.getRecord(for: constant, type: .crown)
+            let lightning = PersonalBestStore.shared.getRecord(for: constant, type: .lightning)
+            
+            if let crown = crown {
+                print("debug: selecting CROWN Ghost for \(constant)")
                 return crown
             }
-            if let lightning = PersonalBestStore.shared.getRecord(for: constant, type: .lightning) {
-                print("debug: found LIGHTNING PB for \(constant): \(lightning.digitCount) digits")
+            if let lightning = lightning {
+                print("debug: selecting LIGHTNING Ghost for \(constant)")
                 return lightning
             }
             return nil
@@ -261,6 +268,8 @@ class SessionViewModel: ObservableObject {
             revealsUsed = 0
             loops = 0
             isSessionSaved = false
+            isSuddenDeathVictory = false
+            isNewPR = false
             print("debug: session started for \(constant) in \(selectedMode) mode")
             
         } catch {
@@ -285,10 +294,22 @@ class SessionViewModel: ObservableObject {
              typedDigits.append(String(digit))
              
              // Story 9.1: Start ghost on first successful input
-             if typedDigits.count == 1 {
-                 ghostEngine?.start()
+              if typedDigits.count == 1 {
+                  ghostEngine?.start()
+              }
+         }
+         
+         // Story 9.5 Patch: Immediate ghost defeat check on input
+         if let ghost = ghostEngine, isActive {
+             let currentGhostPos = ghost.position(at: Date())
+             if currentGhostPos >= Double(ghost.totalDigits) && engine.currentIndex < ghost.totalDigits {
+                 print("💀 GHOST WON (Immediate)! Player at \(engine.currentIndex), Ghost at \(ghost.totalDigits)")
+                 isDefeatedByGhost = true
+                 engine.finishSession()
+                 endSession()
+                 return
              }
-        }
+         }
         
         if result.isCorrect {
             // Success feedback
@@ -318,6 +339,7 @@ class SessionViewModel: ObservableObject {
                 let delta = atmosphericDelta(at: Date())
                 if delta > 0 {
                     print("⚡️ SUDDEN DEATH: Error while ahead of ghost (+ \(delta)). Ending session.")
+                    isSuddenDeathVictory = true
                     engine.finishSession()
                     endSession()
                     return
@@ -389,21 +411,18 @@ class SessionViewModel: ObservableObject {
             print("debug: creating SessionRecord for \(selectedConstant) (mode: \(selectedMode))")
             
             // Story 9.5: Certification & Dynamic PR Recording
-            // Rule: Certified if !learn, 0 reveals, and 0 errors (Strict Review Update)
-            let isCertified = selectedMode != .learn && revealsUsed == 0 && engine.errors == 0
-            
-            // Check if we beat the ghost (distance or speed)
-            // Note: This logic is tricky. If we are 'ahead' in distance when we fail, we technically 'beat' the ghost's distance at that specific moment if we stopped?
-            // User request: "If ahead of ghost, first error ends session with message WON! If simple error, NEW PR. Else Won with errors."
+            // Rule: Certified if !learn, 0 reveals, and (0 errors OR Sudden Death Victory)
+            let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory)
             
             if isCertified {
-                print("✅ Session CERTIFIED. Checking for new PRs.")
+                print("✅ Session CERTIFIED. Checking for new PRs (SuddenDeath: \(isSuddenDeathVictory)).")
                 
                 // 1. Check for Crown (Distance/Marathon)
                 let currentCrown = PersonalBestStore.shared.getRecord(for: selectedConstant, type: .crown)
-                let isNewCrown = currentCrown == nil || engine.currentIndex > currentCrown!.digitCount || (engine.currentIndex == currentCrown!.digitCount && engine.elapsedTime < currentCrown!.totalTime)
+                let isBetterCrown = currentCrown == nil || engine.currentIndex > currentCrown!.digitCount || (engine.currentIndex == currentCrown!.digitCount && engine.elapsedTime < currentCrown!.totalTime)
                 
-                if isNewCrown {
+                if isBetterCrown {
+                    isNewPR = true
                     let newCrown = PersonalBestRecord(
                         constant: selectedConstant,
                         type: .crown,
@@ -421,9 +440,10 @@ class SessionViewModel: ObservableObject {
                 if engine.currentIndex >= 50 {
                     let currentLightning = PersonalBestStore.shared.getRecord(for: selectedConstant, type: .lightning)
                     let sessionDPM = engine.digitsPerMinute
-                    let isNewLightning = currentLightning == nil || sessionDPM > currentLightning!.digitsPerMinute
+                    let isBetterLightning = currentLightning == nil || sessionDPM > currentLightning!.digitsPerMinute
                     
-                    if isNewLightning {
+                    if isBetterLightning {
+                        isNewPR = true
                         let newLightning = PersonalBestRecord(
                             constant: selectedConstant,
                             type: .lightning,

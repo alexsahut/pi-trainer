@@ -142,4 +142,15 @@ final class PersonalBestStoreTests: XCTestCase {
         
         let saved = store.getRecord(for: .pi, type: .lightning)
         XCTAssertEqual(saved?.totalTime, 30.0)
-    }}
+    }
+    
+    func testSave_LightningPR_ExactlyThreshold_Saves() async {
+        // Boundary check: Exactly 50 digits
+        let record = PersonalBestRecord(constant: .pi, type: .lightning, digitCount: 50, totalTime: 25.0, cumulativeTimes: [])
+        await store.save(record: record)
+        
+        let saved = store.getRecord(for: .pi, type: .lightning)
+        XCTAssertNotNil(saved)
+        XCTAssertEqual(saved?.digitCount, 50)
+    }
+}

@@ -54,6 +54,47 @@ class SessionViewModelIntegrationTests: XCTestCase {
         XCTAssertNotEqual(status.title, "NEW RECORD", "Session with 1 error should NOT be a NEW RECORD (Certified)")
     }
     
+    func testCertificationSucceedsWithSuddenDeath_GameMode() async {
+        // Given
+        viewModel.selectedMode = .game
+        viewModel.startSession()
+        
+        // Mock Ghost starting... user typed 1 digit
+        viewModel.processInput(1) 
+        
+        // Wait for ghost to advance? No, easier to mock ghost position or just trigger the logic
+        // In SVM_MockDigitsProvider, 50 digits is short enough.
+        
+        // Let's assume we are ahead of ghost (delta > 0)
+        // With current Mock, ghost is at PB.
+        // We need a PB to have a ghost.
+        let times = Array(repeating: 1.0, count: 10)
+        let record = PersonalBestRecord(constant: .pi, type: .crown, digitCount: 10, totalTime: 10, cumulativeTimes: times)
+        await PersonalBestStore.shared.save(record: record)
+        
+        viewModel.startSession() // Re-start with PB
+        viewModel.processInput(1) // Start Ghost
+        viewModel.processInput(4) // Second correct digit
+        
+        // Force a delta > 0
+        // Player: 2 correct, 1 error -> Effective pos = 1 (max(0, 2-1))
+        // Ghost: at start ~0.
+        // Delta = 1.
+        
+        // When: User makes error while ahead
+        XCTAssertTrue(viewModel.ghostEngine != nil, "GhostEngine should be initialized")
+        XCTAssertEqual(viewModel.currentIndex, 2, "CurrentIndex should be 2")
+        
+        viewModel.processInput(3) // Wrong digit
+        
+        // Then: Should trigger Sudden Death
+        XCTAssertFalse(viewModel.isActive, "Session should have ended by Sudden Death")
+        
+        // Certification check
+        let status = viewModel.sessionEndStatus
+        XCTAssertEqual(status.title, "CERTIFIED", "Sudden Death victory should be certified")
+    }
+    
     func testCertificationSucceedsWithZeroErrors_GameMode() async {
         // Given
         viewModel.selectedMode = .game

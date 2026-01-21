@@ -62,3 +62,4 @@
 - **2026-01-20:** Initialized Story 9.5 to handle certification and dynamic PR updates.
 - **2026-01-21:** Added Tasks section. Implemented core logic for certification and PR types. Created comprehensive unit tests for PersonalBestStore covering all PR scenarios. Verified GhostEngine regressions fixed. Marked ready for review.
 - **2026-01-21:** Addressed adversarial code review findings. Enforced strict certification (0 errors). Implemented Smart Ghost Selection (Crown > Lightning). Secured persistence tasks. Validated with `SessionViewModelIntegrationTests`. Verified by user via Walkthrough. Marked Done.
+- **2026-01-21:** Fixed Sudden Death paradox where error while ahead prevented certification. Added `isNewPR` flag for accurate UI feedback. Improved ghost selection with robust fallback and added boundary tests for Lightning PR.
