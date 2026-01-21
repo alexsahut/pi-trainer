@@ -50,7 +50,7 @@ enum SessionMode: String, CaseIterable, Codable, CustomStringConvertible {
     
     /// Whether the reveal mechanism (Eye icon) is allowed in this mode
     var allowsReveal: Bool {
-        self == .learn || self == .practice
+        self == .practice
     }
     
     /// Whether the ghost (PR replay) is active

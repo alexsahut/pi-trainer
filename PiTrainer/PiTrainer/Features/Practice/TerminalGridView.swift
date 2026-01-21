@@ -139,14 +139,14 @@ struct TerminalGridView: View {
                         HStack(alignment: .top, spacing: 0) {
                             // Line number and indicator
                             HStack(spacing: 0) {
-                                if row.isComplete {
+                                if row.isComplete || isLearnMode {
                                     Text(String(format: "%03d", row.lineNumber))
                                         .font(.system(size: 12, weight: .regular, design: .monospaced))
                                         .foregroundColor(.gray)
                                         .frame(width: 30, alignment: .trailing)
                                     Text(">")
                                         .font(.system(size: 12, weight: .regular, design: .monospaced))
-                                        .foregroundColor(.gray.opacity(0.5))
+                                        .foregroundColor(row.isComplete ? .gray.opacity(0.5) : DesignSystem.Colors.cyanElectric.opacity(0.8))
                                         .frame(width: 20, height: 24)
                                 } else if allowsReveal {
                                     // Story 7.1 Refined: Reveal Eye at the start of the row
