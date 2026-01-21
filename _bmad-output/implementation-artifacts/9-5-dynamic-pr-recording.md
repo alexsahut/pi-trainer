@@ -1,7 +1,7 @@
 # Story 9.5: Dynamic PR Recording & Rules
 
 **Parent:** Epic 9 - Mode Game (Ghost System & Atmospheric Feedback)
-**Status:** in-progress
+**Status:** done
 
 ## User Story
 
@@ -26,12 +26,12 @@
 - [x] Update `endSession` to trigger PR checks and persistence.
 - [x] Add unit tests for `PersonalBestStore` (Crown/Lightning logic).
 - [x] Verify `SessionViewModel` certification integration via tests.
-- [ ] **Review Follow-ups (AI)**
-    - [ ] [AI-Review][HIGH] Correction de la logique de certification (`errors == 0`) dans `SessionViewModel.swift` [L110]
-    - [ ] [AI-Review][MEDIUM] Implémentation de la sélection dynamique du Ghost (Crown vs Lightning) dans `SessionViewModel.swift` [L142]
-    - [ ] [AI-Review][MEDIUM] Mise à jour de la `File List` avec les fichiers manquants (`SessionViewModel+Game.swift`, `DesignSystem.swift`)
-    - [ ] [AI-Review][LOW] Sécurisation de la persistence dans `endSession` (gestion du cycle de vie de la Task)
-    - [ ] [AI-Review][LOW] Ajout de tests d'intégration pour le cycle de vie de la certification dans `SessionViewModel`
+- [x] **Review Follow-ups (AI)**
+    - [x] [AI-Review][HIGH] Correction de la logique de certification (`errors == 0`) dans `SessionViewModel.swift` [L110]
+    - [x] [AI-Review][MEDIUM] Implémentation de la sélection dynamique du Ghost (Crown vs Lightning) dans `SessionViewModel.swift` [L142]
+    - [x] [AI-Review][MEDIUM] Mise à jour de la `File List` avec les fichiers manquants (`SessionViewModel+Game.swift`, `DesignSystem.swift`)
+    - [x] [AI-Review][LOW] Sécurisation de la persistence dans `endSession` (gestion du cycle de vie de la Task)
+    - [x] [AI-Review][LOW] Ajout de tests d'intégration pour le cycle de vie de la certification dans `SessionViewModel`
 
 ## Technical Notes
 
@@ -52,9 +52,13 @@
 - `PiTrainer/PiTrainer/Core/Features/Practice/PracticeEngine.swift`
 - `PiTrainer/PiTrainer/Core/Persistence/PersonalBestStore.swift`
 - `PiTrainer/PiTrainer/SessionViewModel.swift`
+- `PiTrainer/PiTrainer/SessionViewModel+Game.swift`
+- `PiTrainer/PiTrainer/DesignSystem.swift`
 - `PiTrainer/PiTrainer/Shared/Models/PersonalBestRecord.swift`
 - `PiTrainer/PiTrainerTests/PersonalBestStoreTests.swift` [NEW]
+- `PiTrainer/PiTrainerTests/SessionViewModelIntegrationTests.swift` [NEW]
 
 ### Change Log
 - **2026-01-20:** Initialized Story 9.5 to handle certification and dynamic PR updates.
 - **2026-01-21:** Added Tasks section. Implemented core logic for certification and PR types. Created comprehensive unit tests for PersonalBestStore covering all PR scenarios. Verified GhostEngine regressions fixed. Marked ready for review.
+- **2026-01-21:** Addressed adversarial code review findings. Enforced strict certification (0 errors). Implemented Smart Ghost Selection (Crown > Lightning). Secured persistence tasks. Validated with `SessionViewModelIntegrationTests`. Verified by user via Walkthrough. Marked Done.

@@ -72,10 +72,13 @@ final class HorizonLineTests: XCTestCase {
         viewModel.processInput(1)
         
         // Then: Position should be 3
+        print("DEBUG: Pre-error - Index: \(viewModel.engine.currentIndex), Errors: \(viewModel.engine.errors)")
         XCTAssertEqual(viewModel.playerEffectivePosition, 3)
         
         // When: 1 error (in Strict mode, session ends)
         viewModel.processInput(9) // Wrong
+        
+        print("DEBUG: Post-error - Index: \(viewModel.engine.currentIndex), Errors: \(viewModel.engine.errors), State: \(viewModel.engine.state)")
         
         // Then: Position should be 3 (currentIndex) - 1 (errors) = 2
         XCTAssertEqual(viewModel.playerEffectivePosition, 2)

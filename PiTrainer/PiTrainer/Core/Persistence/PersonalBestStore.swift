@@ -103,6 +103,21 @@ final class PersonalBestStore {
         return try decoder.decode(PersonalBestRecord.self, from: data)
     }
     
+    // MARK: - Testing Support
+    func reset() async {
+        records.removeAll()
+        do {
+            let docs = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let storageDir = docs.appendingPathComponent(storageDirectoryName, isDirectory: true)
+            if fileManager.fileExists(atPath: storageDir.path) {
+                try fileManager.removeItem(at: storageDir)
+                print("debug: PersonalBestStore reset - deleted \(storageDir.path)")
+            }
+        } catch {
+            print("❌ PersonalBestStore reset failed: \(error)")
+        }
+    }
+
     // MARK: - File Path Helper
     private func getFileURL(for constant: Constant, type: PRType) throws -> URL {
         let docs = try fileManager.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)

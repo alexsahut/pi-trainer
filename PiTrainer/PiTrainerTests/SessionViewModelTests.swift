@@ -77,7 +77,8 @@ final class SessionViewModelTests: XCTestCase {
             persistence: persistence,
             providerFactory: { constant in 
                 return SessionMockDigitsProvider(constant: constant) 
-            }
+            },
+            personalBestProvider: { _ in nil } // Mock PB provider to avoid FS access
         )
 
     }

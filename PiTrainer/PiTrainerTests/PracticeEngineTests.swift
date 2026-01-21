@@ -112,10 +112,10 @@ final class PracticeEngineTests: XCTestCase {
         // Fail
         let result = engine.input(digit: 9)
         
-        // Learning mode should continue
+        // Learning mode should continue but NOT advance (retry)
         XCTAssertTrue(engine.isActive)
-        XCTAssertTrue(result.indexAdvanced)
-        XCTAssertEqual(engine.currentIndex, 1)
+        XCTAssertFalse(result.indexAdvanced)
+        XCTAssertEqual(engine.currentIndex, 0) // Stay on index 0
         XCTAssertEqual(engine.errors, 1)
         XCTAssertEqual(engine.currentStreak, 0)
     }

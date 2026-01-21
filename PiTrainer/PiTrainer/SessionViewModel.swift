@@ -107,7 +107,7 @@ class SessionViewModel: ObservableObject {
         }
         
         let isStrictFinish = selectedMode == .game || selectedMode == .test
-        let isCertified = selectedMode != .learn && revealsUsed == 0 && (isStrictFinish ? engine.errors <= 1 : engine.errors == 0)
+        let isCertified = selectedMode != .learn && revealsUsed == 0 && engine.errors == 0
         
         if isCertified {
              // Certified means we stopped voluntarily or had 1 fatal error but followed rules
@@ -138,10 +138,16 @@ class SessionViewModel: ObservableObject {
         self.providerFactory = actualFactory
         self.segmentStore = segmentStore ?? SegmentStore()
         self.personalBestProvider = personalBestProvider ?? { constant in
-            // Default: Fetch the Crown (Marathon) record
-            let pb = PersonalBestStore.shared.getRecord(for: constant, type: .crown)
-            print("debug: personalBestProvider fetched CROWN PB for \(constant): \(pb != nil ? "\(pb!.digitCount) digits" : "nil")")
-            return pb
+            // Smart Selection: Prioritize Crown (Distance), fallback to Lightning (Speed)
+            if let crown = PersonalBestStore.shared.getRecord(for: constant, type: .crown) {
+                print("debug: found CROWN PB for \(constant): \(crown.digitCount) digits")
+                return crown
+            }
+            if let lightning = PersonalBestStore.shared.getRecord(for: constant, type: .lightning) {
+                print("debug: found LIGHTNING PB for \(constant): \(lightning.digitCount) digits")
+                return lightning
+            }
+            return nil
         }
         
         // Initialize with default (pi) - will be updated before start
@@ -383,9 +389,8 @@ class SessionViewModel: ObservableObject {
             print("debug: creating SessionRecord for \(selectedConstant) (mode: \(selectedMode))")
             
             // Story 9.5: Certification & Dynamic PR Recording
-            // Rule: Certified if !learn, 0 reveals, and (at most 1 error if in a strict finish mode, else 0)
-            let isStrictFinish = selectedMode == .game || selectedMode == .test
-            let isCertified = selectedMode != .learn && revealsUsed == 0 && (isStrictFinish ? engine.errors <= 1 : engine.errors == 0)
+            // Rule: Certified if !learn, 0 reveals, and 0 errors (Strict Review Update)
+            let isCertified = selectedMode != .learn && revealsUsed == 0 && engine.errors == 0
             
             // Check if we beat the ghost (distance or speed)
             // Note: This logic is tricky. If we are 'ahead' in distance when we fail, we technically 'beat' the ghost's distance at that specific moment if we stopped?
@@ -406,7 +411,7 @@ class SessionViewModel: ObservableObject {
                         totalTime: engine.elapsedTime,
                         cumulativeTimes: engine.cumulativeTimes
                     )
-                    Task {
+                    Task { [newCrown] in
                         await PersonalBestStore.shared.save(record: newCrown)
                         print("🏆 New CROWN PR saved: \(newCrown.digitCount) digits")
                     }
@@ -426,9 +431,9 @@ class SessionViewModel: ObservableObject {
                             totalTime: engine.elapsedTime,
                             cumulativeTimes: engine.cumulativeTimes
                         )
-                        Task {
+                        Task { [newLightning] in
                             await PersonalBestStore.shared.save(record: newLightning)
-                            print("⚡️ New LIGHTNING PR saved: \(sessionDPM) DPM")
+                            print("⚡️ New LIGHTNING PR saved: \(newLightning.digitsPerMinute) DPM")
                         }
                     }
                 }
