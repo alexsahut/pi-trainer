@@ -109,7 +109,7 @@ class SessionViewModel: ObservableObject {
         }
         
         let isStrictFinish = selectedMode == .game || selectedMode == .test
-        let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory) && !isDefeatedByGhost
+        let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory || selectedMode == .test) && !isDefeatedByGhost
         
         if isNewPR {
              return ("NEW RECORD", DesignSystem.Colors.cyanElectric)
@@ -424,8 +424,8 @@ class SessionViewModel: ObservableObject {
             print("debug: creating SessionRecord for \(selectedConstant) (mode: \(selectedMode))")
             
             // Story 9.5: Certification & Dynamic PR Recording
-            // Rule: Certified if !learn, 0 reveals, and (0 errors OR Sudden Death Victory) AND NOT Defeated
-            let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory) && !isDefeatedByGhost
+            // Rule: Certified if !learn, 0 reveals, and (0 errors OR Sudden Death Victory OR Test Mode fail) AND NOT Defeated
+            let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory || selectedMode == .test) && !isDefeatedByGhost
             
             if isCertified {
                 print("✅ Session CERTIFIED. Checking for new PRs (SuddenDeath: \(isSuddenDeathVictory)).")

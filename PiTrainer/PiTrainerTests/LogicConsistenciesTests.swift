@@ -48,7 +48,7 @@ final class LogicConsistenciesTests: XCTestCase {
         viewModel.endSession() 
         
         // Wait for async update
-        try? await Task.sleep(nanoseconds: 200_000_000) 
+        try? await Task.sleep(nanoseconds: 500_000_000) 
         
         let history = statsStore.history(for: .pi)
         print("debug: defeat history count: \(history.count)")
@@ -78,7 +78,7 @@ final class LogicConsistenciesTests: XCTestCase {
         viewModel.processInput(3) // Error -> Sudden Death
         
         // Wait for async update
-        try? await Task.sleep(nanoseconds: 200_000_000) 
+        try? await Task.sleep(nanoseconds: 500_000_000) 
         
         print("debug: suddenDeath isActive: \(viewModel.isActive)")
         XCTAssertFalse(viewModel.isActive, "Session should have ended by Sudden Death")
@@ -105,7 +105,7 @@ final class LogicConsistenciesTests: XCTestCase {
         
         viewModel.endSession()
         
-        try? await Task.sleep(nanoseconds: 200_000_000)
+        try? await Task.sleep(nanoseconds: 500_000_000)
         
         let session = statsStore.history(for: .pi).first
         XCTAssertNotNil(session)
@@ -124,11 +124,31 @@ final class LogicConsistenciesTests: XCTestCase {
         
         viewModel.endSession() 
         
-        try? await Task.sleep(nanoseconds: 200_000_000)
+        try? await Task.sleep(nanoseconds: 500_000_000)
         
         let session = statsStore.history(for: .pi).first
         XCTAssertNotNil(session, "Session should be saved")
         XCTAssertTrue(session?.isCertified == true, "Perfect Test session SHOULD be certified")
         XCTAssertEqual(statsStore.bestStreak(for: .pi), 3, "Certified session should update Best Streak")
+    }
+    
+    func testTestMode_Fail_IsCertified() async {
+        viewModel.selectedMode = .test
+        viewModel.startSession()
+        
+        viewModel.processInput(1) // pos 1: 1
+        viewModel.processInput(4) // pos 2: 4
+        viewModel.processInput(3) // pos 3: Error (1 expected) -> Session ends
+        
+        try? await Task.sleep(nanoseconds: 500_000_000)
+        
+        XCTAssertFalse(viewModel.isActive, "Test session should end on first error")
+        XCTAssertEqual(viewModel.engine.errors, 1)
+        XCTAssertEqual(viewModel.engine.bestStreak, 2)
+        
+        let session = statsStore.history(for: .pi).first
+        XCTAssertNotNil(session, "Session should be saved automatically on fail")
+        XCTAssertTrue(session?.isCertified == true, "Test session failing on error SHOULD be certified")
+        XCTAssertEqual(statsStore.bestStreak(for: .pi), 2, "Certified session with error should update Best Streak")
     }
 }

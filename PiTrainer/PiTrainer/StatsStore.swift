@@ -431,8 +431,11 @@ class StatsStore: ObservableObject {
                 // This fixes issues where a phantom high score persists after history corruption/deletion.
                 //
                 // Fix for Story 8.5/9.5: Exclude Learn Mode AND require Certification for Best Streak calculation
-                // Learn Mode defines 'streak' as loops or segment completions, which is not comparable to Practice/Test/Game.
-                let eligibleRecords = records.filter { $0.sessionMode != .learn && $0.isCertified }
+                // Note: We also explicitly include Test mode sessions with 0 reveals even if not marked certified, 
+                // to retroactively fix valid fails that were saved before the certification rule was refined.
+                let eligibleRecords = records.filter { 
+                    $0.sessionMode != .learn && ($0.isCertified || ($0.sessionMode == .test && $0.revealsUsed == 0 && $0.errors <= 1))
+                }
                 let bestInHistory = eligibleRecords.max(by: { $0.bestStreakInSession < $1.bestStreakInSession })
                 
                 if let best = bestInHistory {
