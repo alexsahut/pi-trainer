@@ -24,6 +24,12 @@ struct HistoryRow: View {
                     
                     Text(session.sessionMode.displayName)
                         .font(DesignSystem.Fonts.monospaced(size: 9, weight: .bold))
+                    
+                    if session.isCertified {
+                        Image(systemName: "trophy.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(DesignSystem.Colors.cyanElectric)
+                    }
                 }
                 .foregroundColor(DesignSystem.Colors.textSecondary)
             }

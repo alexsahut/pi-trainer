@@ -1,7 +1,7 @@
 # Story 9.1: GhostEngine & PersonalBest avec Timestamps
 
 **Parent:** Epic 9 - Mode Game (Ghost System & Atmospheric Feedback)
-**Status:** ready-for-dev
+**Status:** done
 
 ## User Story
 
@@ -11,41 +11,42 @@
 
 ## Acceptance Criteria
 
-- [ ] **Data Loading:** Le système charge le Personal Best (PR) pour la constante sélectionnée au lancement de la session.
-- [ ] **Ghost Initialization:**
-    - [ ] Si PR existe: `GhostEngine` est initialisé avec les timestamps cumulés.
-    - [ ] Si PR n'existe pas: Le Ghost reste à la position 0 (premier essai).
-- [ ] **Ghost Movement:** Le Ghost "avance" virtuellement en fonction du temp écoulé comparé aux timestamps du PR.
-- [ ] **Timestamps Recording (Story 9.5 pre-req):** Prévoir la structure de données pour enregistrer les temps.
+- [x] **Data Loading:** Le système charge le Personal Best (PR) pour la constante sélectionnée au lancement de la session.
+- [x] **Ghost Initialization:**
+    - [x] Si PR existe: `GhostEngine` est initialisé avec les timestamps cumulés.
+    - [x] Si PR n'existe pas: Le Ghost reste à la position 0 (premier essai).
+- [x] **Ghost Movement:** Le Ghost "avance" virtuellement en fonction du temp écoulé comparé aux timestamps du PR.
+- [x] **Timestamps Recording (Story 9.5 pre-req):** Prévoir la structure de données pour enregistrer les temps.
 
 ## Technical Notes
 
 ### 1. Data Structures (`Shared/Models`)
-- Update `PersonalBestRecord` struct:
-    ```swift
-    struct PersonalBestRecord: Codable, Equatable {
-        let constant: Constant
-        let digitCount: Int
-        let totalTime: TimeInterval
-        let cumulativeTimes: [TimeInterval] // New: Timestamps relative to start
-        let date: Date
-    }
-    ```
+- `PersonalBestRecord` struct updated to include `cumulativeTimes`.
 
 ### 2. Core Engine (`Core/Engine/GhostEngine.swift`)
-- Create `GhostEngine` class (actors or plain class, thread-safety to consider with `PracticeEngine`? Likely `MainActor` or shared actor).
-    ```swift
-    @Observable
-    final class GhostEngine {
-        private let timestamps: [TimeInterval]
-        private let startTime: Date
-
-        var ghostPosition: Int {
-             // Binary search or index tracking (timestamps are sorted) to find current position
-        }
-    }
-    ```
+- `GhostEngine` implemented with `start()` signal and precision timing.
+- Strictly isolated: only initialized if `SessionMode.hasGhost` is true.
 
 ### 3. Persistence (`Core/Persistence/PersonalBestStore.swift`)
-- Create store to handle loading/saving `PersonalBestRecord`.
-- Should act as the source of truth for the `GhostEngine`.
+- `PersonalBestStore` implemented with lazy loading for performance.
+
+## Senior Developer Review (AI)
+
+### findings
+- **🔴 HIGH:** Originally missing integration in `SessionViewModel`. **FIXED.**
+- **🟡 MEDIUM:** Originally missing manual start signal (Ghost started too early). **FIXED.**
+- **🟡 MEDIUM:** Originally missing mode isolation. **FIXED.**
+- **🟢 LOW:** Originally eager loading all records. **FIXED.**
+
+## Dev Agent Record
+
+### File List
+- `PiTrainer/PiTrainer/Shared/Models/PersonalBestRecord.swift`
+- `PiTrainer/PiTrainer/Core/Engine/GhostEngine.swift`
+- `PiTrainer/PiTrainer/Core/Persistence/PersonalBestStore.swift`
+- `PiTrainer/PiTrainer/SessionViewModel.swift` (Modified)
+- `PiTrainer/PiTrainerTests/GhostEngineTests.swift`
+
+### Change Log
+- **2026-01-20:** Created core models and engines for Story 9.1.
+- **2026-01-20:** Refactored for precision timing, mode isolation, and lazy loading after adversarial review.

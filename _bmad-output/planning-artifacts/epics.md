@@ -496,11 +496,14 @@ Implémenter le Game Mode avec course contre le Ghost (Personal Best) et feedbac
 
 **FRs V2 covered:** FR6-V2 (Ghost), FR7-V2 (Horizon), FR8-V2 (Atmospheric), FR9-V2 (Error Tolerance)
 
-#### Story 9.1: GhostEngine & PersonalBest avec Timestamps
+#### Story 9.1: GhostEngine — Twin Shadows Logic
+As a gamer, I want to compete against two types of ghosts (Distance/Marathon and Speed/Sprint) to push my limits in different ways.
 
-As a gamer,
-I want courir contre ma meilleure performance passée,
-So that me dépasser progressivement.
+**Acceptance Criteria:**
+- **Ghost Types**: Separation between "CROWN" (Distance) and "LIGHTNING" (Speed).
+- **Certified Status**: Only sessions with 0 errors starting from Mode Game or Mode Test are eligible for a PR (Ghost).
+- **Start Signal**: Ghost waits for the user's first input.
+- **Speed Minimum**: Speed PR only eligible for sessions > 50 digits.
 
 **Acceptance Criteria:**
 
@@ -577,11 +580,15 @@ So that continuer ma course tout en payant le prix de mes fautes.
 - Ajouter `errorCount` au moteur
 - Position effective = `correctCount - errorCount`
 
-#### Story 9.5: Enregistrement PR avec Timestamps
+#### Story 9.5: Dynamic PR Recording & Rules
 
-As a gamer,
-I want que mon nouveau record enregistre mes temps par décimale,
-So that mon futur Ghost soit fidèle à ma vraie performance.
+As a gamer, I want the system to automatically certify my runs and update my Twin-Shadows PRs based on the new rules.
+
+**Acceptance Criteria:**
+- **Certification Logic**: `if sessionMode != .learn && revealsUsed == 0 && errors == 0 { certify() }`.
+- **Tie-break Rule**: If distances are equal, fastest time wins for the Crown.
+- **Sprint Logic**: Updates the Lightning Slot if CPS is higher and distance > 50.
+- **Practice Exclusion**: Runs with errors or in Learn mode are saved as "Uncertified" in history but NEVER used as Ghosts.
 
 **Acceptance Criteria:**
 
@@ -594,6 +601,19 @@ So that mon futur Ghost soit fidèle à ma vraie performance.
 **Technical Notes:**
 - Enregistrer `Date().timeIntervalSince(startTime)` à chaque input correct
 - Structure : `PersonalBestRecord { constant, digitCount, totalTime, cumulativeTimes }`
+
+#### Story 9.6: Game Mode Rules & Onboarding
+
+As a new gamer, I want to see a clear explanation of the Twin-Shadows rules so I understand how to earn my Stars and Ghosts.
+
+**Acceptance Criteria:**
+- **Rules Page**: A dedicated view or overlay explaining the Crown (Distance) vs Lightning (Speed) PRs.
+- **Certification Explanation**: Clear mention that errors or reveals disqualify a run from being "Certified".
+- **Visuals**: Use icons (Crown, Lightning, Shield) to illustrate the rules.
+
+**Technical Notes:**
+- Create `GameModeRulesView.swift`.
+- Integrate as a "info" button or first-launch overlay in Game Mode.
 
 ---
 
@@ -621,12 +641,13 @@ So that mon futur Ghost soit fidèle à ma vraie performance.
 3. Story 8.1 — Dual Slider
 4. Story 8.2 — Overlay Permanent
 
-**Phase 3 (Game Mode):**
-5. Story 9.1 — GhostEngine
-6. Story 9.5 — Enregistrement PR (prérequis pour 9.2)
-7. Story 9.2 — Horizon Line
-8. Story 9.3 — Atmospheric Feedback
-9. Story 9.4 — Gestion Erreurs
+**Phase 3 (Game Mode — The Trial):**
+5. Story 9.1 — GhostEngine (Twin Shadows foundation)
+6. Story 9.5 — Dynamic PR Recording (Certification logic)
+7. Story 9.2 — Horizon Line (Dual points: Player vs Ghost)
+8. Story 9.6 — Rules & Onboarding
+9. Story 9.3 — Atmospheric Feedback
+10. Story 9.4 — Gestion Erreurs
 
 <!-- End story breakdown -->
 

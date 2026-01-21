@@ -28,11 +28,13 @@ class PracticeEngine {
     enum Mode: String, Codable, CustomStringConvertible {
         case strict   // Wrong digit ends the session immediately
         case learning // Wrong digit reveals answer and advances
+        case game     // Story 9.4: Wrong digit adds penalty but continues (unless fatal condition met in VM)
         
         var description: String {
             switch self {
             case .strict: return "STRICT"
             case .learning: return "LEARN"
+            case .game: return "GAME"
             }
         }
     }
@@ -84,6 +86,7 @@ class PracticeEngine {
     private(set) var minCPS: Double = .infinity
     private(set) var maxCPS: Double = 0
     private var lastCorrectInputTime: Date?
+    private(set) var cumulativeTimes: [TimeInterval] = []
     
     /// Returns true if the session is currently running (timer active)
     var isActive: Bool {
@@ -161,6 +164,7 @@ class PracticeEngine {
         self.minCPS = .infinity
         self.maxCPS = 0
         self.lastCorrectInputTime = nil
+        self.cumulativeTimes = []
     }
     
     /// Processes a digit input
@@ -216,6 +220,12 @@ class PracticeEngine {
             persistence.saveHighestIndex(currentIndex, for: constant.id)
             
             currentIndex += 1
+            
+            // Record timing for PB (Story 9.5)
+            // Precise absolute time since start to avoid drift if session was paused/resumed
+            if let start = startTime {
+                cumulativeTimes.append(Date().timeIntervalSince(start) + elapsedTimeInternal)
+            }
             
             // Story 8.1 & 8.6: Check against Segment End and Auto Restart
             if let end = endIndex, currentIndex >= end {
@@ -274,6 +284,12 @@ class PracticeEngine {
                 case .learning:
                     // Stay on current index to allow retry
                     indexAdvanced = false
+                    
+                case .game:
+                    // Story 9.4: Game Mode
+                    // Continue session, error is penalized (errors += 1 above)
+                    // Do NOT advance index, user must retry
+                    indexAdvanced = false
                 }
             }
         }
@@ -309,7 +325,7 @@ class PracticeEngine {
     
     // MARK: - Private Methods
     
-    private func finishSession() {
+    func finishSession() {
         if state == .running {
             pauseTimer()
         }

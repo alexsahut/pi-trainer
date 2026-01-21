@@ -62,7 +62,7 @@ struct StatsView: View {
                             if let last = currentStats.lastSession {
                                 // Last Session Quick Stats Row
                                 HStack(spacing: 30) {
-                                    QuickStat(label: "CPS", value: String(format: "%.1f", last.digitsPerMinute))
+                                    QuickStat(label: "CPS", value: String(format: "%.1f", last.digitsPerMinute / 60.0))
                                     QuickStat(label: "ERR", value: "\(last.errors)", color: last.errors > 0 ? .red : .white)
                                     QuickStat(label: "TIME", value: formatTime(last.durationSeconds))
                                 }
@@ -186,6 +186,7 @@ struct StatsView: View {
         switch mode {
         case .strict: return String(localized: "mode.strict")
         case .learning: return String(localized: "mode.learning")
+        case .game: return String(localized: "mode.game")
         }
     }
     

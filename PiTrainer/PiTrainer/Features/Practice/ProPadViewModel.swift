@@ -23,12 +23,7 @@ final class ProPadViewModel {
     
     /// Computed property to determine target opacity based on streak and activity
     private var targetOpacity: Double {
-        guard isGhostModeEnabled else { return 1.0 }
-        guard currentStreak >= 20 else { return 0.2 }
-        
-        // Check if inactive for threshold seconds
-        let timeSinceLastInput = Date().timeIntervalSince(lastInputTime)
-        return timeSinceLastInput >= inactivityThreshold ? 0.2 : 0.05
+        return 1.0 // Story 9.2 Fix: Keep ProPad opaque in all V2 modes
     }
     
     func triggerHaptics() {

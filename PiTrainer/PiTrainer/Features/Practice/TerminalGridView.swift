@@ -132,81 +132,33 @@ struct TerminalGridView: View {
                                 .foregroundColor(.white)
                                 .id("integerPart")
                         }
+                        .accessibilityHidden(true)
                     }
                     
                     ForEach(rows) { row in
                         HStack(alignment: .top, spacing: 0) {
-                            // Line number and reveal button container
+                            // Line number and indicator
                             HStack(spacing: 0) {
-                                // Logic:
-                                // If Row Complete -> Show Line Number
-                                // If Row Incomplete:
-                                //   - If Practice (allowsReveal) -> Show Eye
-                                //   - If Learn (!allowsReveal) -> Show Nothing (or placeholder) - User said "Eye is useless... digits revealed"
-                                //   - User also said "Segment could be displayed prettier with a > aligned"
-                                
                                 if row.isComplete {
-                                    // Completed Line: Show Index (e.g. "060")
                                     Text(String(format: "%03d", row.lineNumber))
                                         .font(.system(size: 12, weight: .regular, design: .monospaced))
                                         .foregroundColor(.gray)
                                         .frame(width: 30, alignment: .trailing)
-                                    
-                                    // Completion Indicator
                                     Text(">")
                                         .font(.system(size: 12, weight: .regular, design: .monospaced))
                                         .foregroundColor(.gray.opacity(0.5))
                                         .frame(width: 20, height: 24)
                                 } else {
-                                    // Incomplete Line
-                                    // Placeholder for Line Number (Empty)
                                     Color.clear.frame(width: 30, height: 24)
-                                    
-                                    if allowsReveal && !isLearnMode && (revealedDigitsPerRow[row.id] ?? 0) < 10 {
-                                        // Practice Mode: Show Eye (Tap = 1, Long Press = All)
-                                        Image(systemName: "eye.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
-                                            .frame(width: 20, height: 24)
-                                            .contentShape(Rectangle()) // Easier touch target
-                                            .onTapGesture {
-                                                // Short Tap: Reveal ONE digit
-                                                let currentTyped = row.digits.count
-                                                let currentRevealed = revealedDigitsPerRow[row.id] ?? currentTyped
-                                                let baseIndex = max(currentTyped, currentRevealed)
-                                                
-                                                let next = min(10, baseIndex + 1)
-                                                if next > baseIndex {
-                                                    revealedDigitsPerRow[row.id] = next
-                                                    onReveal?(1)
-                                                }
-                                            }
-                                            .onLongPressGesture(minimumDuration: 0.5) {
-                                                // Long Press: Reveal REST of line
-                                                let currentTyped = row.digits.count
-                                                let currentRevealed = revealedDigitsPerRow[row.id] ?? currentTyped
-                                                let baseIndex = max(currentTyped, currentRevealed)
-                                                
-                                                let next = 10
-                                                if next > baseIndex {
-                                                    let newlyRevealed = next - baseIndex
-                                                    revealedDigitsPerRow[row.id] = next
-                                                    onReveal?(newlyRevealed)
-                                                }
-                                            }
-                                            .accessibilityLabel(String(localized: "Révéler la ligne"))
-                                    } else {
-                                        // Learn Mode or standard incomplete: Show ">" aligned
-                                        Text(">")
-                                            .font(.system(size: 12, weight: .regular, design: .monospaced))
-                                            .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.8))
-                                            .frame(width: 20, height: 24)
-                                    }
+                                    Text(">")
+                                        .font(.system(size: 12, weight: .regular, design: .monospaced))
+                                        .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.8))
+                                        .frame(width: 20, height: 24)
                                 }
                             }
                             .frame(width: 50, alignment: .trailing)
+                            .accessibilityHidden(true)
                             
-                            // Spacer
                             Color.clear.frame(width: 8, height: 1)
                             
                             // Digits
@@ -217,8 +169,6 @@ struct TerminalGridView: View {
                                         let isLastDigitInRow = (row.id == rows.last?.id && i == row.digits.count - 1)
                                         digitView(digit: digit, state: digitState(localIndex: i, isLast: isLastDigitInRow))
                                     } else if i < (revealedDigitsPerRow[row.id] ?? 0) || isLearnMode {
-                                        // Ghost digits
-                                        // FIX: Add startOffset to globalIndex calculation!
                                         let globalIndex = startOffset + (row.id * 10) + i
                                         if globalIndex < fullDigits.count {
                                             let ghostDigit = Int(String(fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)])) ?? 0
@@ -231,7 +181,6 @@ struct TerminalGridView: View {
                                         placeholderView
                                     }
                                     
-                                    // Add space after every 5 digits
                                     if (i + 1) % 5 == 0 && i < 9 {
                                         Spacer().frame(width: 16)
                                     }
@@ -239,13 +188,26 @@ struct TerminalGridView: View {
                             }
                             .id(row.id)
                         }
+                        .accessibilityElement(children: .contain)
+                        .accessibilityHidden(row.isComplete)
+                        .focusable(false)
                     }
+                    
+                    // Invisible view for scrolling anchor
+                    Spacer()
+                        .frame(height: 1)
+                        .id("cursor")
+                        .accessibilityHidden(true)
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
+                .focusable(false)
             }
+            .focusable(false)
+            .accessibilityHidden(true)
             .background(DesignSystem.Colors.blackOLED)
             .onChange(of: typedDigits.count) { oldValue, newValue in
+                // Scroll to bottom when typing
                 withAnimation(.easeOut(duration: 0.15)) {
                     proxy.scrollTo("cursor", anchor: .bottom)
                 }

@@ -19,18 +19,11 @@ struct ModeSelector: View {
             selection: Binding(
                 get: { selectedMode },
                 set: { newValue in
-                    if newValue == .game {
-                        showingGameAlert = true
-                    } else {
-                        selectedMode = newValue
-                    }
+                    selectedMode = newValue
                 }
             )
         )
         .accessibilityIdentifier("home.mode_selector")
-        .alert(String(localized: "mode.game.coming_soon"), isPresented: $showingGameAlert) {
-            Button("OK", role: .cancel) { }
-        }
     }
 }
 

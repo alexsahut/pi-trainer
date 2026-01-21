@@ -13,9 +13,23 @@ struct SessionView: View {
     @ObservedObject var statsStore: StatsStore
     @Environment(\.dismiss) var dismiss
     
+    @State private var showOptions = false
+    @State private var hapticsEnabled = HapticService.shared.isEnabled
+    
     var body: some View {
-        VStack(spacing: 0) {
-            // Header showing stats (Zen-Athlete 3.0 - Symmetrical Edition)
+        ZStack {
+            // Story 9.3: Atmospheric Feedback Background
+            TimelineView(.animation) { timeline in
+                DesignSystem.Colors.blackOLED
+                    .overlay(
+                        viewModel.atmosphericColor(at: timeline.date)
+                            .opacity(viewModel.atmosphericOpacity(at: timeline.date))
+                    )
+                    .ignoresSafeArea()
+            }
+
+            VStack(spacing: 0) {
+                // Header showing stats (Zen-Athlete 3.0 - Symmetrical Edition)
             HStack(alignment: .center) {
                 // LEFT COLUMN
                 VStack(alignment: .leading, spacing: 12) {
@@ -85,136 +99,148 @@ struct SessionView: View {
             )
             
             // Terminal-Grid Display Area (blocks of 10 digits)
-            ZStack {
-                TerminalGridView(
-                    typedDigits: viewModel.typedDigits,
-                    integerPart: viewModel.integerPart,
-                    fullDigits: viewModel.fullDigitsString,
-                    isLearnMode: viewModel.selectedMode == .learn,
-                    allowsReveal: viewModel.selectedMode.allowsReveal, // Pass allow reveal (Learn + Practice)
-                    startOffset: viewModel.currentSegmentOffset,
-                    segmentLength: viewModel.currentSegmentLength,
-                    onReveal: { count in
-                        viewModel.reveal(count: count)
-                    },
-                    showError: viewModel.showErrorFlash,
-                    wrongInputDigit: viewModel.lastWrongInput
-                )
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 200)
-                .modifier(StreakFlowEffect(streak: viewModel.selectedMode == .learn ? 0 : viewModel.engine.currentStreak))
-                .modifier(ShakeEffect(animatableData: viewModel.showErrorFlash ? 1 : 0))
+            VStack(spacing: 8) {
+                if viewModel.showsHorizonLine {
+                    HorizonLineView(
+                        playerProgress: viewModel.playerProgressRatio,
+                        ghostEngine: viewModel.ghostEngine,
+                        totalDigits: viewModel.totalDigitsForMapping
+                    )
+                    .padding(.horizontal, 24)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
                 
-                // Retry / Quit Overlay when session ends
-                if !viewModel.isActive && viewModel.engine.attempts > 0 {
-                    ZStack {
-                        Color.black.opacity(0.8)
-                        
-                        VStack(spacing: 24) {
-                            Text(viewModel.engine.errors > 0 ? String(localized: "session.game_over") : String(localized: "session.complete"))
-                                .font(DesignSystem.Fonts.monospaced(size: 32, weight: .black))
-                                .foregroundColor(viewModel.engine.errors > 0 ? .red : DesignSystem.Colors.cyanElectric)
-                                .foregroundColor(viewModel.engine.errors > 0 ? .red : DesignSystem.Colors.cyanElectric)
-                                .textCase(.uppercase)
+                ZStack {
+                    TerminalGridView(
+                        typedDigits: viewModel.typedDigits,
+                        integerPart: viewModel.integerPart,
+                        fullDigits: viewModel.fullDigitsString,
+                        isLearnMode: viewModel.selectedMode == .learn,
+                        allowsReveal: viewModel.selectedMode.allowsReveal,
+                        startOffset: viewModel.currentSegmentOffset,
+                        segmentLength: viewModel.currentSegmentLength,
+                        onReveal: { count in
+                            viewModel.reveal(count: count)
+                        },
+                        showError: viewModel.showErrorFlash,
+                        wrongInputDigit: viewModel.lastWrongInput
+                    )
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: 200)
+                    .modifier(StreakFlowEffect(streak: viewModel.selectedMode == .learn ? 0 : viewModel.engine.currentStreak))
+                    .modifier(ShakeEffect(animatableData: viewModel.showErrorFlash ? 1 : 0))
+                    .focusable(false)
+                    
+                    // Retry / Quit Overlay when session ends
+                    if !viewModel.isActive && viewModel.engine.attempts > 0 {
+                        ZStack {
+                            Color.black.opacity(0.8)
                             
-                            HStack(spacing: 40) {
-                                VStack(spacing: 4) {
-                                    Text(String(localized: "stats.best_streak"))
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    Text("\(viewModel.engine.currentStreak)")
-                                        .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
-                                        .foregroundColor(.white)
-                                }
+                            VStack(spacing: 24) {
+                                let status = viewModel.sessionEndStatus
+                                Text(status.title)
+                                    .font(DesignSystem.Fonts.monospaced(size: 32, weight: .black))
+                                    .foregroundColor(status.color)
+                                    .textCase(.uppercase)
                                 
-                                if viewModel.revealsUsed > 0 {
+                                HStack(spacing: 40) {
                                     VStack(spacing: 4) {
-                                        Text(String(localized: "session.summary.reveals"))
+                                        Text(String(localized: "stats.best_streak"))
                                             .font(.caption)
                                             .foregroundColor(.secondary)
-                                        Text("\(viewModel.revealsUsed)")
+                                        Text("\(viewModel.engine.bestStreak)")
                                             .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
-                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
-                                    }
-                                }
-                            }
-                            
-                            // Advanced Speed Stats (CPS & CPM)
-                            VStack(spacing: 12) {
-                                Text(String(localized: "session.summary.speed").uppercased())
-                                    .font(DesignSystem.Fonts.monospaced(size: 14, weight: .black))
-                                    .foregroundColor(.white.opacity(0.5))
-                                
-                                HStack(spacing: 32) {
-                                    // CPS Column
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("CPS")
-                                            .font(.caption2.bold())
-                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
-                                        
-                                        SpeedMetricRow(label: "MIN", value: viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS)
-                                        SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS)
-                                        SpeedMetricRow(label: "AVG", value: viewModel.engine.digitsPerMinute / 60.0)
+                                            .foregroundColor(.white)
                                     }
                                     
-                                    // CPM Column
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("CPM")
-                                            .font(.caption2.bold())
-                                            .foregroundColor(DesignSystem.Colors.cyanElectric)
-                                        
-                                        SpeedMetricRow(label: "MIN", value: (viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS) * 60.0)
-                                        SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS * 60.0)
-                                        SpeedMetricRow(label: "AVG", value: viewModel.engine.digitsPerMinute)
+                                    if viewModel.revealsUsed > 0 {
+                                        VStack(spacing: 4) {
+                                            Text(String(localized: "session.summary.reveals"))
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            Text("\(viewModel.revealsUsed)")
+                                                .font(DesignSystem.Fonts.monospaced(size: 24, weight: .bold))
+                                                .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                        }
                                     }
                                 }
-                                .padding(.horizontal, 20)
-                                .padding(.vertical, 12)
-                                .background(Color.white.opacity(0.05))
-                                .cornerRadius(12)
-                            }
-                            
-                            VStack(spacing: 12) {
-                                Button {
-                                    viewModel.startSession()
-                                } label: {
-                                    Text(String(localized: "session.retry"))
-                                        .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
-                                        .foregroundColor(.black)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(DesignSystem.Colors.cyanElectric)
-                                        .cornerRadius(20)
+                                
+                                // Advanced Speed Stats (CPS & CPM)
+                                VStack(spacing: 12) {
+                                    Text(String(localized: "session.summary.speed").uppercased())
+                                        .font(DesignSystem.Fonts.monospaced(size: 14, weight: .black))
+                                        .foregroundColor(.white.opacity(0.5))
+                                    
+                                    HStack(spacing: 32) {
+                                        // CPS Column
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("CPS")
+                                                .font(.caption2.bold())
+                                                .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                            
+                                            SpeedMetricRow(label: "MIN", value: viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS)
+                                            SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS)
+                                            SpeedMetricRow(label: "AVG", value: viewModel.engine.digitsPerMinute / 60.0)
+                                        }
+                                        
+                                        // CPM Column
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("CPM")
+                                                .font(.caption2.bold())
+                                                .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                            
+                                            SpeedMetricRow(label: "MIN", value: (viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS) * 60.0)
+                                            SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS * 60.0)
+                                            SpeedMetricRow(label: "AVG", value: viewModel.engine.digitsPerMinute)
+                                        }
+                                    }
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .background(Color.white.opacity(0.05))
+                                    .cornerRadius(12)
                                 }
                                 
-                                Button {
-                                    viewModel.endSession()
-                                    dismiss()
-                                } label: {
-                                    Text(String(localized: "session.quit"))
-                                        .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(Color.white.opacity(0.1))
-                                        .cornerRadius(20)
+                                VStack(spacing: 12) {
+                                    Button {
+                                        viewModel.startSession()
+                                    } label: {
+                                        Text(String(localized: "session.retry"))
+                                            .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
+                                            .foregroundColor(.black)
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                            .background(DesignSystem.Colors.cyanElectric)
+                                            .cornerRadius(20)
+                                    }
+                                    
+                                    Button {
+                                        viewModel.endSession()
+                                        dismiss()
+                                    } label: {
+                                        Text(String(localized: "session.quit"))
+                                            .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
+                                            .foregroundColor(.white)
+                                            .frame(maxWidth: .infinity)
+                                            .padding()
+                                            .background(Color.white.opacity(0.1))
+                                            .cornerRadius(20)
+                                    }
                                 }
+                                .padding(.horizontal, 40)
                             }
-                            .padding(.horizontal, 40)
                         }
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 }
             }
             
             Spacer()
 
-            
             // ProPad (Numeric Keypad)
             ProPadView(
                 layout: statsStore.keypadLayout,
                 currentStreak: viewModel.engine.currentStreak,
-                isActive: viewModel.isInputAllowed, // Allow input when Ready or Running
+                isActive: viewModel.isInputAllowed,
                 isGhostModeEnabled: statsStore.selectedMode.hasGhost,
                 onDigit: { digit in
                     if viewModel.isInputAllowed {
@@ -230,10 +256,10 @@ struct SessionView: View {
                     showOptions = true
                 }
             )
+            .focusable(false)
         }
-
         .navigationBarBackButtonHidden(true)
-        .interactiveDismissDisabled(viewModel.isActive) // Story 3.2: Zen Mode (only when running)
+        .interactiveDismissDisabled(viewModel.isActive)
         .onAppear {
             viewModel.startSession()
         }
@@ -247,11 +273,8 @@ struct SessionView: View {
             }
         }
     }
-    
-    @State private var showOptions = false
-    @State private var hapticsEnabled = HapticService.shared.isEnabled
 }
-
+}
 
 struct SpeedMetricRow: View {
     let label: String
