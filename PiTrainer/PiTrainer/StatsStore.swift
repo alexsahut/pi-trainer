@@ -244,14 +244,14 @@ class StatsStore: ObservableObject {
         currentStats.lastSession = record
         
         // Update best streak and BEST session if needed
-        // Fix for Story 8.5: Exclude Learn Mode from Best Streak calculation
-        if record.sessionMode != .learn {
+        // Story 8.5/9.5: Exclude Learn Mode AND require Certification for Best Streak calculation
+        if record.isCertified {
             if record.bestStreakInSession > currentStats.bestStreak {
                 print("debug: new record streak! \(record.bestStreakInSession) > \(currentStats.bestStreak)")
                 currentStats.bestStreak = record.bestStreakInSession
                 currentStats.bestSession = record
             } else if record.bestStreakInSession == currentStats.bestStreak {
-                // Optional: If same streak, keep the faster one or the most recent?
+                // If same streak, keep the faster one or the most recent?
                 // Let's keep the most recent for now to update metadata.
                 currentStats.bestSession = record
             }

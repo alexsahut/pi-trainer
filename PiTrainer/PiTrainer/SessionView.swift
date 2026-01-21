@@ -127,7 +127,6 @@ struct SessionView: View {
                     )
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 200)
-                    .modifier(StreakFlowEffect(streak: viewModel.selectedMode == .learn ? 0 : viewModel.engine.currentStreak))
                     .modifier(ShakeEffect(animatableData: viewModel.showErrorFlash ? 1 : 0))
                     .focusable(false)
                     

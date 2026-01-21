@@ -59,12 +59,12 @@ struct StatsView: View {
                                     .foregroundColor(DesignSystem.Colors.cyanElectric)
                             }
                             
-                            if let last = currentStats.lastSession {
-                                // Last Session Quick Stats Row
+                            if let best = currentStats.bestSession {
+                                // Best Session Quick Stats Row
                                 HStack(spacing: 30) {
-                                    QuickStat(label: "CPS", value: String(format: "%.1f", last.digitsPerMinute / 60.0))
-                                    QuickStat(label: "ERR", value: "\(last.errors)", color: last.errors > 0 ? .red : .white)
-                                    QuickStat(label: "TIME", value: formatTime(last.durationSeconds))
+                                    QuickStat(label: "CPS", value: String(format: "%.1f", best.digitsPerMinute / 60.0))
+                                    QuickStat(label: "ERR", value: "\(best.errors)", color: best.errors > 0 ? .red : .white)
+                                    QuickStat(label: "TIME", value: formatTime(best.durationSeconds))
                                 }
                                 .padding(.top, 10)
                             }

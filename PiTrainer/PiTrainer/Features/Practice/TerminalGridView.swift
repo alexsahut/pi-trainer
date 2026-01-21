@@ -148,6 +148,20 @@ struct TerminalGridView: View {
                                         .font(.system(size: 12, weight: .regular, design: .monospaced))
                                         .foregroundColor(.gray.opacity(0.5))
                                         .frame(width: 20, height: 24)
+                                } else if allowsReveal {
+                                    // Story 7.1 Refined: Reveal Eye at the start of the row
+                                    Button {
+                                        revealNextDigit(in: row)
+                                    } label: {
+                                        Image(systemName: "eye.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(DesignSystem.Colors.cyanElectric.opacity(0.8))
+                                            .frame(width: 50, height: 24)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+                                        revealFullRow(in: row)
+                                    })
                                 } else {
                                     Color.clear.frame(width: 30, height: 24)
                                     Text(">")
@@ -233,7 +247,26 @@ struct TerminalGridView: View {
             .frame(width: 22, height: 32)
     }
     
-    // MARK: - Helpers
+    private func revealNextDigit(in row: TerminalRow) {
+        let currentRevealed = revealedDigitsPerRow[row.id] ?? 0
+        if currentRevealed < 10 {
+            withAnimation(.spring()) {
+                revealedDigitsPerRow[row.id] = currentRevealed + 1
+            }
+            onReveal?(1)
+        }
+    }
+    
+    private func revealFullRow(in row: TerminalRow) {
+        let currentRevealed = revealedDigitsPerRow[row.id] ?? 0
+        let remainingOnRow = 10 - currentRevealed
+        if remainingOnRow > 0 {
+            withAnimation(.spring()) {
+                revealedDigitsPerRow[row.id] = 10
+            }
+            onReveal?(remainingOnRow)
+        }
+    }
     
     private func digitState(localIndex: Int, isLast: Bool) -> DigitState {
         if isLast && showError {
