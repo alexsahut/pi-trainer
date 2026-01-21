@@ -30,6 +30,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     let loops: Int
     let isCertified: Bool // Story 9.5: PB eligibility
     let wasVictory: Bool? // Story 9.5: Game Mode result
+    let beatenPRTypes: Set<PRType>? // Story 9.6: Track specific records beaten
     
     var cps: Double {
         digitsPerMinute / 60.0
@@ -37,7 +38,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     
     // Custom decoder for backward compatibility (Story 6.2 & 8.5)
     enum CodingKeys: String, CodingKey {
-        case id, date, constant, mode, sessionMode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed, minCPS, maxCPS, segmentStart, segmentEnd, loops, isCertified, wasVictory
+        case id, date, constant, mode, sessionMode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed, minCPS, maxCPS, segmentStart, segmentEnd, loops, isCertified, wasVictory, beatenPRTypes
     }
     
     init(from decoder: Decoder) throws {
@@ -70,9 +71,11 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         loops = try container.decodeIfPresent(Int.self, forKey: .loops) ?? 0
         isCertified = try container.decodeIfPresent(Bool.self, forKey: .isCertified) ?? false
         wasVictory = try container.decodeIfPresent(Bool.self, forKey: .wasVictory)
+        beatenPRTypes = try container.decodeIfPresent(Set<PRType>.self, forKey: .beatenPRTypes)
     }
     
-    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, sessionMode: SessionMode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int = 0, minCPS: Double? = nil, maxCPS: Double? = nil, segmentStart: Int? = nil, segmentEnd: Int? = nil, loops: Int = 0, isCertified: Bool = false, wasVictory: Bool? = nil) {
+    // Explicit init for SessionViewModel
+    init(id: UUID = UUID(), date: Date = Date(), constant: Constant, mode: PracticeEngine.Mode, sessionMode: SessionMode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int = 0, minCPS: Double? = nil, maxCPS: Double? = nil, segmentStart: Int? = nil, segmentEnd: Int? = nil, loops: Int = 0, isCertified: Bool = false, wasVictory: Bool? = nil, beatenPRTypes: Set<PRType>? = nil) {
         self.id = id
         self.date = date
         self.constant = constant
@@ -91,6 +94,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         self.loops = loops
         self.isCertified = isCertified
         self.wasVictory = wasVictory
+        self.beatenPRTypes = beatenPRTypes
     }
 }
 
@@ -142,6 +146,12 @@ class StatsStore: ObservableObject {
         didSet {
             // persistence.saveSelectedMode(selectedMode.rawValue)
             UserDefaults.standard.set(selectedMode.rawValue, forKey: "selectedMode")
+        }
+    }
+    
+    @Published var selectedGhostType: PRType = .crown {
+        didSet {
+            persistence.saveSelectedGhostType(selectedGhostType.rawValue)
         }
     }
     
@@ -339,6 +349,13 @@ class StatsStore: ObservableObject {
         } else {
             // New V2 default is .learn
             selectedMode = .learn
+        }
+        
+        if let ghostTypeString = persistence.loadSelectedGhostType(),
+           let type = PRType(rawValue: ghostTypeString) {
+            selectedGhostType = type
+        } else {
+            selectedGhostType = .crown
         }
         
         // 2. Load Stats

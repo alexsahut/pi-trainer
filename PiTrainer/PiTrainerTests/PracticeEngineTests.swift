@@ -239,3 +239,73 @@ final class PracticeEngineTests: XCTestCase {
         XCTAssertEqual(persistence.saveCallCount, 0)
     }
 }
+
+// MARK: - Story 9.4: Game Mode
+
+final class PracticeEngineGameModeTests: XCTestCase {
+    
+    var provider: MockDigitsProvider!
+    var persistence: MockPracticePersistence!
+    var engine: PracticeEngine!
+    
+    override func setUp() {
+        super.setUp()
+        provider = MockDigitsProvider()
+        persistence = MockPracticePersistence()
+        // Default to Pi
+        engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
+    }
+
+    func testGameMode_ErrorDoesNotEndSession() {
+        // AC 1: La session ne s'arrête pas en cas d'erreur en mode GAME.
+        engine.start(mode: .game)
+        
+        // Expected: 1, Input: 9 (Error)
+        let result = engine.input(digit: 9)
+        
+        XCTAssertTrue(engine.isActive, "Session should remain active after error in Game Mode")
+        XCTAssertFalse(result.indexAdvanced, "Index should not advance on error")
+        XCTAssertEqual(engine.errors, 1, "Error count should increment")
+    }
+
+    func testGameMode_ErrorDoesNotAdvanceIndex() {
+        // AC 2: L'utilisateur doit saisir le chiffre correct pour avancer
+        engine.start(mode: .game)
+        
+        // Initial state
+        XCTAssertEqual(engine.currentIndex, 0)
+        
+        // Input Error
+        _ = engine.input(digit: 9)
+        
+        XCTAssertEqual(engine.currentIndex, 0, "Index should stay at 0 after error")
+    }
+
+    func testGameMode_CorrectInputAfterErrorAdvances() {
+        // AC 2: L'utilisateur doit saisir le chiffre correct pour avancer
+        engine.start(mode: .game)
+        
+        // 1. Error
+        _ = engine.input(digit: 9)
+        XCTAssertEqual(engine.currentIndex, 0)
+        
+        // 2. Correct Input (1)
+        let result = engine.input(digit: 1)
+        
+        XCTAssertTrue(result.isCorrect)
+        XCTAssertTrue(result.indexAdvanced)
+        XCTAssertEqual(engine.currentIndex, 1, "Index should advance after correction")
+        XCTAssertEqual(engine.errors, 1, "Error count should persist")
+    }
+    
+    func testGameMode_MultipleErrorsAccumulate() {
+        // AC 4 check (errors count)
+        engine.start(mode: .game)
+        
+        _ = engine.input(digit: 9) // Error 1
+        _ = engine.input(digit: 8) // Error 2
+        
+        XCTAssertEqual(engine.errors, 2)
+        XCTAssertEqual(engine.currentIndex, 0)
+    }
+}

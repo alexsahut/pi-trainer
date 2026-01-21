@@ -1,8 +1,15 @@
 import Foundation
 
-enum PRType: String, Codable, CaseIterable {
+enum PRType: String, Codable, CaseIterable, CustomStringConvertible {
     case crown     // Distance (Marathon)
     case lightning // Speed (Sprint)
+    
+    var description: String {
+        switch self {
+        case .crown: return String(localized: "rules.crown.title")
+        case .lightning: return String(localized: "rules.lightning.title")
+        }
+    }
 }
 
 struct PersonalBestRecord: Codable, Equatable {

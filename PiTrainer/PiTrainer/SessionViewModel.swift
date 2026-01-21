@@ -18,6 +18,7 @@ class SessionViewModel: ObservableObject {
     @Published private(set) var engine: PracticeEngine
     @Published private(set) var typedDigits: String = ""
     @Published private(set) var showErrorFlash: Bool = false
+    @Published private(set) var isShowingErrorReveal: Bool = false // Story 9.4 Fix: Stay visible until correction
     @Published private(set) var lastCorrectDigit: Int?
     @Published private(set) var expectedDigit: Int? // For learning mode feedback
     @Published private(set) var lastWrongInput: Int? // For visual feedback of wrong entry
@@ -27,13 +28,22 @@ class SessionViewModel: ObservableObject {
     @Published var loops: Int = 0 // Story 8.6: Track segment completions
     @Published var ghostEngine: GhostEngine? // Story 9.1: Replay opponent
     private var isSessionSaved: Bool = false // Story 8.5: Prevent double saving
-    private var isSuddenDeathVictory: Bool = false // Story 9.5 Patch: Error while ahead in Game Mode
     private var isNewPR: Bool = false // Story 9.5 Patch: Accurate status feedback
+    private var beatenPRTypes: Set<PRType> = []
+    
+    // Story 9.6: Practice Mode PR logic (validation before first error)
+    private struct SessionSnapshot {
+        let index: Int
+        let time: TimeInterval
+        let cumulativeTimes: [TimeInterval]
+    }
+    private var firstErrorSnapshot: SessionSnapshot?
     
     // UI selection state
     @Published var selectedMode: SessionMode = .learn
     @Published var selectedConstant: Constant = .pi
     @Published var keypadLayout: KeypadLayout = .phone
+    @Published var selectedGhostType: PRType = .crown
 
     // MARK: - Properties
     
@@ -44,7 +54,7 @@ class SessionViewModel: ObservableObject {
     private var segmentStore: SegmentStore
     
     // Story 9.2: PB Provider for Ghost
-    private let personalBestProvider: (Constant) -> PersonalBestRecord?
+    private let personalBestProvider: (Constant, PRType) -> PersonalBestRecord?
     
     // Configuration for the current session
     var onSaveSession: ((SessionRecord) -> Void)?
@@ -108,11 +118,16 @@ class SessionViewModel: ObservableObject {
             return ("DEFEATED", DesignSystem.Colors.orangeElectric)
         }
         
-        let isStrictFinish = selectedMode == .game || selectedMode == .test
-        let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory || selectedMode == .test) && !isDefeatedByGhost
+        let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || selectedMode == .game || selectedMode == .test) && !isDefeatedByGhost
         
-        if isNewPR {
-             return ("NEW RECORD", DesignSystem.Colors.cyanElectric)
+        if !beatenPRTypes.isEmpty {
+             if beatenPRTypes.contains(.crown) && beatenPRTypes.contains(.lightning) {
+                 return ("DUAL RECORD!", DesignSystem.Colors.cyanElectric)
+             } else if beatenPRTypes.contains(.lightning) {
+                 return ("SPEED RECORD!", DesignSystem.Colors.cyanElectric)
+             } else {
+                 return ("NEW RECORD!", DesignSystem.Colors.cyanElectric)
+             }
         } else if isCertified {
              return ("CERTIFIED", DesignSystem.Colors.cyanElectric)
         } else {
@@ -132,27 +147,34 @@ class SessionViewModel: ObservableObject {
     init(persistence: PracticePersistenceProtocol? = nil,
          providerFactory: ((Constant) -> any DigitsProvider)? = nil,
          segmentStore: SegmentStore? = nil,
-         personalBestProvider: ((Constant) -> PersonalBestRecord?)? = nil) {
+         personalBestProvider: ((Constant, PRType) -> PersonalBestRecord?)? = nil) {
         let actualPersistence = persistence ?? PracticePersistence()
         let actualFactory = providerFactory ?? { FileDigitsProvider(constant: $0) }
         
         self.persistence = actualPersistence
         self.providerFactory = actualFactory
         self.segmentStore = segmentStore ?? SegmentStore()
-        self.personalBestProvider = personalBestProvider ?? { constant in
-            // Smart Selection: 
-            // 1. Try to find the record that matches the user's intent (not explicitly tracked yet, so we use a heuristic)
-            // 2. Fallback cascade: Crown -> Lightning
+        self.personalBestProvider = personalBestProvider ?? { constant, type in
             let crown = PersonalBestStore.shared.getRecord(for: constant, type: .crown)
             let lightning = PersonalBestStore.shared.getRecord(for: constant, type: .lightning)
             
-            if let crown = crown {
+            if let crown = crown, type == .crown {
                 print("debug: selecting CROWN Ghost for \(constant)")
                 return crown
             }
-            if let lightning = lightning {
+            if let lightning = lightning, type == .lightning {
                 print("debug: selecting LIGHTNING Ghost for \(constant)")
                 return lightning
+            }
+            
+            // Auto-fallback if requested type is missing
+            if let crown = crown { 
+                print("debug: fallback to CROWN Ghost for \(constant)")
+                return crown 
+            }
+            if let lightning = lightning { 
+                print("debug: fallback to LIGHTNING Ghost for \(constant)")
+                return lightning 
             }
             return nil
         }
@@ -171,6 +193,7 @@ class SessionViewModel: ObservableObject {
         self.selectedConstant = store.selectedConstant
 
         self.selectedMode = store.selectedMode
+        self.selectedGhostType = store.selectedGhostType
         
         // Story 8.1 Fix: Use the segment store from HomeView
         self.segmentStore = segmentStore
@@ -181,9 +204,10 @@ class SessionViewModel: ObservableObject {
         // Clear previous error state and reset session-specific properties
         errorState = nil
         isDefeatedByGhost = false
-        isSuddenDeathVictory = false
         isNewPR = false
+        beatenPRTypes = []
         isSessionSaved = false
+        isShowingErrorReveal = false
         revealsUsed = 0
         loops = 0
         typedDigits = ""
@@ -191,6 +215,7 @@ class SessionViewModel: ObservableObject {
         lastCorrectDigit = nil
         expectedDigit = nil
         lastWrongInput = nil
+        firstErrorSnapshot = nil
         
         ghostMonitorTask?.cancel()
         ghostMonitorTask = nil
@@ -229,7 +254,7 @@ class SessionViewModel: ObservableObject {
             
             // Story 9.1: Initialize Ghost only for Game Mode
             if selectedMode.hasGhost {
-                if let pb = personalBestProvider(constant) {
+                if let pb = personalBestProvider(constant, selectedGhostType) {
                     if !pb.cumulativeTimes.isEmpty {
                         self.ghostEngine = GhostEngine(personalBest: pb)
                         print("debug: ghost engine initialized with \(pb.digitCount) digits for \(constant)")
@@ -253,19 +278,7 @@ class SessionViewModel: ObservableObject {
                         
                         guard let self = self else { break }
                         // Use MainActor for property access & state change
-                        await MainActor.run {
-                            guard self.isActive else { return }
-                            
-                            let currentGhostPos = ghost.position(at: Date())
-                            if currentGhostPos >= Double(ghost.totalDigits) {
-                                if self.engine.currentIndex < ghost.totalDigits {
-                                    print("💀 GHOST WON! Player at \(self.engine.currentIndex), Ghost at \(ghost.totalDigits)")
-                                    self.isDefeatedByGhost = true
-                                    self.engine.finishSession()
-                                    self.endSession()
-                                }
-                            }
-                        }
+                        await self.checkGhostStatus(ghost: ghost)
                     }
                 }
             }
@@ -279,7 +292,7 @@ class SessionViewModel: ObservableObject {
             revealsUsed = 0
             loops = 0
             isSessionSaved = false
-            isSuddenDeathVictory = false
+            isSessionSaved = false
             isNewPR = false
             print("debug: session started for \(constant) in \(selectedMode) mode")
             
@@ -292,15 +305,26 @@ class SessionViewModel: ObservableObject {
         }
     }
     
+    private func checkGhostStatus(ghost: GhostEngine) async {
+        guard isActive else { return }
+        
+        let currentGhostPos = ghost.position(at: Date())
+        // print("debug: checkGhostStatus - Ghost: \(currentGhostPos)/\(ghost.totalDigits), Player: \(engine.currentIndex)")
+        
+        if currentGhostPos >= Double(ghost.totalDigits) && engine.currentIndex <= ghost.totalDigits {
+            print("💀 GHOST WON! Player at \(engine.currentIndex) <= Ghost Total \(ghost.totalDigits)")
+            isDefeatedByGhost = true
+            engine.finishSession()
+            await endSession()
+        }
+    }
+
     /// Processes a digit input from the keypad
     /// - Parameter digit: The digit (0-9)
     func processInput(_ digit: Int) {
         objectWillChange.send()
         
-        // Story 9.5 Refined: Sudden Death if ahead of ghost in Game Mode
-        // We capture delta BEFORE processing the input to ensure we don't penalize 
-        // the player's position before checking if they were winning at the time of error.
-        let deltaBeforeInput = atmosphericDelta(at: Date())
+        // Story 9.5 Refined: Removed Sudden Death (delta check)
         
         let result = engine.input(digit: digit)
         print("debug: input \(digit), isCorrect: \(result.isCorrect), engine.isActive: \(engine.isActive)")
@@ -323,7 +347,7 @@ class SessionViewModel: ObservableObject {
                 print("💀 GHOST WON (Immediate)! Player at \(engine.currentIndex), Ghost at \(ghost.totalDigits)")
                 isDefeatedByGhost = true
                 engine.finishSession()
-                endSession()
+                Task { await endSession() }
                 return
             }
         }
@@ -332,6 +356,7 @@ class SessionViewModel: ObservableObject {
             // Success feedback
             lastCorrectDigit = digit
             expectedDigit = nil
+            isShowingErrorReveal = false
             
             // Light haptic for success (instant)
             HapticService.shared.playSuccess()
@@ -339,28 +364,43 @@ class SessionViewModel: ObservableObject {
             // Error feedback
             expectedDigit = result.expectedDigit
             lastWrongInput = digit
+            isShowingErrorReveal = true
             HapticService.shared.playError()
+            
+            // Story 9.6: Capture snapshot before first error in Practice AND Game mode
+            if (selectedMode == .practice || selectedMode == .game) && firstErrorSnapshot == nil && revealsUsed == 0 {
+                firstErrorSnapshot = SessionSnapshot(
+                    index: engine.currentIndex,
+                    time: engine.elapsedTime,
+                    cumulativeTimes: engine.cumulativeTimes
+                )
+                print("debug: captured first error snapshot at index \(engine.currentIndex)")
+            }
             
             withAnimation(.easeInOut(duration: 0.1).repeatCount(3, autoreverses: true)) {
                 showErrorFlash = true
             }
             
-            // Reset flash after a short delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            // Reset flash after a short delay (using centralized constant)
+            DispatchQueue.main.asyncAfter(deadline: .now() + DesignSystem.Animations.errorFlashDuration) {
                 self.showErrorFlash = false
                 self.lastWrongInput = nil
             }
             
-            // Story 9.5 Refined: "Sudden Death" if ahead of ghost in Game Mode
+            // Story 9.5 Refined / User Feedback:
+            // "If I make an error while ahead of the ghost and I have exceeded its streak record, 
+            // then the game stops and if I made no errors BEFORE, the session is certified."
             if selectedMode == .game {
-                if deltaBeforeInput > 0 {
-                    print("⚡️ SUDDEN DEATH: Error while ahead of ghost (+ \(deltaBeforeInput)). Ending session.")
-                    isSuddenDeathVictory = true
+                let ghostTotal = ghostEngine?.totalDigits ?? 0
+                if engine.currentIndex > ghostTotal {
+                    print("⚡️ VICTORY STOP: Error while ahead of ghost record (\(engine.currentIndex) > \(ghostTotal)). Ending session.")
                     engine.finishSession()
-                    endSession()
+                    Task { await endSession() }
                     return
                 }
             }
+            
+            // Story 9.5 Refined: "Sudden Death" if ahead of ghost in Game Mode
         }
         
         // Story 8.4: Handle Engine Events (Looping)
@@ -374,12 +414,12 @@ class SessionViewModel: ObservableObject {
                 // Optional: Visual flash for loop?
                 
             case .finished:
-                 endSession()
+                 Task { await endSession() }
             }
         } else {
             // Legacy/Standard Check
             if !engine.isActive {
-                endSession()
+                Task { await endSession() }
             }
         }
     }
@@ -411,7 +451,7 @@ class SessionViewModel: ObservableObject {
     }
     
     /// Ends the session and saves stats
-    func endSession(shouldDismiss: Bool = false) {
+    func endSession(shouldDismiss: Bool = false) async {
         print("debug: endSession called. attempts: \(engine.attempts), isSessionSaved: \(isSessionSaved), shouldDismiss: \(shouldDismiss)")
         
         ghostMonitorTask?.cancel()
@@ -423,51 +463,77 @@ class SessionViewModel: ObservableObject {
         if engine.attempts > 0 && !isSessionSaved {
             print("debug: creating SessionRecord for \(selectedConstant) (mode: \(selectedMode))")
             
-            // Story 9.5: Certification & Dynamic PR Recording
-            // Rule: Certified if !learn, 0 reveals, and (0 errors OR Sudden Death Victory OR Test Mode fail) AND NOT Defeated
-            let isCertified = selectedMode != .learn && revealsUsed == 0 && (engine.errors == 0 || isSuddenDeathVictory || selectedMode == .test) && !isDefeatedByGhost
+            // Story 9.5 & 9.6: Certification & Dynamic PR Recording
+            // Certification Rule: 
+            // - Basic: !learn AND 0 reveals
+            // - Success condition: (0 errors OR Sudden Death Victory OR Test Mode fail OR PRACTICE MODE with snapshot)
+            // - Failure condition: NOT Defeated by ghost
+            
+            let isPracticePR = selectedMode == .practice && revealsUsed == 0 && (engine.errors == 0 || firstErrorSnapshot != nil)
+            let isCertified = revealsUsed == 0 && !isDefeatedByGhost && (
+                selectedMode == .test || 
+                selectedMode == .game || 
+                isPracticePR
+            )
             
             if isCertified {
-                print("✅ Session CERTIFIED. Checking for new PRs (SuddenDeath: \(isSuddenDeathVictory)).")
+                print("✅ Session CERTIFIED for PR (Mode: \(selectedMode), PracticePR: \(isPracticePR)).")
+                
+                // Story 9.6: Determine evaluation data (current engine OR snapshot before error)
+                let evalIndex: Int
+                let evalTime: TimeInterval
+                let evalCumulative: [TimeInterval]
+                
+                if (selectedMode == .practice || selectedMode == .game) && engine.errors > 0, let snapshot = firstErrorSnapshot {
+                    evalIndex = snapshot.index
+                    evalTime = snapshot.time
+                    evalCumulative = snapshot.cumulativeTimes
+                    print("debug: using snapshot for PR evaluation (Index: \(evalIndex))")
+                } else {
+                    evalIndex = engine.currentIndex
+                    evalTime = engine.elapsedTime
+                    evalCumulative = engine.cumulativeTimes
+                }
                 
                 // 1. Check for Crown (Distance/Marathon)
                 let currentCrown = PersonalBestStore.shared.getRecord(for: selectedConstant, type: .crown)
-                let isBetterCrown = currentCrown == nil || engine.currentIndex > currentCrown!.digitCount || (engine.currentIndex == currentCrown!.digitCount && engine.elapsedTime < currentCrown!.totalTime)
+                let isBetterCrown = currentCrown == nil || evalIndex > currentCrown!.digitCount || (evalIndex == currentCrown!.digitCount && evalTime < currentCrown!.totalTime)
                 
-                if isBetterCrown {
+                if isBetterCrown && evalIndex > 0 {
                     isNewPR = true
+                    beatenPRTypes.insert(.crown)
                     let newCrown = PersonalBestRecord(
                         constant: selectedConstant,
                         type: .crown,
-                        digitCount: engine.currentIndex,
-                        totalTime: engine.elapsedTime,
-                        cumulativeTimes: engine.cumulativeTimes
+                        digitCount: evalIndex,
+                        totalTime: evalTime,
+                        cumulativeTimes: evalCumulative
                     )
-                    Task { [newCrown] in
-                        await PersonalBestStore.shared.save(record: newCrown)
-                        print("🏆 New CROWN PR saved: \(newCrown.digitCount) digits")
-                    }
+                    print("debug: saving new crown PR: \(evalIndex) digits")
+                    await PersonalBestStore.shared.save(record: newCrown)
                 }
                 
-                // 2. Check for Lightning (Speed/Sprint) - Min 50 digits
-                if engine.currentIndex >= 50 {
+                // 2. Check for Lightning (Speed/Sprint) - Min 10 digits (Story 9.6)
+                if evalIndex >= 10 {
                     let currentLightning = PersonalBestStore.shared.getRecord(for: selectedConstant, type: .lightning)
-                    let sessionDPM = engine.digitsPerMinute
-                    let isBetterLightning = currentLightning == nil || sessionDPM > currentLightning!.digitsPerMinute
+                    
+                    // Re-calculate DPM based on evaluation data
+                    let evalDPM = evalTime > 0 ? (Double(evalIndex) / (evalTime / 60.0)) : 0
+                    
+                    let isBetterLightning = currentLightning == nil || evalDPM > (currentLightning?.digitsPerMinute ?? 0)
                     
                     if isBetterLightning {
                         isNewPR = true
+                        beatenPRTypes.insert(.lightning)
                         let newLightning = PersonalBestRecord(
                             constant: selectedConstant,
                             type: .lightning,
-                            digitCount: engine.currentIndex,
-                            totalTime: engine.elapsedTime,
-                            cumulativeTimes: engine.cumulativeTimes
+                            digitCount: evalIndex,
+                            totalTime: evalTime,
+                            cumulativeTimes: evalCumulative
                         )
-                        Task { [newLightning] in
-                            await PersonalBestStore.shared.save(record: newLightning)
-                            print("⚡️ New LIGHTNING PR saved: \(newLightning.digitsPerMinute) DPM")
-                        }
+                        print("debug: saving new lightning PR: \(evalDPM) CPS")
+                        await PersonalBestStore.shared.save(record: newLightning)
                     }
                 }
             } else {
@@ -477,13 +543,10 @@ class SessionViewModel: ObservableObject {
             // Result tracking for Game Mode (Story 9.5)
         var wasVictory: Bool? = nil
         if selectedMode == .game {
-            if isSuddenDeathVictory {
-                wasVictory = true
-            } else if isDefeatedByGhost {
+            if isDefeatedByGhost {
                 wasVictory = false
             } else {
-                // If not defeated and not sudden death, check if player is at the end?
-                // Actually, if we finished normally in Game mode without being defeated, it's a victory.
+                // If not defeated, check if player is at the end
                 let reachedEnd = engine.currentIndex >= (ghostEngine?.totalDigits ?? 0)
                 wasVictory = reachedEnd && !isDefeatedByGhost
             }
@@ -491,31 +554,32 @@ class SessionViewModel: ObservableObject {
         
         let record = SessionRecord(
             id: UUID(),
-            date: Date(), // Kept original `Date()`
-            constant: selectedConstant, // Kept original `selectedConstant`
-            mode: selectedMode.practiceEngineMode, // Kept original `selectedMode.practiceEngineMode`
+            date: Date(),
+            constant: selectedConstant,
+            mode: selectedMode.practiceEngineMode,
             sessionMode: selectedMode,
             attempts: engine.attempts,
             errors: engine.errors,
             bestStreakInSession: engine.bestStreak,
-            durationSeconds: engine.elapsedTime, // Kept original `engine.elapsedTime`
-            digitsPerMinute: engine.digitsPerMinute, // Kept original `engine.digitsPerMinute`
+            durationSeconds: engine.elapsedTime,
+            digitsPerMinute: engine.digitsPerMinute,
             revealsUsed: revealsUsed,
             minCPS: engine.minCPS == .infinity ? nil : engine.minCPS,
             maxCPS: engine.maxCPS,
-            segmentStart: selectedMode == .learn ? segmentStore.segmentStart : nil, // Kept original segment logic
-            segmentEnd: selectedMode == .learn ? segmentStore.segmentEnd : nil, // Kept original segment logic
+            segmentStart: selectedMode == .learn ? segmentStore.segmentStart : nil,
+            segmentEnd: selectedMode == .learn ? segmentStore.segmentEnd : nil,
             loops: loops,
             isCertified: isCertified,
-            wasVictory: wasVictory
+            wasVictory: wasVictory,
+            beatenPRTypes: beatenPRTypes.isEmpty ? nil : beatenPRTypes
         )
             
             isSessionSaved = true
             if let onSaveSession = onSaveSession {
-                print("debug: invoking onSaveSession closure")
+                print("debug: invoking onSaveSession closure with record")
                 onSaveSession(record)
             } else {
-                print("⚠️ WARNING: onSaveSession is NIL! Session will not be saved.")
+                print("⚠️ WARNING: onSaveSession is NIL! Session record might not be persisted in history.")
             }
             
             // Note: We don't call engine.reset() here anymore because the UI 

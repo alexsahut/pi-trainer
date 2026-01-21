@@ -48,7 +48,11 @@ struct SettingsView: View {
                             selection: $statsStore.keypadLayout
                         )
                         
-                        // Ghost Mode
+                        ZenSegmentedControl(
+                            title: String(localized: "session.settings.ghost_type"),
+                            options: [PRType.crown, PRType.lightning],
+                            selection: $statsStore.selectedGhostType
+                        )
                         
                         // Notifications & Haptics
                         VStack(alignment: .leading, spacing: 12) {

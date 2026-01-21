@@ -46,12 +46,12 @@ struct SessionDetailView: View {
             }
             
             Section(header: Text("stats.speed.per_second")) {
-                DetailRow(label: "AVG", value: String(format: "%.1f", session.cps))
+                DetailRow(label: "AVG", value: String(format: "%.2f", session.cps))
                 if let min = session.minCPS, min > 0 {
-                    DetailRow(label: "MIN", value: String(format: "%.1f", min))
+                    DetailRow(label: "MIN", value: String(format: "%.2f", min))
                 }
                 if let max = session.maxCPS, max > 0 {
-                    DetailRow(label: "MAX", value: String(format: "%.1f", max))
+                    DetailRow(label: "MAX", value: String(format: "%.2f", max))
                 }
             }
             

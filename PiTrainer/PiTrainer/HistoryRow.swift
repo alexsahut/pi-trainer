@@ -38,9 +38,22 @@ struct HistoryRow: View {
                     }
                     
                     if session.isCertified {
-                        Image(systemName: "trophy.fill")
+                        Image(systemName: "checkmark.shield.fill")
                             .font(.system(size: 8))
                             .foregroundColor(DesignSystem.Colors.cyanElectric)
+                    }
+                    
+                    if let types = session.beatenPRTypes {
+                        if types.contains(.crown) {
+                            Image(systemName: "crown.fill")
+                                .font(.system(size: 8))
+                                .foregroundColor(.yellow)
+                        }
+                        if types.contains(.lightning) {
+                            Image(systemName: "bolt.fill")
+                                .font(.system(size: 8))
+                                .foregroundColor(.orange)
+                        }
                     }
                 }
                 .foregroundColor(DesignSystem.Colors.textSecondary)
@@ -72,7 +85,7 @@ struct HistoryRow: View {
             
             // Right: Speed & Errors
             VStack(alignment: .trailing, spacing: 2) {
-                Text(String(format: "%.1f", session.cps))
+                Text(String(format: "%.2f", session.cps))
                     .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
                     .foregroundColor(.white)
                 
@@ -88,7 +101,7 @@ struct HistoryRow: View {
         .padding(.horizontal, 16)
         .background(Color.white.opacity(0.02))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(session.date.formatted(.dateTime.day().month())): \(session.bestStreakInSession) streak, \(session.errors) errors, \(String(format: "%.1f", session.cps)) cps")
+        .accessibilityLabel("\(session.date.formatted(.dateTime.day().month())): \(session.bestStreakInSession) streak, \(session.errors) errors, \(String(format: "%.2f", session.cps)) cps")
         .accessibilityIdentifier("stats.history.row.\(session.id.uuidString)")
     }
     
@@ -121,7 +134,15 @@ struct HistoryRow: View {
                 bestStreakInSession: 85,
                 durationSeconds: 120,
                 digitsPerMinute: 42,
-                revealsUsed: 0
+                revealsUsed: 0,
+                minCPS: nil,
+                maxCPS: nil,
+                segmentStart: nil,
+                segmentEnd: nil,
+                loops: 0,
+                isCertified: true,
+                wasVictory: nil,
+                beatenPRTypes: [.crown]
             ))
             
             HistoryRow(session: SessionRecord(
@@ -135,7 +156,15 @@ struct HistoryRow: View {
                 bestStreakInSession: 12,
                 durationSeconds: 60,
                 digitsPerMinute: 25,
-                revealsUsed: 3
+                revealsUsed: 3,
+                minCPS: nil,
+                maxCPS: nil,
+                segmentStart: 0,
+                segmentEnd: 10,
+                loops: 3,
+                isCertified: false,
+                wasVictory: nil,
+                beatenPRTypes: nil
             ))
         }
     }

@@ -14,4 +14,15 @@ enum DesignSystem {
             return Font.system(size: size, weight: weight, design: .monospaced)
         }
     }
+    
+    enum Animations {
+        static let errorFlashDuration: Double = 0.3
+        static let ghostRevealOpacity: Double = 0.3
+        static let atmosphericMinOpacity: Double = 0.05
+        static let atmosphericMaxOpacity: Double = 0.20
+    }
+    
+    enum Constants {
+        static let maxAtmosphericDelta: Double = 5.0
+    }
 }

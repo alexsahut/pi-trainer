@@ -1,5 +1,6 @@
 import Foundation
 
+@MainActor
 @Observable
 final class PersonalBestStore {
     static let shared = PersonalBestStore()
@@ -66,8 +67,8 @@ final class PersonalBestStore {
             }
             
         case .lightning:
-            // Lightning: Speed priority (only if count > 50)
-            if record.digitCount >= 50 {
+            // Lightning: Speed priority (only if count >= 10)
+            if record.digitCount >= 10 {
                 if let current = current {
                     if record.digitsPerMinute > current.digitsPerMinute {
                         shouldSave = true

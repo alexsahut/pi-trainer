@@ -29,6 +29,9 @@ protocol PracticePersistenceProtocol {
     
     func saveSelectedMode(_ mode: String)
     func loadSelectedMode() -> String?
+    
+    func saveSelectedGhostType(_ type: String)
+    func loadSelectedGhostType() -> String?
 }
 
 /// Concrete implementation of PracticePersistence using UserDefaults.
@@ -40,6 +43,7 @@ class PracticePersistence: PracticePersistenceProtocol {
     private let keypadLayoutKey = "com.alexandre.pitrainer.keypadLayout"
     private let selectedConstantKey = "com.alexandre.pitrainer.selectedConstant"
     private let selectedModeKey = "com.alexandre.pitrainer.selectedMode"
+    private let selectedGhostTypeKey = "com.alexandre.pitrainer.selectedGhostType"
     
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -100,5 +104,13 @@ class PracticePersistence: PracticePersistenceProtocol {
     
     func loadSelectedMode() -> String? {
         return userDefaults.string(forKey: selectedModeKey)
+    }
+    
+    func saveSelectedGhostType(_ type: String) {
+        userDefaults.set(type, forKey: selectedGhostTypeKey)
+    }
+    
+    func loadSelectedGhostType() -> String? {
+        return userDefaults.string(forKey: selectedGhostTypeKey)
     }
 }

@@ -43,30 +43,41 @@ struct StatsView: View {
                             )
                             .padding(.horizontal, 20)
                         }
-                        .padding(.top, 20) // Add top padding since Dashboard is gone
-                        
-                        let currentStats = statsStore.stats(for: selectedConstantForStats)
+                        .padding(.top, 20)
                         
                         // 3. Current Constant Detail (Zen Card)
                         VStack(spacing: 24) {
-                            // Primary Stat: Best Streak
-                            VStack(spacing: 4) {
-                                Text("stats.best_streak")
+                            HStack(spacing: 40) {
+                                // Crown Record
+                                VStack(spacing: 4) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "crown.fill")
+                                            .foregroundColor(.yellow)
+                                        Text("stats.best_streak")
+                                    }
                                     .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
                                     .foregroundColor(DesignSystem.Colors.textSecondary)
-                                Text("\(currentStats.bestStreak)")
-                                    .font(DesignSystem.Fonts.monospaced(size: 64, weight: .black))
-                                    .foregroundColor(DesignSystem.Colors.cyanElectric)
-                            }
-                            
-                            if let best = currentStats.bestSession {
-                                // Best Session Quick Stats Row
-                                HStack(spacing: 30) {
-                                    QuickStat(label: "CPS", value: String(format: "%.1f", best.digitsPerMinute / 60.0))
-                                    QuickStat(label: "ERR", value: "\(best.errors)", color: best.errors > 0 ? .red : .white)
-                                    QuickStat(label: "TIME", value: formatTime(best.durationSeconds))
+                                    
+                                    Text("\(bestCrownStreak)")
+                                        .font(DesignSystem.Fonts.monospaced(size: 48, weight: .black))
+                                        .foregroundColor(bestCrownStreak > 0 ? DesignSystem.Colors.cyanElectric : .white.opacity(0.1))
                                 }
-                                .padding(.top, 10)
+                                
+                                // Lightning Record
+                                VStack(spacing: 4) {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "bolt.fill")
+                                            .foregroundColor(.orange)
+                                        Text("CPS")
+                                    }
+                                    .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
+                                    .foregroundColor(DesignSystem.Colors.textSecondary)
+                                    
+                                    Text(bestLightningCPS > 0 ? String(format: "%.2f", bestLightningCPS) : "0.00")
+                                        .font(DesignSystem.Fonts.monospaced(size: 48, weight: .black))
+                                        .foregroundColor(bestLightningCPS > 0 ? DesignSystem.Colors.cyanElectric : .white.opacity(0.1))
+                                    
+                                }
                             }
                         }
                         .padding(30)
@@ -142,6 +153,13 @@ struct StatsView: View {
                         .font(DesignSystem.Fonts.monospaced(size: 16, weight: .black))
                         .foregroundColor(.white)
                 }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { showingRulesSheet = true }) {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(DesignSystem.Colors.cyanElectric)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill")
@@ -149,6 +167,9 @@ struct StatsView: View {
                             .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
+            }
+            .sheet(isPresented: $showingRulesSheet) {
+                GameModeRulesView()
             }
             .alert("stats.reset_confirmation.title", isPresented: $showResetConfirmation) {
                 Button("stats.cancel", role: .cancel) { }
@@ -181,6 +202,19 @@ struct StatsView: View {
     
     @State private var showResetConfirmation = false
     @State private var showClearHistoryConfirmation = false
+    @State private var showingRulesSheet = false
+    
+    private var bestCrownStreak: Int {
+        statsStore.history(for: selectedConstantForStats)
+            .filter { $0.isCertified || ($0.sessionMode == .test && $0.revealsUsed == 0 && $0.errors <= 1) }
+            .max(by: { $0.bestStreakInSession < $1.bestStreakInSession })?
+            .bestStreakInSession ?? 0
+    }
+    
+    private var bestLightningCPS: Double {
+        let dpm = PersonalBestStore.shared.getRecord(for: selectedConstantForStats, type: .lightning)?.digitsPerMinute ?? 0
+        return dpm / 60.0
+    }
     
     private func formatMode(_ mode: PracticeEngine.Mode) -> String {
         switch mode {

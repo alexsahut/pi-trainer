@@ -24,8 +24,16 @@ struct SessionSettingsView: View {
                             ZenSegmentedControl(
                                 title: String(localized: "DISPOSITION CLAVIER"),
                                 options: KeypadLayout.allCases,
-                                selection: $statsStore.keypadLayout
+                                selection: $viewModel.keypadLayout
                             )
+                            
+                            if viewModel.selectedMode.hasGhost {
+                                ZenSegmentedControl(
+                                    title: String(localized: "session.options.ghost_selection"),
+                                    options: PRType.allCases,
+                                    selection: $viewModel.selectedGhostType
+                                )
+                            }
                             
                             
                             // Haptics Toggle
@@ -70,8 +78,10 @@ struct SessionSettingsView: View {
                             }
                             
                             Button(action: { 
-                                viewModel.endSession(shouldDismiss: true)
-                                dismiss()
+                                Task {
+                                    await viewModel.endSession(shouldDismiss: true)
+                                    dismiss()
+                                }
                             }) {
                                 HStack {
                                     Image(systemName: "xmark.circle")

@@ -16,6 +16,10 @@ struct SessionView: View {
     @State private var showOptions = false
     @State private var hapticsEnabled = HapticService.shared.isEnabled
     
+    // Story 9.6: Game Mode Rules & Onboarding
+    @State private var showingRulesSheet = false
+    @AppStorage("hasSeenGameModeRules") var hasSeenGameModeRules = false
+    
     var body: some View {
         ZStack {
             if viewModel.selectedMode == .game {
@@ -50,9 +54,16 @@ struct SessionView: View {
                         Text("\(viewModel.bestStreak)")
                             .font(DesignSystem.Fonts.monospaced(size: 24, weight: .black))
                             .foregroundColor(.white.opacity(0.3))
-                        Text("PR")
-                            .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
-                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                        
+                        HStack(spacing: 2) {
+                            if viewModel.selectedMode.hasGhost {
+                                Image(systemName: viewModel.selectedGhostType == .crown ? "crown.fill" : "bolt.fill")
+                                    .font(.system(size: 8, weight: .black))
+                            }
+                            Text("PR")
+                                .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
+                        }
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -64,10 +75,22 @@ struct SessionView: View {
                         .foregroundColor(DesignSystem.Colors.cyanElectric)
                         .shadow(color: DesignSystem.Colors.cyanElectric.opacity(0.3), radius: 10)
                     
-                    Text(viewModel.selectedMode.description)
-                        .font(DesignSystem.Fonts.monospaced(size: 9, weight: .black))
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                        .tracking(2)
+                    HStack(spacing: 8) {
+                        Text(viewModel.selectedMode.description)
+                            .font(DesignSystem.Fonts.monospaced(size: 9, weight: .black))
+                            .foregroundColor(DesignSystem.Colors.textSecondary)
+                            .tracking(2)
+                        
+                        if viewModel.selectedMode != .learn {
+                            Button {
+                                showingRulesSheet = true
+                            } label: {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(DesignSystem.Colors.cyanElectric)
+                            }
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 
@@ -127,7 +150,8 @@ struct SessionView: View {
                         onReveal: { count in
                             viewModel.reveal(count: count)
                         },
-                        showError: viewModel.showErrorFlash,
+                        showErrorReveal: viewModel.isShowingErrorReveal,
+                        showErrorFlash: viewModel.showErrorFlash,
                         wrongInputDigit: viewModel.lastWrongInput
                     )
                     .frame(maxWidth: .infinity)
@@ -182,8 +206,8 @@ struct SessionView: View {
                                                 .font(.caption2.bold())
                                                 .foregroundColor(DesignSystem.Colors.cyanElectric)
                                             
-                                            SpeedMetricRow(label: "MIN", value: viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS)
-                                            SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS)
+                                            SpeedMetricRow(label: "MIN", value: viewModel.engine.minCPS == .infinity ? 0 : viewModel.engine.minCPS, fractionLength: 2)
+                                            SpeedMetricRow(label: "MAX", value: viewModel.engine.maxCPS, fractionLength: 2)
                                             SpeedMetricRow(label: "AVG", value: viewModel.engine.digitsPerMinute / 60.0)
                                         }
                                         
@@ -218,8 +242,10 @@ struct SessionView: View {
                                     }
                                     
                                     Button {
-                                        viewModel.endSession()
-                                        dismiss()
+                                        Task {
+                                            await viewModel.endSession()
+                                            dismiss()
+                                        }
                                     } label: {
                                         Text(String(localized: "session.quit"))
                                             .font(DesignSystem.Fonts.monospaced(size: 18, weight: .bold))
@@ -264,12 +290,22 @@ struct SessionView: View {
         }
         .navigationBarBackButtonHidden(true)
         .interactiveDismissDisabled(viewModel.isActive)
-        .onAppear {
-            viewModel.startSession()
-        }
-        .animation(.default, value: viewModel.isActive)
         .sheet(isPresented: $showOptions) {
             SessionSettingsView(viewModel: viewModel, statsStore: statsStore)
+        }
+        .sheet(isPresented: $showingRulesSheet) {
+            GameModeRulesView()
+        }
+        .onAppear {
+            viewModel.startSession()
+            
+            // Story 9.6: First-launch onboarding
+            if viewModel.selectedMode == .game && !hasSeenGameModeRules {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showingRulesSheet = true
+                    hasSeenGameModeRules = true
+                }
+            }
         }
         .onChange(of: viewModel.shouldDismiss) { _, newValue in
             if newValue {
@@ -283,6 +319,7 @@ struct SessionView: View {
 struct SpeedMetricRow: View {
     let label: String
     let value: Double
+    var fractionLength: Int = 1
     
     var body: some View {
         HStack(spacing: 8) {
@@ -291,7 +328,7 @@ struct SpeedMetricRow: View {
                 .foregroundColor(.white.opacity(0.3))
                 .frame(width: 25, alignment: .leading)
             
-            Text(String(format: "%.1f", value))
+            Text(String(format: "%.\(fractionLength)f", value))
                 .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
                 .foregroundColor(.white)
         }

@@ -65,8 +65,11 @@ struct TerminalGridView: View {
     /// Callback when a row is revealed
     var onReveal: ((Int) -> Void)? = nil
     
-    /// Whether to show error flash on the last digit
-    var showError: Bool = false
+    /// Whether to show error reveal on the cursor position
+    var showErrorReveal: Bool = false
+    
+    /// Whether to show error flash on the last digit (Story 9.4)
+    var showErrorFlash: Bool = false
     
     /// Wrong digit entered by user (displayed in red at cursor position)
     var wrongInputDigit: Int? = nil
@@ -182,21 +185,17 @@ struct TerminalGridView: View {
                                         let digit = row.digits[i]
                                         let isLastDigitInRow = (row.id == rows.last?.id && i == row.digits.count - 1)
                                         digitView(digit: digit, state: digitState(localIndex: i, isLast: isLastDigitInRow))
-                                    } else if i < (revealedDigitsPerRow[row.id] ?? 0) || isLearnMode {
+                                    } else if i < (revealedDigitsPerRow[row.id] ?? 0) || isLearnMode || (showErrorReveal && startOffset + (row.id * 10) + i == typedDigits.count) {
                                         let globalIndex = startOffset + (row.id * 10) + i
                                         if globalIndex < fullDigits.count {
                                             let ghostDigit = Int(String(fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)])) ?? 0
                                             digitView(digit: ghostDigit, state: .normal)
-                                                .opacity(0.3)
+                                                .opacity(DesignSystem.Animations.ghostRevealOpacity)
                                         } else {
                                             placeholderView
                                         }
                                     } else {
                                         placeholderView
-                                    }
-                                    
-                                    if (i + 1) % 5 == 0 && i < 9 {
-                                        Spacer().frame(width: 16)
                                     }
                                 }
                             }
@@ -266,7 +265,7 @@ struct TerminalGridView: View {
     }
     
     private func digitState(localIndex: Int, isLast: Bool) -> DigitState {
-        if isLast && showError {
+        if isLast && showErrorFlash {
             return .error
         } else if isLast || localIndex == activeIndex {
             return .active
@@ -341,6 +340,6 @@ struct TerminalGridView: View {
         typedDigits: "141592653",
         integerPart: "3",
         fullDigits: "1415926535",
-        showError: true
+        showErrorReveal: true
     )
 }

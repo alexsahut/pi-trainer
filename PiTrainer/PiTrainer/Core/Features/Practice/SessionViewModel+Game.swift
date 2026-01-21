@@ -4,11 +4,11 @@ import SwiftUI
 extension SessionViewModel {
     /// Position effective du joueur (correctCount - errorCount)
     /// Story 9.2: Mapping pour la ligne d'horizon
-    var playerEffectivePosition: Int {
+    var playerEffectivePosition: Double {
         // En mode Learn,StartIndex peut être > 0
         // En mode Game, StartIndex est 0
-        let currentProgress = engine.currentIndex - engine.startIndex
-        return max(0, currentProgress - engine.errors)
+        let currentProgress = Double(engine.currentIndex - engine.startIndex)
+        return max(0, currentProgress - Double(engine.errors))
     }
     
     /// Position du ghost (interpolée)
@@ -47,15 +47,12 @@ extension SessionViewModel {
     
     // MARK: - Story 9.3: Atmospheric Feedback
     
-    /// Seuil de saturation pour l'effet d'opacité (en nombre de chiffres)
-    private var maxAtmosphericDelta: Double { 5.0 }
-    
     /// Calcule le delta entre le joueur et le ghost à un instant T
     /// Positif = Joueur en avance, Négatif = Joueur en retard
     func atmosphericDelta(at date: Date) -> Double {
         guard let ghost = ghostEngine else { return 0 }
         let currentGhostPos = ghost.position(at: date)
-        return Double(playerEffectivePosition) - currentGhostPos
+        return playerEffectivePosition - currentGhostPos
     }
     
     /// Couleur atmosphérique basée sur le delta
@@ -80,7 +77,7 @@ extension SessionViewModel {
         if delta < 0.001 { return 0 }
         
         // Saturation de l'effet
-        let ratio = min(1.0, delta / maxAtmosphericDelta)
-        return 0.05 + (ratio * 0.15) // Échelle de 0.05 (5%) à 0.20 (20%)
+        let ratio = min(1.0, delta / DesignSystem.Constants.maxAtmosphericDelta)
+        return DesignSystem.Animations.atmosphericMinOpacity + (ratio * (DesignSystem.Animations.atmosphericMaxOpacity - DesignSystem.Animations.atmosphericMinOpacity))
     }
 }

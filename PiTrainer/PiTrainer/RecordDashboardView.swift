@@ -40,6 +40,15 @@ struct RecordCard: View {
     let constant: Constant
     let stats: ConstantStats
     
+    // Fetch records from PersonalBestStore
+    private var crownRecord: PersonalBestRecord? {
+        PersonalBestStore.shared.getRecord(for: constant, type: .crown)
+    }
+    
+    private var lightningRecord: PersonalBestRecord? {
+        PersonalBestStore.shared.getRecord(for: constant, type: .lightning)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -54,34 +63,28 @@ struct RecordCard: View {
                     .foregroundColor(DesignSystem.Colors.textSecondary)
             }
             
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(stats.bestStreak)")
-                    .font(DesignSystem.Fonts.monospaced(size: 28, weight: .bold))
-                    .foregroundColor(.white)
+            VStack(alignment: .leading, spacing: 8) {
+                // Crown Record (Distance)
+                RecordRow(
+                    icon: "crown.fill",
+                    iconColor: .yellow,
+                    value: "\(crownRecord?.digitCount ?? 0)",
+                    subValue: formatTime(crownRecord?.totalTime ?? 0),
+                    isPlaceholder: crownRecord == nil
+                )
                 
-                if let best = stats.bestSession {
-                    Text(formatTime(best.durationSeconds))
-                        .font(DesignSystem.Fonts.monospaced(size: 10, weight: .bold))
-                        .foregroundColor(DesignSystem.Colors.cyanElectric)
-                } else {
-                    Text("stats.dashboard.no_time")
-                        .font(DesignSystem.Fonts.monospaced(size: 10, weight: .bold))
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                }
-            }
-            
-            if let best = stats.bestSession {
-                Text(best.date.formatted(.dateTime.day().month().year()).uppercased())
-                    .font(DesignSystem.Fonts.monospaced(size: 9, weight: .regular))
-                    .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.7))
-            } else {
-                Text("stats.dashboard.no_session")
-                    .font(DesignSystem.Fonts.monospaced(size: 9, weight: .regular))
-                    .foregroundColor(DesignSystem.Colors.textSecondary.opacity(0.5))
+                // Lightning Record (Speed)
+                RecordRow(
+                    icon: "bolt.fill",
+                    iconColor: .orange,
+                    value: String(format: "%.1f", lightningRecord?.digitsPerMinute ?? 0),
+                    unit: "DPM",
+                    isPlaceholder: lightningRecord == nil
+                )
             }
         }
         .padding(16)
-        .frame(width: 140)
+        .frame(width: 160) // Slightly wider to accommodate dual records
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color.white.opacity(0.05))
@@ -91,14 +94,53 @@ struct RecordCard: View {
                 )
         )
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(constant.rawValue): \(stats.bestStreak) digits")
+        .accessibilityLabel("\(constant.rawValue) records")
         .accessibilityIdentifier("stats.dashboard.card.\(constant.rawValue)")
     }
     
     private func formatTime(_ seconds: TimeInterval) -> String {
+        guard seconds > 0 else { return "--:--" }
         let minutes = Int(seconds) / 60
         let remainingSeconds = Int(seconds) % 60
         return String(format: "%01d:%02d", minutes, remainingSeconds)
+    }
+}
+
+struct RecordRow: View {
+    let icon: String
+    let iconColor: Color
+    let value: String
+    var unit: String? = nil
+    var subValue: String? = nil
+    let isPlaceholder: Bool
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(isPlaceholder ? .white.opacity(0.1) : iconColor)
+                .frame(width: 16)
+            
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text(value)
+                        .font(DesignSystem.Fonts.monospaced(size: 16, weight: .bold))
+                        .foregroundColor(isPlaceholder ? .white.opacity(0.1) : .white)
+                    
+                    if let unit = unit {
+                        Text(unit)
+                            .font(DesignSystem.Fonts.monospaced(size: 8, weight: .black))
+                            .foregroundColor(isPlaceholder ? .white.opacity(0.1) : DesignSystem.Colors.textSecondary)
+                    }
+                }
+                
+                if let subValue = subValue {
+                    Text(subValue)
+                        .font(DesignSystem.Fonts.monospaced(size: 10, weight: .bold))
+                        .foregroundColor(isPlaceholder ? .white.opacity(0.1) : DesignSystem.Colors.cyanElectric)
+                }
+            }
+        }
     }
 }
 
