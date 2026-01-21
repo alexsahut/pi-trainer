@@ -139,7 +139,7 @@ struct TerminalGridView: View {
                         HStack(alignment: .top, spacing: 0) {
                             // Line number and indicator
                             HStack(spacing: 0) {
-                                if row.isComplete || isLearnMode {
+                                if row.isComplete || !allowsReveal {
                                     Text(String(format: "%03d", row.lineNumber))
                                         .font(.system(size: 12, weight: .regular, design: .monospaced))
                                         .foregroundColor(.gray)
