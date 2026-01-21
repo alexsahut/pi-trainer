@@ -178,9 +178,20 @@ class SessionViewModel: ObservableObject {
     
     /// Starts a new session with the selected mode
     func startSession() {
-        // Clear previous error state
+        // Clear previous error state and reset session-specific properties
         errorState = nil
         isDefeatedByGhost = false
+        isSuddenDeathVictory = false
+        isNewPR = false
+        isSessionSaved = false
+        revealsUsed = 0
+        loops = 0
+        typedDigits = ""
+        showErrorFlash = false
+        lastCorrectDigit = nil
+        expectedDigit = nil
+        lastWrongInput = nil
+        
         ghostMonitorTask?.cancel()
         ghostMonitorTask = nil
         

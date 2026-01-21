@@ -430,9 +430,9 @@ class StatsStore: ObservableObject {
                 // If the history file shows a best streak of X, then the stats must show X.
                 // This fixes issues where a phantom high score persists after history corruption/deletion.
                 //
-                // Fix for Story 8.5: Exclude Learn Mode from Best Streak calculation
+                // Fix for Story 8.5/9.5: Exclude Learn Mode AND require Certification for Best Streak calculation
                 // Learn Mode defines 'streak' as loops or segment completions, which is not comparable to Practice/Test/Game.
-                let eligibleRecords = records.filter { $0.sessionMode != .learn }
+                let eligibleRecords = records.filter { $0.sessionMode != .learn && $0.isCertified }
                 let bestInHistory = eligibleRecords.max(by: { $0.bestStreakInSession < $1.bestStreakInSession })
                 
                 if let best = bestInHistory {
