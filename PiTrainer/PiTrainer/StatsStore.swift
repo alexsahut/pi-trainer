@@ -29,6 +29,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     let segmentEnd: Int?
     let loops: Int
     let isCertified: Bool // Story 9.5: PB eligibility
+    let wasVictory: Bool? // Story 9.5: Game Mode result
     
     var cps: Double {
         digitsPerMinute / 60.0
@@ -36,7 +37,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
     
     // Custom decoder for backward compatibility (Story 6.2 & 8.5)
     enum CodingKeys: String, CodingKey {
-        case id, date, constant, mode, sessionMode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed, minCPS, maxCPS, segmentStart, segmentEnd, loops, isCertified
+        case id, date, constant, mode, sessionMode, attempts, errors, bestStreakInSession, durationSeconds, digitsPerMinute, revealsUsed, minCPS, maxCPS, segmentStart, segmentEnd, loops, isCertified, wasVictory
     }
     
     init(from decoder: Decoder) throws {
@@ -68,9 +69,10 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         segmentEnd = try container.decodeIfPresent(Int.self, forKey: .segmentEnd)
         loops = try container.decodeIfPresent(Int.self, forKey: .loops) ?? 0
         isCertified = try container.decodeIfPresent(Bool.self, forKey: .isCertified) ?? false
+        wasVictory = try container.decodeIfPresent(Bool.self, forKey: .wasVictory)
     }
     
-    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, sessionMode: SessionMode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int = 0, minCPS: Double? = nil, maxCPS: Double? = nil, segmentStart: Int? = nil, segmentEnd: Int? = nil, loops: Int = 0, isCertified: Bool = false) {
+    init(id: UUID, date: Date, constant: Constant, mode: PracticeEngine.Mode, sessionMode: SessionMode, attempts: Int, errors: Int, bestStreakInSession: Int, durationSeconds: TimeInterval, digitsPerMinute: Double, revealsUsed: Int = 0, minCPS: Double? = nil, maxCPS: Double? = nil, segmentStart: Int? = nil, segmentEnd: Int? = nil, loops: Int = 0, isCertified: Bool = false, wasVictory: Bool? = nil) {
         self.id = id
         self.date = date
         self.constant = constant
@@ -88,6 +90,7 @@ struct SessionRecord: Codable, Identifiable, Equatable {
         self.segmentEnd = segmentEnd
         self.loops = loops
         self.isCertified = isCertified
+        self.wasVictory = wasVictory
     }
 }
 

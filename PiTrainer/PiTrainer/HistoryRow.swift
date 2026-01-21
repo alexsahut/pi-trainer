@@ -25,6 +25,18 @@ struct HistoryRow: View {
                     Text(session.sessionMode.displayName)
                         .font(DesignSystem.Fonts.monospaced(size: 9, weight: .bold))
                     
+                    if session.sessionMode == .game {
+                        if session.wasVictory == true {
+                             Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 8))
+                                .foregroundColor(.green)
+                        } else if session.wasVictory == false {
+                             Image(systemName: "xmark.seal.fill")
+                                .font(.system(size: 8))
+                                .foregroundColor(.orange)
+                        }
+                    }
+                    
                     if session.isCertified {
                         Image(systemName: "trophy.fill")
                             .font(.system(size: 8))

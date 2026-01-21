@@ -285,6 +285,12 @@ class SessionViewModel: ObservableObject {
     /// - Parameter digit: The digit (0-9)
     func processInput(_ digit: Int) {
         objectWillChange.send()
+        
+        // Story 9.5 Refined: Sudden Death if ahead of ghost in Game Mode
+        // We capture delta BEFORE processing the input to ensure we don't penalize 
+        // the player's position before checking if they were winning at the time of error.
+        let deltaBeforeInput = atmosphericDelta(at: Date())
+        
         let result = engine.input(digit: digit)
         print("debug: input \(digit), isCorrect: \(result.isCorrect), engine.isActive: \(engine.isActive)")
         
@@ -299,17 +305,17 @@ class SessionViewModel: ObservableObject {
               }
          }
          
-         // Story 9.5 Patch: Immediate ghost defeat check on input
-         if let ghost = ghostEngine, isActive {
-             let currentGhostPos = ghost.position(at: Date())
-             if currentGhostPos >= Double(ghost.totalDigits) && engine.currentIndex < ghost.totalDigits {
-                 print("💀 GHOST WON (Immediate)! Player at \(engine.currentIndex), Ghost at \(ghost.totalDigits)")
-                 isDefeatedByGhost = true
-                 engine.finishSession()
-                 endSession()
-                 return
-             }
-         }
+        // Story 9.5 Patch: Immediate ghost defeat check on input
+        if let ghost = ghostEngine, isActive {
+            let currentGhostPos = ghost.position(at: Date())
+            if currentGhostPos >= Double(ghost.totalDigits) && engine.currentIndex < ghost.totalDigits {
+                print("💀 GHOST WON (Immediate)! Player at \(engine.currentIndex), Ghost at \(ghost.totalDigits)")
+                isDefeatedByGhost = true
+                engine.finishSession()
+                endSession()
+                return
+            }
+        }
         
         if result.isCorrect {
             // Success feedback
@@ -334,20 +340,16 @@ class SessionViewModel: ObservableObject {
                 self.lastWrongInput = nil
             }
             
-            // Story 9.5: "Sudden Death" if ahead of ghost in Game Mode
+            // Story 9.5 Refined: "Sudden Death" if ahead of ghost in Game Mode
             if selectedMode == .game {
-                let delta = atmosphericDelta(at: Date())
-                if delta > 0 {
-                    print("⚡️ SUDDEN DEATH: Error while ahead of ghost (+ \(delta)). Ending session.")
+                if deltaBeforeInput > 0 {
+                    print("⚡️ SUDDEN DEATH: Error while ahead of ghost (+ \(deltaBeforeInput)). Ending session.")
                     isSuddenDeathVictory = true
                     engine.finishSession()
                     endSession()
                     return
                 }
             }
-            
-            // Note: In learning mode (if allowErrors=true), we continue.
-            // If test, engine state is now finished.
         }
         
         // Story 8.4: Handle Engine Events (Looping)
@@ -461,25 +463,41 @@ class SessionViewModel: ObservableObject {
                 print("ℹ️ Session NOT CERTIFIED (Errors: \(engine.errors), Reveals: \(revealsUsed), Mode: \(selectedMode)). PB will not be updated.")
             }
 
-            let record = SessionRecord(
-                id: UUID(),
-                date: Date(),
-                constant: selectedConstant,
-                mode: selectedMode.practiceEngineMode,
-                sessionMode: selectedMode, // Story 8.5: Accurate mode tracking
-                attempts: engine.attempts,
-                errors: engine.errors,
-                bestStreakInSession: engine.bestStreak,
-                durationSeconds: engine.elapsedTime,
-                digitsPerMinute: engine.digitsPerMinute,
-                revealsUsed: revealsUsed,
-                minCPS: engine.minCPS == .infinity ? nil : engine.minCPS,
-                maxCPS: engine.maxCPS,
-                segmentStart: selectedMode == .learn ? segmentStore.segmentStart : nil,
-                segmentEnd: selectedMode == .learn ? segmentStore.segmentEnd : nil,
-                loops: loops,
-                isCertified: isCertified
-            )
+            // Result tracking for Game Mode (Story 9.5)
+        var wasVictory: Bool? = nil
+        if selectedMode == .game {
+            if isSuddenDeathVictory {
+                wasVictory = true
+            } else if isDefeatedByGhost {
+                wasVictory = false
+            } else {
+                // If not defeated and not sudden death, check if player is at the end?
+                // Actually, if we finished normally in Game mode without being defeated, it's a victory.
+                let reachedEnd = engine.currentIndex >= (ghostEngine?.totalDigits ?? 0)
+                wasVictory = reachedEnd && !isDefeatedByGhost
+            }
+        }
+        
+        let record = SessionRecord(
+            id: UUID(),
+            date: Date(), // Kept original `Date()`
+            constant: selectedConstant, // Kept original `selectedConstant`
+            mode: selectedMode.practiceEngineMode, // Kept original `selectedMode.practiceEngineMode`
+            sessionMode: selectedMode,
+            attempts: engine.attempts,
+            errors: engine.errors,
+            bestStreakInSession: engine.bestStreak,
+            durationSeconds: engine.elapsedTime, // Kept original `engine.elapsedTime`
+            digitsPerMinute: engine.digitsPerMinute, // Kept original `engine.digitsPerMinute`
+            revealsUsed: revealsUsed,
+            minCPS: engine.minCPS == .infinity ? nil : engine.minCPS,
+            maxCPS: engine.maxCPS,
+            segmentStart: selectedMode == .learn ? segmentStore.segmentStart : nil, // Kept original segment logic
+            segmentEnd: selectedMode == .learn ? segmentStore.segmentEnd : nil, // Kept original segment logic
+            loops: loops,
+            isCertified: isCertified,
+            wasVictory: wasVictory
+        )
             
             isSessionSaved = true
             if let onSaveSession = onSaveSession {

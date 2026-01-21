@@ -16,6 +16,14 @@ struct SessionDetailView: View {
                 DetailRow(label: "stats.date", value: formatDate(session.date))
                 DetailRow(label: "stats.mode", value: session.sessionMode.displayName)
                 
+                if session.sessionMode == .game, let wasVictory = session.wasVictory {
+                    DetailRow(
+                        label: "session.summary.result", 
+                        value: wasVictory ? String(localized: "session.victory") : String(localized: "session.game_over"),
+                        color: wasVictory ? .green : .orange
+                    )
+                }
+                
                 if let start = session.segmentStart, let end = session.segmentEnd {
                     DetailRow(label: "stats.segment", value: "\(start) - \(end)")
                 }

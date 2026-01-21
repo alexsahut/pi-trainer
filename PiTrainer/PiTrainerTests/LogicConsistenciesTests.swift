@@ -55,6 +55,7 @@ final class LogicConsistenciesTests: XCTestCase {
         if let record = history.first {
             print("debug: defeat record isCertified: \(record.isCertified)")
             XCTAssertFalse(record.isCertified, "Defeat should NOT be certified")
+            XCTAssertEqual(record.wasVictory, false, "Defeat should have wasVictory = false")
         } else {
             XCTFail("Record should have been saved")
         }
@@ -86,6 +87,7 @@ final class LogicConsistenciesTests: XCTestCase {
         if let session = history.first {
             print("debug: suddenDeath record isCertified: \(session.isCertified)")
             XCTAssertTrue(session.isCertified, "Sudden Death Victory SHOULD be certified")
+            XCTAssertEqual(session.wasVictory, true, "Sudden Death should have wasVictory = true")
         } else {
             XCTFail("Record should have been saved")
         }
