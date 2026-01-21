@@ -308,6 +308,8 @@ class StatsStore: ObservableObject {
             self.historyCache = [:]
             streakStore.reset()
             NotificationService.shared.cancelPendingReminders()
+            await PersonalBestStore.shared.reset()
+            SegmentStore.shared.reset()
         }
     }
     

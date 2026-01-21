@@ -5,6 +5,8 @@ import Combine
 /// Manages the learning segment (Story 8.1)
 @MainActor
 public class SegmentStore: ObservableObject {
+    public static let shared = SegmentStore()
+    
     private let userDefaults: UserDefaults
     private let startKey = "learnSegmentStart"
     private let endKey = "learnSegmentEnd"

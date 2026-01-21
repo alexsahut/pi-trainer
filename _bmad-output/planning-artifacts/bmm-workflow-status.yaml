@@ -70,7 +70,7 @@ workflow_items:
   - id: retrospective
     phase: 5
     name: Verification
-    status: in-progress
+    status: skipped
     required: true
     agent: sm
     command: "/bmad:bmm:workflows:retrospective"

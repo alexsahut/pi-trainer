@@ -16,32 +16,28 @@ This document provides the complete epic and story breakdown for pi-trainer, dec
 
 ### Functional Requirements
 
-FR1: L'utilisateur peut sélectionner une constante mathématique (Pi, e, phi, etc.).
-FR2: L'utilisateur peut lancer une session en Mode Strict (arrêt immédiat à l'erreur).
-FR3: L'utilisateur peut saisir des décimales via un pavé numérique optimisé pour la vitesse.
-FR4: Le système valide la saisie en temps réel par rapport aux données mathématiques.
-FR5: Le système affiche un compteur de position en temps réel (Position Tracker).
-FR6: Le système affiche les décimales saisies par blocs de 10 (Terminal-Grid).
-FR7: L'utilisateur peut consulter l'historique de ses 200 dernières performances (date, score, vitesse).
-FR8: Le système active le Streak Flow (animations visuelles / Ghost Mode) lors des séries de réussites.
-FR9: Le système fournit des retours haptiques et sonores lors de la saisie et des erreurs (Core Haptics).
-FR10: Le système enregistre et affiche le record personnel (Personal Best) par constante.
-FR11: Le système suit et affiche le nombre de jours consécutifs d'utilisation (Daily Streak).
-FR12: Le système envoie des notifications locales de rappel journalier pour maintenir les séries.
-FR13: Le système persiste l'intégralité des données localement (Hybride UserDefaults + Fichiers).
-FR14: Le système demande explicitement le consentement de l'utilisateur pour les notifications locales dès le premier lancement.
-FR15: Le système permet d'activer/désactiver les retours haptiques dans les réglages de l'application.
-FR16: L'interface ajuste dynamiquement ses marges pour respecter les Safe Areas de tous les modèles d'iPhone supportés.
+FR1: (Navigation) Interface principale divisée en 3 onglets : Learn, Practice, Play.
+FR2: (Sections) Learn (Outils), Practice (Zen), Play (Compétition/Game).
+FR3: (Segmentation) Définition de segment d'apprentissage (ex: 50-100).
+FR4: (Visual Guide) Overlay de transparence pour le guidage.
+FR5: (Repetition Flow) Saisie par-dessus le modèle ("calque").
+FR6: (Ghost System) Calcul et animation du Ghost basé sur le PR.
+FR7: (Horizon Line) Visualisation de la course (1px).
+FR8: (Atmospheric Feedback) Couleur dynamique selon le delta vitesse.
+FR9: (Error Tolerance) Game Mode : erreurs signalées mais non bloquantes.
+FR10: (Strict Rules) Compétition : arrêt immédiat à l'erreur.
+FR11: (Validity) Certification accessible uniquement en Mode Compétition.
+FR12: (Daily Challenge) Défi quotidien unique et statique (V2.8).
+FR13: (Rewards System) XP simple, Grades calculés, Double Bang animation.
+FR14: (Streak Flow) Animations de combo actives dans tous les modes.
 
 ### NonFunctional Requirements
 
-NFR1: Latence de feedback visuel/sonore inférieure à 16ms (60 FPS constants).
-NFR2: Temps de lancement de l'application inférieur à 2 secondes.
-NFR3: Taux d'erreur de validation mathématique de 0%.
-NFR4: Respect des standards WCAG AA pour le contraste et VoiceOver.
-NFR5: Taille minimale des cibles de saisie de 44x44 points (Contrainte App Store).
-NFR6: Threading dédié (User Interactive priority) pour la validation afin de ne jamais bloquer le Main Thread.
-NFR7: RAM Management : Pré-chargement des segments de décimales en mémoire vive pour éliminer les latences I/O disque pendant le sprint.
+NFR1: Latence < 16ms (60 FPS).
+NFR2: Launch time < 2s.
+NFR3: Validation mathématique 0% erreur.
+NFR4: Accessibilité WCAG AA.
+NFR5: Touch targets 44x44 points.
 
 ### Additional Requirements
 
@@ -631,26 +627,69 @@ As a new gamer, I want to see a clear explanation of the Twin-Shadows rules so I
 | FR8-V2 (Atmospheric) | 9.3 |
 | FR9-V2 (Error Tolerance) | 9.4 |
 
-## V2 Implementation Order
+### Epic 10: Engagement & Récompenses (Daily & XP)
+Créer la boucle d'engagement quotidienne avec des défis statiques et un système d'XP simple ("Zero-Code") pour valoriser la pratique.
+**FRs covered:** FR12, FR13.
 
-**Phase 1 (Fondations V2):**
-1. Story 7.1 — Mode Selector (bloque tout le reste)
-2. Story 7.2 — Cleanup Settings
+## Epic 10: Engagement & Récompenses (Daily & XP)
 
-**Phase 2 (Learn Mode):**
-3. Story 8.1 — Dual Slider
-4. Story 8.2 — Overlay Permanent
+Créer la boucle d'engagement quotidienne avec des défis statiques et un système d'XP simple ("Zero-Code") pour valoriser la pratique.
 
-**Phase 3 (Game Mode — The Trial):**
-5. Story 9.1 — GhostEngine (Twin Shadows foundation)
-6. Story 9.5 — Dynamic PR Recording (Certification logic)
-7. Story 9.2 — Horizon Line (Dual points: Player vs Ghost)
-8. Story 9.6 — Rules & Onboarding
-9. Story 9.3 — Atmospheric Feedback
-10. Story 9.4 — Gestion Erreurs
+### Story 10.1: Système de Défis Quotidiens (Static Curated)
 
-<!-- End story breakdown -->
+As a utilisateur fidèle,
+I want un défi unique chaque jour qui change à minuit,
+So that avoir une raison de revenir quotidiennement et tester ma polyvalence.
 
+**Acceptance Criteria:**
+- **Given** l'application lancée
+- **When** j'accède à la section Challenges
+- **Then** un défi unique est affiché basé sur la date du jour (YYYY-MM-DD) et le fichier `challenges.json`
+- **And** si je complète le défi, l'état est sauvegardé localement (`defaults.lastChallengeDate`)
+- **And** je ne peux gagner la récompense qu'une seule fois par jour.
+
+### Story 10.2: Système d'XP "Zero-Code" & Grades
+
+As a athlète de la mémoire,
+I want que mon rang (Grade) reflète mon volume d'entraînement total,
+So that afficher mon niveau d'expertise.
+
+**Acceptance Criteria:**
+- **Given** mon historique de pratique
+- **When** je consulte mon profil
+- **Then** mon total d'XP est égal à la somme de toutes mes décimales correctes (`totalCorrectDigits`)
+- **And** mon Grade est calculé dynamiquement selon les paliers (Novice < 1k, Apprenti < 5k, Athlète < 20k, Expert < 100k, Grandmaster > 100k)
+- **And** ce calcul est instantané et ne nécessite pas de base de données dédiée.
+
+### Story 10.3: Animation "Double Bang" (Reward)
+
+As a gamer,
+I want une célébration épique quand je bats mon record ET que je monte en grade simultanément,
+So that marquer le coup lors d'une performance exceptionnelle.
+
+**Acceptance Criteria:**
+- **Given** une session terminée
+- **When** j'ai battu mon Personal Best (Ghost) **ET** franchi un palier de Grade
+- **Then** une double animation se déclenche (Explosion de particules + Éclairs)
+- **And** un feedback haptique intense (Success + Impact) est joué
+- **And** l'écran de résultat mentionne "DOUBLE BANG".
+
+## Requirements Coverage Map
+
+FR1 (Navigation) : Epic 7 - Story 7.1
+FR2 (Sections) : Epic 7 - Story 7.1
+FR3 (Segmentation) : Epic 8 - Story 8.1
+FR4 (Visual Guide) : Epic 8 - Story 8.2
+FR5 (Repetition Flow) : Epic 8 - Story 8.2
+FR6 (Ghost System) : Epic 9 - Story 9.1
+FR7 (Horizon Line) : Epic 9 - Story 9.2
+FR8 (Atmospheric Feedback) : Epic 9 - Story 9.3
+FR9 (Error Tolerance) : Epic 9 - Story 9.4
+FR10 (Strict Rules) : Epic 3 - Story 3.3
+FR11 (Validity) : Epic 9 - Story 9.5
+FR12 (Daily Challenge) : Epic 10 - Story 10.1
+FR13 (Rewards System) : Epic 10 - Story 10.2 & 10.3
+FR14 (Streak Flow) : Epic 2 - Story 2.3
 
 
 

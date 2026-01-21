@@ -1,14 +1,14 @@
 ---
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 'v2-extensions']
 workflowType: 'architecture'
-lastStep: 'v2-extensions'
-status: 'complete'
+lastStep: 'v2-extensions-resumed'
+status: 'in-progress'
 completedAt: '2026-01-17'
+resumedAt: '2026-01-21'
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/ux-design-specification.md'
   - '_bmad-output/project-knowledge/architecture.md'
-workflowType: 'architecture'
 project_name: 'pi-trainer'
 user_name: 'Alex'
 date: '2026-01-15'
@@ -509,4 +509,53 @@ sequenceDiagram
 | **Cohérence Architecture** | ✅ Extension du pattern existant |
 | **Testabilité** | ✅ GhostEngine injectable, mockable |
 | **Séparation Concerns** | ✅ Engine = logique, VM = présentation |
+
+---
+
+### V2.8 Gamification Architecture (Simplified)
+
+**Decision Method:** Occam's Razor (Simplicity First)
+
+#### XP & Grades ("Zero-Code" Approach)
+Au lieu d'un système complexe de gestion d'XP, nous utilisons les données existantes.
+
+- **XP Source :** `StatsStore.shared.totalCorrectDigits`.
+    - 1 Décimale juste = 1 XP.
+    - Pas de base de données supplémentaire.
+    - Pas de risque de désynchronisation.
+- **Grades :** Propriété calculée (Computed Property) sur le total.
+    - `Novice` : 0 - 999
+    - `Apprenti` : 1,000 - 4,999
+    - `Athlète` : 5,000 - 19,999
+    - `Expert` : 20,000 - 99,999
+    - `Grandmaster` : 100,000+
+
+```swift
+// Shared/Models/Grade.swift
+enum Grade: String, CaseIterable {
+    case novice, apprentice, athlete, expert, grandmaster
+    
+    static func from(totalDigits: Int) -> Grade {
+        // Logique de seuil simple
+    }
+}
+```
+
+#### Daily Challenges (Static Curated)
+Au lieu d'un générateur procédural risqué, nous utilisons un contenu éditorialisé et statique.
+
+- **Source :** `Resources/challenges.json`.
+- **Structure :** Tableau de 366 objets Challenge.
+- **Sélection :** Basée sur le jour de l'année (`Calendar.current.ordinality`).
+- **Persistance :** `UserDefaults` stocke uniquement `lastDailyChallengeDate` pour empêcher le farming.
+
+```json
+[
+  { "id": 1, "day": 1, "type": "target", "targetIndex": 50, "description": "Atteignez la 50ème décimale" },
+  { "id": 2, "day": 2, "type": "sprint", "timeLimit": 30, "description": "30 décimales en 30 secondes" }
+]
+```
+
+**Raisonnement :**
+Cette approche élimine 80% de la complexité technique tout en délivrant 100% de la valeur utilisateur (Sentiment de progression + Rendez-vous quotidien).
 
