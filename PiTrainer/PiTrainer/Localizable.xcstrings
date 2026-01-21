@@ -902,13 +902,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Game Over"
+            "value" : "Lost"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terminé"
+            "value" : "Perdu"
           }
         }
       }
@@ -1083,6 +1083,23 @@
         }
       }
     },
+    "session.summary.result" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Result"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Résultat"
+          }
+        }
+      }
+    },
     "session.summary.reveals" : {
       "localizations" : {
         "en" : {
@@ -1111,6 +1128,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vitesse"
+          }
+        }
+      }
+    },
+    "session.victory" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Won"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gagné"
           }
         }
       }
