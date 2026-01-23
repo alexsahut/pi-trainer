@@ -32,6 +32,10 @@ protocol PracticePersistenceProtocol {
     
     func saveSelectedGhostType(_ type: String)
     func loadSelectedGhostType() -> String?
+    
+    // Story 10.1: Auto-Advance Persistence
+    func saveAutoAdvance(_ enabled: Bool)
+    func loadAutoAdvance() -> Bool?
 }
 
 /// Concrete implementation of PracticePersistence using UserDefaults.
@@ -44,6 +48,7 @@ class PracticePersistence: PracticePersistenceProtocol {
     private let selectedConstantKey = "com.alexandre.pitrainer.selectedConstant"
     private let selectedModeKey = "com.alexandre.pitrainer.selectedMode"
     private let selectedGhostTypeKey = "com.alexandre.pitrainer.selectedGhostType"
+    private let autoAdvanceKey = "com.alexandre.pitrainer.autoAdvance"
     
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -112,5 +117,15 @@ class PracticePersistence: PracticePersistenceProtocol {
     
     func loadSelectedGhostType() -> String? {
         return userDefaults.string(forKey: selectedGhostTypeKey)
+    }
+    
+    func saveAutoAdvance(_ enabled: Bool) {
+        userDefaults.set(enabled, forKey: autoAdvanceKey)
+    }
+    
+    func loadAutoAdvance() -> Bool? {
+        // Return nil if not set, allows default handling in Store
+        guard userDefaults.object(forKey: autoAdvanceKey) != nil else { return nil }
+        return userDefaults.bool(forKey: autoAdvanceKey)
     }
 }

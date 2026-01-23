@@ -22,6 +22,7 @@ class SessionViewModel: ObservableObject {
     @Published private(set) var lastCorrectDigit: Int?
     @Published private(set) var expectedDigit: Int? // For learning mode feedback
     @Published private(set) var lastWrongInput: Int? // For visual feedback of wrong entry
+    @Published private(set) var indulgentErrorIndices: Set<Int> = [] // Story 10.1: Track positions of indulged errors
     @Published var errorState: String? // Critical error preventing session start
     @Published var shouldDismiss: Bool = false // Signal to View to dismiss itself
     @Published var revealsUsed: Int = 0 // Track assistance used (Story 6.2)
@@ -44,6 +45,14 @@ class SessionViewModel: ObservableObject {
     @Published var selectedConstant: Constant = .pi
     @Published var keypadLayout: KeypadLayout = .phone
     @Published var selectedGhostType: PRType = .crown
+    
+    // Story 10.1: Auto-Advance Setting (Propagated from StatsStore)
+    @Published var isAutoAdvanceEnabled: Bool = false {
+        didSet {
+            engine.isIndulgent = isAutoAdvanceEnabled
+            print("debug: reactive sync - engine.isIndulgent updated to \(engine.isIndulgent)")
+        }
+    }
 
     // MARK: - Properties
     
@@ -194,6 +203,7 @@ class SessionViewModel: ObservableObject {
 
         self.selectedMode = store.selectedMode
         self.selectedGhostType = store.selectedGhostType
+        self.isAutoAdvanceEnabled = store.isAutoAdvanceEnabled
         
         // Story 8.1 Fix: Use the segment store from HomeView
         self.segmentStore = segmentStore
@@ -215,6 +225,7 @@ class SessionViewModel: ObservableObject {
         lastCorrectDigit = nil
         expectedDigit = nil
         lastWrongInput = nil
+        indulgentErrorIndices = []
         firstErrorSnapshot = nil
         
         ghostMonitorTask?.cancel()
@@ -241,6 +252,10 @@ class SessionViewModel: ObservableObject {
             } else {
                 engine.start(mode: selectedMode.practiceEngineMode)
             }
+            
+            // Story 10.1: Apply Indulgent Mode Setting
+            engine.isIndulgent = isAutoAdvanceEnabled
+            print("debug: engine initialized with isIndulgent = \(engine.isIndulgent)")
             
             // Pre-warm the haptic engine only on success
             HapticService.shared.prewarm()
@@ -333,6 +348,18 @@ class SessionViewModel: ObservableObject {
         // If the engine advanced (whether correct or allowed error), update the UI string
         if result.indexAdvanced {
              typedDigits.append(String(digit))
+             
+             // Story 10.1: Track Indulgent Errors
+             // If we advanced BUT it wasn't correct, it's an indulged error.
+             if !result.isCorrect {
+                 // The engine has already incremented currentIndex.
+                 // So the error position is at currentIndex - 1.
+                 // We use the 0-based index relative to the session start (matching typedDigits)
+                 // Engine index is absolute logic, but typedDigits.count corresponds to entries.
+                 // The index of the just-added digit is typedDigits.count - 1.
+                 let errorIndex = typedDigits.count - 1
+                 indulgentErrorIndices.insert(errorIndex)
+             }
              
              // Story 9.1: Start ghost on first successful input
               if typedDigits.count == 1 {
@@ -448,6 +475,24 @@ class SessionViewModel: ObservableObject {
     /// Toggles the permanent reveal state (Story 8.2)
     func toggleReveal() {
         // No longer used as a toggle in standard modes as per user request
+    }
+    
+    /// Resets the current loop (Story 10.2)
+    func resetLoop() {
+        guard selectedMode == .learn else { return }
+        
+        // Reset Engine
+        engine.resetLoop()
+        
+        // Reset local UI State
+        typedDigits = ""
+        showErrorFlash = false
+        isShowingErrorReveal = false
+        lastWrongInput = nil
+        indulgentErrorIndices.removeAll()
+        
+        // Feedback
+        HapticService.shared.playSelection()
     }
     
     /// Ends the session and saves stats

@@ -19,6 +19,10 @@ struct ProPadView: View {
     var onBackspace: () -> Void
     var onOptions: () -> Void
     
+    // Reset Loop Feature (Story 10.3)
+    var showResetLoop: Bool = false
+    var onResetLoop: () -> Void = {}
+    
     // Grid Setup
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
     
@@ -39,7 +43,7 @@ struct ProPadView: View {
                 }
             }
             
-            // Options (Bottom Left)
+            // Bottom Left: Options
             ProPadButton(content: "⚙️", isAction: true) {
                 viewModel.actionPressed(.options)
                 onOptions()
@@ -51,10 +55,17 @@ struct ProPadView: View {
                 onDigit(0)
             }
             
-            // Backspace (Bottom Right)
-            ProPadButton(content: "⌫", isAction: true) {
-                viewModel.actionPressed(.backspace)
-                onBackspace()
+            // Bottom Right: Backspace OR Reset Loop (Story 10.3)
+            if showResetLoop {
+                ProPadButton(content: "⟳", isAction: true) {
+                    onResetLoop()
+                }
+                .accessibilityLabel(String(localized: "session.reset_loop"))
+            } else {
+                ProPadButton(content: "⌫", isAction: true) {
+                    viewModel.actionPressed(.backspace)
+                    onBackspace()
+                }
             }
         }
         .padding()

@@ -152,12 +152,15 @@ struct SessionView: View {
                         },
                         showErrorReveal: viewModel.isShowingErrorReveal,
                         showErrorFlash: viewModel.showErrorFlash,
-                        wrongInputDigit: viewModel.lastWrongInput
+                        wrongInputDigit: viewModel.lastWrongInput,
+                        indulgentErrorIndices: viewModel.indulgentErrorIndices
                     )
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 200)
                     .modifier(ShakeEffect(animatableData: viewModel.showErrorFlash ? 1 : 0))
                     .focusable(false)
+                    
+// Floating Reset Loop Button removed (Moved to Keypad in Story 10.3)
                     
                     // Retry / Quit Overlay when session ends
                     if !viewModel.isActive && viewModel.engine.attempts > 0 {
@@ -261,12 +264,12 @@ struct SessionView: View {
                         }
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
-                }
-            }
+                } // ZStack at 141
+            } // VStack at 130
             
             Spacer()
 
-            // ProPad (Numeric Keypad)
+            // ProPad (Numeric Keypad) - Story 10.3: Fix Layout & Reset Loop
             ProPadView(
                 layout: statsStore.keypadLayout,
                 currentStreak: viewModel.engine.currentStreak,
@@ -284,10 +287,15 @@ struct SessionView: View {
                 },
                 onOptions: {
                     showOptions = true
+                },
+                showResetLoop: true,
+                onResetLoop: {
+                    viewModel.reset()
                 }
             )
             .focusable(false)
-        }
+        } // VStack at 40
+        } // ZStack at 24
         .navigationBarBackButtonHidden(true)
         .interactiveDismissDisabled(viewModel.isActive)
         .sheet(isPresented: $showOptions) {
@@ -313,7 +321,6 @@ struct SessionView: View {
             }
         }
     }
-}
 }
 
 struct SpeedMetricRow: View {

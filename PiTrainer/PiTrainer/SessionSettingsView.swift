@@ -53,29 +53,25 @@ struct SessionSettingsView: View {
                             .onChange(of: hapticsEnabled) { _, newValue in
                                 HapticService.shared.isEnabled = newValue
                             }
+                            
+                            // Story 10.1 & User Request: Mode Indulgent Toggle
+                            Toggle(isOn: $viewModel.isAutoAdvanceEnabled) {
+                                Text(String(localized: "MODE INDULGENT"))
+                                    .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            .tint(DesignSystem.Colors.cyanElectric)
+                            .padding()
+                            .background(DesignSystem.Colors.blackOLED.opacity(0.3))
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
                         }
                         
                         // Action Section
                         VStack(spacing: 16) {
-                            Button(action: { 
-                                viewModel.reset()
-                                dismiss()
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.counterclockwise")
-                                    Text(String(localized: "RÉINITIALISER"))
-                                }
-                                .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
-                                .foregroundColor(.orange)
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.orange.opacity(0.1))
-                                .cornerRadius(12)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                )
-                            }
                             
                             Button(action: { 
                                 Task {

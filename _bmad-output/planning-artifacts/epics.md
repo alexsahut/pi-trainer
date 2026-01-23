@@ -627,15 +627,64 @@ As a new gamer, I want to see a clear explanation of the Twin-Shadows rules so I
 | FR8-V2 (Atmospheric) | 9.3 |
 | FR9-V2 (Error Tolerance) | 9.4 |
 
-### Epic 10: Engagement & Récompenses (Daily & XP)
+### Epic 11: Engagement & Récompenses (Daily & XP)
 Créer la boucle d'engagement quotidienne avec des défis statiques et un système d'XP simple ("Zero-Code") pour valoriser la pratique.
 **FRs covered:** FR12, FR13.
 
-## Epic 10: Engagement & Récompenses (Daily & XP)
+### Epic 10: Raffinements Expérience Utilisateur (Community Feedback)
+Implémenter les retours de la communauté pour fluidifier l'apprentissage et réduire la frustration (Gestion d'erreurs, Reset Loop).
+**FRs covered:** FR-New (User Feedback).
+
+## Epic 10: Raffinements Expérience Utilisateur (Community Feedback)
+
+Implémenter les retours de la communauté pour fluidifier l'apprentissage et réduire la frustration.
+
+### Story 10.1: Mode Indulgent (Auto-Advance on Error)
+
+As a utilisateur rapide,
+I want que mes erreurs soient comptabilisées mais ne bloquent pas ma saisie,
+So that conserver mon rythmer (flow) et ne pas être frustré par une "cascade" d'erreurs.
+
+**Acceptance Criteria:**
+- **Given** l'option "Auto-Advance" activée dans les réglages
+- **When** je saisis un chiffre incorrect
+- **Then** le compteur d'erreurs s'incrémente
+- **And** le curseur **avance** au chiffre suivant (comme une réussite)
+- **And** le chiffre incorrect est marqué visuellement (ex: Rouge) pour signaler la faute
+- **And** ce mode est disponible en Practice et Game (avec pénalité de score/temps).
+
+### Story 10.2: Réinitialisation de Série (Loop Reset)
+
+As a apprenant en mode Learn,
+I want pouvoir recommencer ma boucle (série) actuelle sans réinitialiser toute la session,
+So that reprendre proprement un segment mal engagé sans perdre mon compteur de répétitions global.
+
+**Acceptance Criteria:**
+- **Given** une session en mode Learn avec un segment actif
+- **When** je suis perdu ou je veux recommencer le segment
+- **Then** une action "Reset Loop" est disponible (Bouton ou Geste)
+- **When** je déclenche cette action
+- **Then** le curseur revient au début du segment
+- **And** les statistiques de la session (temps total, boucles complétées) **ne sont pas** remises à zéro
+- **And** le streak actuel est réinitialisé.
+
+### Story 10.3: Fix Learn Mode UI & Reset Loop Button (Hotfix)
+
+As a apprenant,
+I want que le clavier soit positionné correctement en bas d'écran et avoir un accès rapide au "Reset Loop",
+So that pratiquer confortablement et utiliser la nouvelle fonction sans friction.
+
+**Acceptance Criteria:**
+- **Given** le mode Learn
+- **Then** le clavier est ancré en bas de l'écran (Correction régression layout)
+- **And** le bouton "Retour" (Back) du clavier est remplacé par le bouton "Reset Loop"
+- **And** l'action "Reset Loop" se comporte comme défini dans la Story 10.2.
+
+## Epic 11: Engagement & Récompenses (Daily & XP)
 
 Créer la boucle d'engagement quotidienne avec des défis statiques et un système d'XP simple ("Zero-Code") pour valoriser la pratique.
 
-### Story 10.1: Système de Défis Quotidiens (Static Curated)
+### Story 11.1: Système de Défis Quotidiens (Static Curated)
 
 As a utilisateur fidèle,
 I want un défi unique chaque jour qui change à minuit,
@@ -648,7 +697,7 @@ So that avoir une raison de revenir quotidiennement et tester ma polyvalence.
 - **And** si je complète le défi, l'état est sauvegardé localement (`defaults.lastChallengeDate`)
 - **And** je ne peux gagner la récompense qu'une seule fois par jour.
 
-### Story 10.2: Système d'XP "Zero-Code" & Grades
+### Story 11.2: Système d'XP "Zero-Code" & Grades
 
 As a athlète de la mémoire,
 I want que mon rang (Grade) reflète mon volume d'entraînement total,
@@ -661,7 +710,7 @@ So that afficher mon niveau d'expertise.
 - **And** mon Grade est calculé dynamiquement selon les paliers (Novice < 1k, Apprenti < 5k, Athlète < 20k, Expert < 100k, Grandmaster > 100k)
 - **And** ce calcul est instantané et ne nécessite pas de base de données dédiée.
 
-### Story 10.3: Animation "Double Bang" (Reward)
+### Story 11.3: Animation "Double Bang" (Reward)
 
 As a gamer,
 I want une célébration épique quand je bats mon record ET que je monte en grade simultanément,
@@ -687,8 +736,8 @@ FR8 (Atmospheric Feedback) : Epic 9 - Story 9.3
 FR9 (Error Tolerance) : Epic 9 - Story 9.4
 FR10 (Strict Rules) : Epic 3 - Story 3.3
 FR11 (Validity) : Epic 9 - Story 9.5
-FR12 (Daily Challenge) : Epic 10 - Story 10.1
-FR13 (Rewards System) : Epic 10 - Story 10.2 & 10.3
+FR12 (Daily Challenge) : Epic 11 - Story 11.1
+FR13 (Rewards System) : Epic 11 - Story 11.2 & 11.3
 FR14 (Streak Flow) : Epic 2 - Story 2.3
 
 

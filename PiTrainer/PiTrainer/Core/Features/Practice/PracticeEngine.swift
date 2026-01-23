@@ -135,6 +135,7 @@ class PracticeEngine {
     
     // V2 Configuration
     var allowErrors: Bool = false
+    var isIndulgent: Bool = false // Story 10.1: Auto-Advance
     var autoRestart: Bool = false
     private(set) var startIndex: Int = 0
     private(set) var endIndex: Int? = nil
@@ -268,8 +269,14 @@ class PracticeEngine {
             currentStreak = 0
             
             // Mode-specific behavior
-            // Extended logic for V2: allowErrors override
-            if allowErrors {
+            // Extended logic for V2: isIndulgent takes priority for Auto-Advance
+            if isIndulgent && mode != .strict {
+                // Story 10.1: Indulgent Mode
+                // If enabled (and not strict), we advance even on error.
+                // Error is counted (errors += 1 above).
+                indexAdvanced = true
+                currentIndex += 1
+            } else if allowErrors {
                 // If errors allow, we don't finish.
                 // We stay on index (typical behavior for learn mode)
                 indexAdvanced = false
@@ -308,6 +315,24 @@ class PracticeEngine {
         // Only allow backspace if running or ready (though ready implies index 0)
         guard isReadyOrRunning && currentIndex > 0 else { return }
         currentIndex -= 1
+    }
+    
+    /// Resets the current loop to the start index without clearing session stats
+    func resetLoop() {
+        // Reset index to start of current loop/segment
+        currentIndex = startIndex
+        
+        // Reset streak local to this loop attempt
+        currentStreak = 0
+        
+        // Reset timing capability for next input
+        lastCorrectInputTime = nil
+        
+        // Explicitly NOT resetting:
+        // - attempts
+        // - errors
+        // - elapsedTimeInternal / startTime
+        // - bestStreak (global to session)
     }
     
     /// Resets all state and statistics

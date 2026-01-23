@@ -94,10 +94,22 @@ development_status:
   8-7-learn-visuals-refinement: done
   epic-8-retrospective: done
 
-  epic-9: in-progress
+  epic-9: done
   9-1-ghost-engine: done
   9-2-horizon-line: done
-  9-3-atmospheric-feedback: review
-  9-4-game-mode-error-handling: backlog
+  9-3-atmospheric-feedback: done
+  9-4-game-mode-error-handling: done
   9-5-dynamic-pr-recording: done
-  9-6-game-mode-rules: backlog
+  9-6-game-mode-rules: done
+  epic-9-retrospective: done
+
+  epic-10: done
+  10-1-mode-indulgent-auto-advance-on-error: done
+  10-2-reinitialisation-de-serie-loop-reset: done
+  10-3-fix-learn-mode-ui: done
+  epic-10-retrospective: done
+
+  epic-11: backlog
+  11-1-systeme-de-defis-quotidiens-static-curated: backlog
+  11-2-systeme-d-xp-zero-code-grades: backlog
+  11-3-animation-double-bang-reward: backlog

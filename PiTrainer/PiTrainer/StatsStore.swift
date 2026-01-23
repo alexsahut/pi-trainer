@@ -155,6 +155,13 @@ class StatsStore: ObservableObject {
         }
     }
     
+    // Story 10.1: Auto-Advance Setting
+    @Published var isAutoAdvanceEnabled: Bool = false {
+        didSet {
+            persistence.saveAutoAdvance(isAutoAdvanceEnabled)
+        }
+    }
+    
     // MARK: - Private Properties
     
     private let persistence: PracticePersistenceProtocol
@@ -356,6 +363,12 @@ class StatsStore: ObservableObject {
             selectedGhostType = type
         } else {
             selectedGhostType = .crown
+        }
+        
+        if let autoAdvance = persistence.loadAutoAdvance() {
+            isAutoAdvanceEnabled = autoAdvance
+        } else {
+            isAutoAdvanceEnabled = false // Default
         }
         
         // 2. Load Stats

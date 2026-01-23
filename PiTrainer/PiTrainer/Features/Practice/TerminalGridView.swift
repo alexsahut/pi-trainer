@@ -77,6 +77,9 @@ struct TerminalGridView: View {
     /// Index of the last correctly typed digit (for active highlight)
     var activeIndex: Int? = nil
     
+    /// Indices of digits that were errors but auto-advanced (Story 10.1)
+    var indulgentErrorIndices: Set<Int> = []
+    
     // MARK: - Computed Properties
     
     private var rows: [TerminalRow] {
@@ -184,7 +187,7 @@ struct TerminalGridView: View {
                                     if i < row.digits.count {
                                         let digit = row.digits[i]
                                         let isLastDigitInRow = (row.id == rows.last?.id && i == row.digits.count - 1)
-                                        digitView(digit: digit, state: digitState(localIndex: i, isLast: isLastDigitInRow))
+                                        digitView(digit: digit, state: digitState(row: row, localIndex: i, isLast: isLastDigitInRow))
                                     } else if i < (revealedDigitsPerRow[row.id] ?? 0) || isLearnMode || (showErrorReveal && startOffset + (row.id * 10) + i == typedDigits.count) {
                                         let globalIndex = startOffset + (row.id * 10) + i
                                         if globalIndex < fullDigits.count {
@@ -264,12 +267,26 @@ struct TerminalGridView: View {
         }
     }
     
-    private func digitState(localIndex: Int, isLast: Bool) -> DigitState {
+    private func digitState(row: TerminalRow, localIndex: Int, isLast: Bool) -> DigitState {
+        // Calculate global index relative to typedDigits (0-based)
+        // startOffset allows handling segments correctly (Story 8.3)
+        let globalIndex = startOffset + (row.id * 10) + localIndex
+        
+        // Story 10.1: Check for Indulgent Errors (Permanent Marker)
+        if indulgentErrorIndices.contains(globalIndex) {
+            return .error
+        }
+        
+        // Standard State Logic
         if isLast && showErrorFlash {
             return .error
-        } else if isLast || localIndex == activeIndex {
+        } else if isLast { 
+            // The last typed digit is usually active
             return .active
+        } else if let activeIndex = activeIndex, globalIndex == activeIndex {
+             return .active
         }
+        
         return .normal
     }
     

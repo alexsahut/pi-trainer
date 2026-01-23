@@ -162,7 +162,11 @@ L'approche MVP instaure la structure tripolaire de l'application :
     - **Grades :** Progression basée sur l'XP (Endurance).
     - **Speed Bonus :** Récompense spécifique pour avoir battu le Ghost.
     - **Double Bang :** Animation spéciale lors de l'obtention simultanée Grade + Speed Bonus.
-- **FR14 (Streak Flow) :** Le mécanisme de streak flow (animations visuelles de combo) est actif dans tous les modes (Learn/Practice/Play).
+- **FR14 (Streak Flow) : Epic 2 - Story 2.3** Le mécanisme de streak flow (animations visuelles de combo) est actif dans tous les modes (Learn/Practice/Play).
+
+### 6. User Experience & Refinements (Community Feedback)
+- **FR15 (Forgiving Flow) : Epic 10 - Story 10.1** Option "Mode Indulgent" permettant d'avancer le curseur même en cas d'erreur (avec pénalité) pour préserver le flow.
+- **FR16 (Loop Reset) : Epic 10 - Story 10.2** En mode Learn, possibilité de réinitialiser le segment en cours sans perdre les statistiques globales de la session.
 
 ---
 
