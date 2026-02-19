@@ -38,7 +38,7 @@ struct GradeBadge: View {
                 HStack(spacing: 4) {
                     Text("\(xp)")
                         .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
-                    Text("XP")
+                    Text("grade.xp")
                         .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }

@@ -208,14 +208,6 @@ struct HomeView: View {
         }
     }
     
-    private var constantTitle: String {
-        switch statsStore.selectedConstant {
-        case .pi: return "PI TRAINER"
-        case .e: return "E TRAINER"
-        case .sqrt2: return "SQRT2 TRAINER"
-        case .phi: return "PHI TRAINER"
-        }
-    }
 }
 
 #Preview {

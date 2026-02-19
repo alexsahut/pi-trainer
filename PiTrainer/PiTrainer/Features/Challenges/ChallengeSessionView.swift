@@ -4,6 +4,7 @@ struct ChallengeSessionView: View {
     @Environment(NavigationCoordinator.self) private var coordinator
     @State private var viewModel: ChallengeViewModel
     @State private var showCelebration: Bool = false
+    @State private var navigationTask: Task<Void, Never>?
     
     // Callback for completion, similar to SessionViewModel
     var onComplete: ((Date) -> Void)?
@@ -64,7 +65,9 @@ struct ChallengeSessionView: View {
                 triggerCelebration()
                 
                 // For now, just call back and pop
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { // Delay for animation
+                navigationTask = Task {
+                    try? await Task.sleep(for: .seconds(2.5)) // Delay for animation
+                    guard !Task.isCancelled else { return }
                     onComplete?(Date())
                     coordinator.pop()
                 }
@@ -86,13 +89,17 @@ struct ChallengeSessionView: View {
                 // Ideally: Pop to Root, then Push Session.
                 coordinator.popToRoot()
                 
-                // Small delay to allow pop animation? 
-                // Or Coordinator handles it.
-                // Using a slight delay to ensure state settles.
-                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                     coordinator.push(.session(mode: .learning)) // Use mapped enum
-                 }
+                // Small delay to allow pop animation
+                navigationTask = Task {
+                    try? await Task.sleep(for: .seconds(0.3))
+                    guard !Task.isCancelled else { return }
+                    coordinator.push(.session(mode: .learning))
+                }
             }
+        }
+        .onDisappear {
+            navigationTask?.cancel()
+            navigationTask = nil
         }
     }
     

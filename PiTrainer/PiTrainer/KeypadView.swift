@@ -86,6 +86,8 @@ struct KeypadButton: View {
                 Text(label)
                     .font(DesignSystem.Fonts.monospaced(size: 28, weight: .bold))
                     .foregroundColor(DesignSystem.Colors.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
                 
                 // Flash Overlay (Cyan)
                 if isFlashing {

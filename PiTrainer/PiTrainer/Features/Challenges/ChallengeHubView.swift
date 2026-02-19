@@ -30,7 +30,7 @@ struct ChallengeHubView: View {
                             .foregroundColor(DesignSystem.Colors.textPrimary)
                     }
                     Spacer()
-                    Text("CHALLENGES")
+                    Text("challenge.hub.title")
                         .font(DesignSystem.Fonts.monospaced(size: 16, weight: .bold))
                         .foregroundColor(DesignSystem.Colors.textPrimary)
                     Spacer()
@@ -99,7 +99,7 @@ struct ChallengeHubView: View {
                                 }) {
                                     HStack {
                                         Image(systemName: "bolt.fill")
-                                        Text("TRAIN NOW")
+                                        Text("challenge.hub.train_now")
                                     }
                                     .font(DesignSystem.Fonts.monospaced(size: 14, weight: .bold))
                                     .foregroundColor(DesignSystem.Colors.cyanElectric)
@@ -111,7 +111,7 @@ struct ChallengeHubView: View {
                                     )
                                 }
                                 
-                                Text("Unlimited practice • Does not affect streak")
+                                Text("challenge.hub.unlimited_practice")
                                     .font(DesignSystem.Fonts.primary(size: 10))
                                     .foregroundColor(DesignSystem.Colors.textSecondary)
                             }

@@ -9,7 +9,6 @@ class ChallengeViewModel {
     var isCompleted: Bool = false
     var isErrorShakeActive: Bool = false
     
-    // Derived properties
     var isShowingRecovery: Bool = false
     var shouldNavigateToPractice: Bool = false
     
