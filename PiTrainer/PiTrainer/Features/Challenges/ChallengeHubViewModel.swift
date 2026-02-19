@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 
 @Observable
+@MainActor
 class ChallengeHubViewModel {
     var dailyChallenge: Challenge?
     var presentedChallenge: Challenge?
@@ -9,16 +10,39 @@ class ChallengeHubViewModel {
     var isDailyCompleted: Bool = false
     var errorText: String?
     
+    /// Minimum number of digits the user must have practiced before challenges unlock
+    static let minimumDigitsForChallenge = 50
+    
+    /// Whether the user has practiced enough digits to access challenges
+    var isChallengeEligible: Bool {
+        persistence.getHighestIndex(for: statsStore.selectedConstant.id) >= Self.minimumDigitsForChallenge
+    }
+    
+    /// How many more digits the user needs to unlock challenges
+    var digitsRemainingToUnlock: Int {
+        let current = persistence.getHighestIndex(for: statsStore.selectedConstant.id)
+        return max(0, Self.minimumDigitsForChallenge - current)
+    }
+    
     private let service: ChallengeServiceProtocol
     private let statsStore: StatsStore
+    private let persistence: PracticePersistenceProtocol
     
     init(service: ChallengeServiceProtocol,
-         statsStore: StatsStore = .shared) {
+         statsStore: StatsStore = .shared,
+         persistence: PracticePersistenceProtocol? = nil) {
         self.service = service
         self.statsStore = statsStore
+        self.persistence = persistence ?? PracticePersistence()
     }
     
     func loadDailyChallenge() async {
+        guard isChallengeEligible else {
+            self.errorText = nil  // Not an error — it's a pre-requisite
+            self.dailyChallenge = nil
+            return
+        }
+        
         let today = Date()
         let constant = statsStore.selectedConstant
         let grade = statsStore.currentGrade
@@ -33,6 +57,11 @@ class ChallengeHubViewModel {
     }
     
     func trainNow() async {
+        guard isChallengeEligible else {
+            self.errorText = nil
+            return
+        }
+        
         let constant = statsStore.selectedConstant
         let grade = statsStore.currentGrade
         

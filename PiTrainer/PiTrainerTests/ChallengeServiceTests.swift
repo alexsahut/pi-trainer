@@ -117,8 +117,10 @@ final class ChallengeServiceTests: XCTestCase {
     }
     
     func testGenerateDailyChallenge_Deterministic() async {
-        persistence.saveHighestIndex(5, for: Constant.pi.id)
-        provider = ChallengeMockDigitsProvider(digits: "1415926535") // 10 digits
+        // Use >= 50 digits (minimum threshold) with highestIndex = 60
+        let longDigits = String(repeating: "1415926535", count: 10) // 100 digits
+        persistence.saveHighestIndex(60, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
         
         // Re-init service with a local provider reference to avoid capture issues
         guard let testProvider = provider else {
@@ -146,7 +148,6 @@ final class ChallengeServiceTests: XCTestCase {
         XCTAssertEqual(challenge1.startIndex, challenge2.startIndex, "Start indices should be equal (Deterministic RNG)")
         
         XCTAssertEqual(challenge1.constant, .pi)
-        XCTAssertLessThanOrEqual(challenge1.startIndex, 4, "Start index \(challenge1.startIndex) should be <= 4")
     }
     
     func testPersistence_Completion() {
@@ -181,8 +182,9 @@ final class ChallengeServiceTests: XCTestCase {
     }
     
     func testGenerateRandomChallenge_Variation() async {
-        // Setup a provider with enough data
-        provider = ChallengeMockDigitsProvider(digits: "141592653589793238462643383279") // 30 digits
+        // Setup a provider with enough data (must be >= 50 for minimum threshold)
+        let longDigits = String(repeating: "141592653589793238462643383279", count: 4) // 120 digits
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
         
         // Re-init service
         guard let testProvider = provider else {
@@ -196,7 +198,7 @@ final class ChallengeServiceTests: XCTestCase {
         
         // We expect different challenges if we call it multiple times, unlike Daily
         let grade: Grade = .novice
-        persistence.saveHighestIndex(20, for: Constant.pi.id)
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
         
         let challenge1 = await service.generateRandomChallenge(for: .pi, grade: grade)
         let challenge2 = await service.generateRandomChallenge(for: .pi, grade: grade)
@@ -212,10 +214,10 @@ final class ChallengeServiceTests: XCTestCase {
     }
 
     func testChallengeGenerationRespectsScope() async {
-        // Setup: highestIndex = 10. Challenge length for novice = 3.
-        // If startIndex is 9, expected digits would be at 10, 11, 12, which is out of scope.
-        persistence.saveHighestIndex(10, for: Constant.pi.id)
-        provider = ChallengeMockDigitsProvider(digits: "141592653589793238462643383279") // 30 digits
+        // Setup: highestIndex = 60 (above minimum threshold 50). Challenge length for novice = 3.
+        let longDigits = String(repeating: "141592653589793238462643383279", count: 4) // 120 digits
+        persistence.saveHighestIndex(60, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
         
         service = ChallengeService(
             persistence: persistence,
@@ -228,7 +230,44 @@ final class ChallengeServiceTests: XCTestCase {
             }
             
             let totalReached = challenge.startIndex + challenge.referenceSequence.count + challenge.expectedNextDigits.count
-            XCTAssertLessThanOrEqual(totalReached, 10, "Challenge reached index \(totalReached) but highestIndex is 10. StartIndex: \(challenge.startIndex), Prompt: \(challenge.referenceSequence), Expected: \(challenge.expectedNextDigits)")
+            XCTAssertLessThanOrEqual(totalReached, 60, "Challenge reached index \(totalReached) but highestIndex is 60. StartIndex: \(challenge.startIndex), Prompt: \(challenge.referenceSequence), Expected: \(challenge.expectedNextDigits)")
+        }
+    }
+    
+    // Story 15.2: Test cold start returns nil
+    func testGenerateChallenge_HighestIndexTooLow_ReturnsNil() async {
+        persistence.saveHighestIndex(0, for: Constant.pi.id)
+        let challenge = await service.generateDailyChallenge(for: .pi, date: Date(), grade: .novice)
+        XCTAssertNil(challenge, "Challenge should be nil when highestIndex is 0 (below minimum threshold)")
+        
+        persistence.saveHighestIndex(49, for: Constant.pi.id)
+        let challenge2 = await service.generateDailyChallenge(for: .pi, date: Date(), grade: .novice)
+        XCTAssertNil(challenge2, "Challenge should be nil when highestIndex is 49 (below minimum 50)")
+    }
+    
+    // Story 15.2: Test E2E validation — sequence matches actual digits
+    func testGenerateChallenge_E2E_SequenceMatchesProvider() async {
+        let piDigits = "14159265358979323846264338327950288419716939937510" // 50 real pi digits
+        let longDigits = piDigits + piDigits // 100 digits
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+        
+        for _ in 0..<10 {
+            guard let challenge = await service.generateRandomChallenge(for: .pi, grade: .novice) else {
+                continue
+            }
+            
+            // Verify E2E: challenge.referenceSequence + expectedNextDigits == actual digits at startIndex
+            let fullSeq = challenge.referenceSequence + challenge.expectedNextDigits
+            let startIdx = longDigits.index(longDigits.startIndex, offsetBy: challenge.startIndex)
+            let endIdx = longDigits.index(startIdx, offsetBy: fullSeq.count)
+            let actualSlice = String(longDigits[startIdx..<endIdx])
+            
+            XCTAssertEqual(fullSeq, actualSlice, "E2E: Challenge sequence '\(fullSeq)' at index \(challenge.startIndex) should match actual digits '\(actualSlice)'")
         }
     }
     
@@ -261,15 +300,17 @@ final class ChallengeHubViewModelTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         persistence = ChallengeMockPersistence()
-        provider = ChallengeMockDigitsProvider(digits: "141592653589793238462643383279") // 30 digits
-        persistence.saveHighestIndex(15, for: Constant.pi.id)
+        // Must be >= 50 digits and >= 50 highestIndex for minimum threshold
+        let longDigits = String(repeating: "141592653589793238462643383279", count: 4) // 120 digits
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
         
         service = ChallengeService(
             persistence: persistence,
             digitsProviderFactory: { _ in self.provider }
         )
         
-        vm = ChallengeHubViewModel(service: service)
+        vm = ChallengeHubViewModel(service: service, persistence: persistence)
     }
     
     func testTrainNow_GeneratesChallenge() async {
@@ -285,5 +326,24 @@ final class ChallengeHubViewModelTests: XCTestCase {
         
         // Verify it's not marked as completed automatically
         XCTAssertFalse(service.isChallengeCompleted(for: Date()), "Random challenge should not affect daily completion status")
+    }
+    
+    // Story 15.2: Test eligibility check
+    func testChallengeEligibility_BelowThreshold() async {
+        persistence.saveHighestIndex(10, for: Constant.pi.id)
+        XCTAssertFalse(vm.isChallengeEligible, "Should not be eligible with highestIndex = 10")
+        XCTAssertEqual(vm.digitsRemainingToUnlock, 40)
+    }
+    
+    func testChallengeEligibility_AboveThreshold() async {
+        persistence.saveHighestIndex(100, for: Constant.pi.id)
+        XCTAssertTrue(vm.isChallengeEligible, "Should be eligible with highestIndex = 100")
+        XCTAssertEqual(vm.digitsRemainingToUnlock, 0)
+    }
+    
+    func testTrainNow_NotEligible_ReturnsNil() async {
+        persistence.saveHighestIndex(5, for: Constant.pi.id)
+        await vm.trainNow()
+        XCTAssertNil(vm.presentedChallenge, "Should not generate challenge when not eligible")
     }
 }

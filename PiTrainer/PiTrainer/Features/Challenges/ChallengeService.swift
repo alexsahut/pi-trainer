@@ -29,6 +29,9 @@ class ChallengeService: ChallengeServiceProtocol {
     private let persistence: PracticePersistenceProtocol
     private let digitsProviderFactory: (Constant) -> DigitsProvider
     
+    /// Minimum highestIndex required to generate a meaningful challenge
+    static let minimumHighestIndex = 50
+    
     init(persistence: PracticePersistenceProtocol,
          digitsProviderFactory: @escaping (Constant) -> DigitsProvider) {
         self.persistence = persistence
@@ -102,8 +105,12 @@ class ChallengeService: ChallengeServiceProtocol {
     }
     
     func generateDailyChallenge(for constant: Constant, date: Date, grade: Grade) async -> Challenge? {
-        // Safe lower bound: ensure at least 10 digits to search, or 0 if totally empty
-        let highestIndex = max(1, persistence.getHighestIndex(for: constant.id))
+        let rawHighestIndex = persistence.getHighestIndex(for: constant.id)
+        guard rawHighestIndex >= Self.minimumHighestIndex else {
+            print("ChallengeService: highestIndex (\(rawHighestIndex)) below minimum threshold (\(Self.minimumHighestIndex))")
+            return nil
+        }
+        let highestIndex = rawHighestIndex
         
         // Load digits (Main Thread OK for load, but logic should be background)
         var provider = digitsProviderFactory(constant)
@@ -157,7 +164,12 @@ class ChallengeService: ChallengeServiceProtocol {
     }
 
     func generateRandomChallenge(for constant: Constant, grade: Grade) async -> Challenge? {
-        let highestIndex = max(1, persistence.getHighestIndex(for: constant.id))
+        let rawHighestIndex = persistence.getHighestIndex(for: constant.id)
+        guard rawHighestIndex >= Self.minimumHighestIndex else {
+            print("ChallengeService: highestIndex (\(rawHighestIndex)) below minimum threshold (\(Self.minimumHighestIndex))")
+            return nil
+        }
+        let highestIndex = rawHighestIndex
         
         var provider = digitsProviderFactory(constant)
         do {
@@ -243,7 +255,7 @@ class ChallengeService: ChallengeServiceProtocol {
             expected = String(decoding: allDigits[expectedStart..<expectedEnd], as: UTF8.self)
         }
         
-        return Challenge(
+        let challenge = Challenge(
             id: UUID(),
             date: date,
             constant: constant,
@@ -251,6 +263,17 @@ class ChallengeService: ChallengeServiceProtocol {
             referenceSequence: refSeq,
             expectedNextDigits: expected
         )
+        
+        // Story 15.2: E2E Validation — verify the generated sequence matches actual digits
+        let fullSequence = refSeq + expected
+        let fullSequenceBytes = Array(fullSequence.utf8)
+        let actualBytes = Array(allDigits[startIndex..<(startIndex + fullSequenceBytes.count)])
+        guard fullSequenceBytes == actualBytes else {
+            print("ChallengeService: E2E VALIDATION FAILED. Expected \(fullSequence) at index \(startIndex) but got \(String(decoding: actualBytes, as: UTF8.self))")
+            return nil
+        }
+        
+        return challenge
     }
 }
 
