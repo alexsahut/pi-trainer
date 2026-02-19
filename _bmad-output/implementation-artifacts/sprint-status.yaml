@@ -134,7 +134,7 @@ development_status:
   14-3-zen-keyboard-alignment: done
 
   epic-15: in-progress
-  15-1-crash-prevention: backlog
+  15-1-crash-prevention: review
   15-2-challenge-mode-cold-start-fix: backlog
   15-3-ui-ux-fixes: backlog
   15-4-test-repair: backlog

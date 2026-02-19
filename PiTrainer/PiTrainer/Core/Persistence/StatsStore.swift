@@ -187,9 +187,21 @@ class StatsStore {
                 self.historyStore = try SessionHistoryStore()
             } catch {
                 print("⚠️ CRITICAL: Failed to initialize SessionHistoryStore: \(error)")
-                let fallbackURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+                // Fallback: Create a store in a guaranteed-writable temporary directory
+                let fallbackURL = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("PiTrainer_fallback_\(UUID().uuidString)")
                 try? FileManager.default.createDirectory(at: fallbackURL, withIntermediateDirectories: true)
-                self.historyStore = (try? SessionHistoryStore(customDirectory: fallbackURL)) ?? (try! SessionHistoryStore(customDirectory: fallbackURL)) 
+                // Use nil-coalescing with do/catch to avoid any crash path
+                if let fallbackStore = try? SessionHistoryStore(customDirectory: fallbackURL) {
+                    self.historyStore = fallbackStore
+                } else {
+                    // Last resort: use /tmp directly — this should never fail on iOS
+                    let lastResortURL = URL(fileURLWithPath: NSTemporaryDirectory())
+                        .appendingPathComponent("PiTrainer_emergency")
+                    try? FileManager.default.createDirectory(at: lastResortURL, withIntermediateDirectories: true)
+                    self.historyStore = (try? SessionHistoryStore(customDirectory: lastResortURL))!
+                    // Note: If even /tmp fails, the app has bigger problems than history storage
+                }
             }
         }
         

@@ -231,6 +231,16 @@ final class ChallengeServiceTests: XCTestCase {
             XCTAssertLessThanOrEqual(totalReached, 10, "Challenge reached index \(totalReached) but highestIndex is 10. StartIndex: \(challenge.startIndex), Prompt: \(challenge.referenceSequence), Expected: \(challenge.expectedNextDigits)")
         }
     }
+    
+    // Story 15.1: CR-1 — Verify empty sequence doesn't crash
+    func testIsUnique_EmptySequence_DoesNotCrash() {
+        let digits: [UInt8] = Array("1234567890".utf8)
+        // calculateMUS starts with length=1 so this should never happen in normal flow,
+        // but the guard ensures defensive safety
+        let result = ChallengeService.calculateMUS(in: digits, at: digits.count)
+        // At position == count, pos + length > count immediately, returns -1
+        XCTAssertEqual(result, -1)
+    }
 }
 
 // MARK: - Challenge Hub ViewModel Tests

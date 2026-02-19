@@ -348,8 +348,10 @@ class PracticeEngine {
         elapsedTimeInternal = 0
     }
     
-    // MARK: - Private Methods
+    // MARK: - Internal Methods (used by SessionViewModel)
     
+    /// Ends the session and stops the timer.
+    /// Internal visibility: called by `SessionViewModel` for game-over, quit, and error-limit scenarios.
     func finishSession() {
         if state == .running {
             pauseTimer()

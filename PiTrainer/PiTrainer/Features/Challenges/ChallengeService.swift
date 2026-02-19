@@ -58,12 +58,13 @@ class ChallengeService: ChallengeServiceProtocol {
     }
     
     private static func isUnique(sequence: ArraySlice<UInt8>, in digits: [UInt8]) -> Bool {
+        guard let firstByte = sequence.first else { return false }
         var count = 0
         let seqCount = sequence.count
         let lastStart = digits.count - seqCount
         
         for i in 0...lastStart {
-            if digits[i] == sequence.first! {
+            if digits[i] == firstByte {
                 var match = true
                 for j in 1..<seqCount {
                     if digits[i+j] != sequence[sequence.startIndex + j] {
