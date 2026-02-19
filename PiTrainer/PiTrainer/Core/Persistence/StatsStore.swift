@@ -110,29 +110,37 @@ struct ConstantStats: Codable, Equatable {
 
 /// Manages persistence of statistics and global records
 @MainActor
-class StatsStore: ObservableObject {
+@Observable
+class StatsStore {
     
-    // MARK: - Published Properties
+    // MARK: - Singleton
+    static let shared = StatsStore(persistence: PracticePersistence())
+
+    // MARK: - Properties
     
-    @Published private(set) var stats: [Constant: ConstantStats] = [:]
+    private(set) var stats: [Constant: ConstantStats] = [:]
     
+    // Story 11.2: Zero-Code XP System
+    private(set) var totalCorrectDigits: Int = 0
+    
+    var currentGrade: Grade {
+        Grade.from(xp: totalCorrectDigits)
+    }
+
     /// Cached history to avoid repeated file reads. 
     /// Keyed by constant.
-    @Published private(set) var historyCache: [Constant: [SessionRecord]] = [:]
+    private(set) var historyCache: [Constant: [SessionRecord]] = [:]
     
     /// Indicates if history is currently being loaded for the selected constant
-    @Published private(set) var isHistoryLoading: Bool = false
+    private(set) var isHistoryLoading: Bool = false
     
-    @Published var keypadLayout: KeypadLayout = .phone {
+    var keypadLayout: KeypadLayout = .phone {
         didSet {
             persistence.saveKeypadLayout(keypadLayout.rawValue)
         }
     }
     
-    func hello() { print("DEBUG: StatsStore hello") }
-    
-    
-    @Published var selectedConstant: Constant = .pi {
+    var selectedConstant: Constant = .pi {
         didSet {
             persistence.saveSelectedConstant(selectedConstant.rawValue)
             // Proactive load to avoid UI flashing
@@ -140,23 +148,20 @@ class StatsStore: ObservableObject {
         }
     }
     
-
-    
-    @Published var selectedMode: SessionMode = .learn {
+    var selectedMode: SessionMode = .learn {
         didSet {
-            // persistence.saveSelectedMode(selectedMode.rawValue)
             UserDefaults.standard.set(selectedMode.rawValue, forKey: "selectedMode")
         }
     }
     
-    @Published var selectedGhostType: PRType = .crown {
+    var selectedGhostType: PRType = .crown {
         didSet {
             persistence.saveSelectedGhostType(selectedGhostType.rawValue)
         }
     }
     
     // Story 10.1: Auto-Advance Setting
-    @Published var isAutoAdvanceEnabled: Bool = false {
+    var isAutoAdvanceEnabled: Bool = false {
         didSet {
             persistence.saveAutoAdvance(isAutoAdvanceEnabled)
         }
@@ -170,7 +175,7 @@ class StatsStore: ObservableObject {
     
     // MARK: - Initialization
     
-    init(persistence: PracticePersistenceProtocol = PracticePersistence(), 
+    init(persistence: PracticePersistenceProtocol, 
          historyStore: SessionHistoryStore? = nil) {
         self.persistence = persistence
         
@@ -181,9 +186,7 @@ class StatsStore: ObservableObject {
             do {
                 self.historyStore = try SessionHistoryStore()
             } catch {
-                // FALLBACK: Log error but do NOT crash. 
                 print("⚠️ CRITICAL: Failed to initialize SessionHistoryStore: \(error)")
-                // Create a temporary store as fallback without try!
                 let fallbackURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
                 try? FileManager.default.createDirectory(at: fallbackURL, withIntermediateDirectories: true)
                 self.historyStore = (try? SessionHistoryStore(customDirectory: fallbackURL)) ?? (try! SessionHistoryStore(customDirectory: fallbackURL)) 
@@ -195,7 +198,6 @@ class StatsStore: ObservableObject {
         loadStats()
         loadHistoryEagerly(for: selectedConstant)
         
-        // Story 8.5: Recovery check - Ensure stats are in sync with history
         Task { @MainActor in
             await repairStatsFromHistory()
         }
@@ -203,28 +205,22 @@ class StatsStore: ObservableObject {
     
     // MARK: - Public Methods
     
-    /// Returns stats for a specific constant (or empty default)
     func stats(for constant: Constant) -> ConstantStats {
         return stats[constant] ?? .empty
     }
     
-    /// Helper to get best streak for the currently selected constant (or any other)
     func bestStreak(for constant: Constant) -> Int {
         return stats(for: constant).bestStreak
     }
     
-    /// Helper to get last session for the currently selected constant (or any other)
     func lastSession(for constant: Constant) -> SessionRecord? {
         return stats(for: constant).lastSession
     }
     
-    /// Returns the history for a specific constant, most recent first.
-    /// This returns the cache immediately. Use loadHistory(for:) to refresh.
     func history(for constant: Constant) -> [SessionRecord] {
         return historyCache[constant] ?? []
     }
 
-    /// Explicitly loads or refreszes history for a constant.
     @MainActor
     func loadHistory(for constant: Constant) async {
         isHistoryLoading = true
@@ -233,7 +229,6 @@ class StatsStore: ObservableObject {
         do {
             let records = try await historyStore.loadHistory(for: constant)
             self.historyCache[constant] = records
-            print("debug: loaded \(records.count) records for \(constant)")
         } catch {
             print("❌ Error loading history for \(constant): \(error)")
         }
@@ -245,7 +240,6 @@ class StatsStore: ObservableObject {
         }
     }
 
-    /// Updates the best streak for a constant if the new value is higher
     func updateBestStreakIfNeeded(_ streak: Int, for constant: Constant) {
         var currentStats = stats(for: constant)
         if streak > currentStats.bestStreak {
@@ -255,71 +249,78 @@ class StatsStore: ObservableObject {
         }
     }
     
-    /// Adds a new session record to history and updates stats
     func addSessionRecord(_ record: SessionRecord) {
-        print("debug: StatsStore adding record for \(record.constant) - streak: \(record.bestStreakInSession), loops: \(record.loops), segment: \(record.segmentStart ?? -1)-\(record.segmentEnd ?? -1)")
+        let previousGrade = currentGrade
         var currentStats = stats(for: record.constant)
+        let previousBestStreak = currentStats.bestStreak
         
-        // Update last session
         currentStats.lastSession = record
         
-        // Update best streak and BEST session if needed
-        // Story 8.5/9.5: Exclude Learn Mode AND require Certification for Best Streak calculation
+        var isNewPB = false
         if record.isCertified {
             if record.bestStreakInSession > currentStats.bestStreak {
-                print("debug: new record streak! \(record.bestStreakInSession) > \(currentStats.bestStreak)")
                 currentStats.bestStreak = record.bestStreakInSession
                 currentStats.bestSession = record
+                isNewPB = previousBestStreak > 0 // Only count as "beating" if there was a previous record
             } else if record.bestStreakInSession == currentStats.bestStreak {
-                // If same streak, keep the faster one or the most recent?
-                // Let's keep the most recent for now to update metadata.
                 currentStats.bestSession = record
             }
         }
 
-        
         stats[record.constant] = currentStats
         persistStats()
         
-        // Update history (Async & Atomic)
+        // Story 11.2: Update XP (Total Correct Digits) - Immediate update for UI responsiveness
+        let xpGained = max(0, record.attempts - record.errors)
+        self.totalCorrectDigits += xpGained
+        persistence.saveTotalCorrectDigits(self.totalCorrectDigits)
+        
+        // Story 11.3: Prepare Double Bang Detection (Triggered only after safe persistence)
+        let newGrade = currentGrade
+        let shouldTriggerDoubleBang = isNewPB && 
+                                      newGrade != previousGrade && 
+                                      (Grade.allCases.firstIndex(of: newGrade) ?? 0 > Grade.allCases.firstIndex(of: previousGrade) ?? 0)
+        
         Task { @MainActor in
             do {
                 let updatedHistory = try await historyStore.appendRecord(record, for: record.constant)
                 self.historyCache[record.constant] = updatedHistory
-                print("debug: history updated, new count for \(record.constant): \(updatedHistory.count)")
                 
-                // Story 5.1: Update Daily Streak
                 streakStore.recordSession()
-                
-                // Story 5.3: Update Daily Reminder
                 NotificationService.shared.scheduleDailyReminder(streak: streakStore.currentStreak)
+                
+                // Story 11.3: Trigger Reward only if persistence succeeded
+                if shouldTriggerDoubleBang {
+                    RewardManager.shared.triggerDoubleBang()
+                }
             } catch {
-                // Log error or handle
                 print("Failed to append record: \(error)")
             }
         }
     }
     
-    /// Clears the history for a specific constant (but keeps best streak)
+    // Story 13.2: Allow external components (like Challenge) to credit XP
+    func creditXP(amount: Int) {
+        self.totalCorrectDigits += amount
+        persistence.saveTotalCorrectDigits(self.totalCorrectDigits)
+    }
+
     func clearHistory(for constant: Constant) {
         var currentStats = stats(for: constant)
         currentStats.lastSession = nil
         stats[constant] = currentStats
         persistStats()
         
-        // Clear history file and cache
         historyCache[constant] = []
         Task { @MainActor in
             try? await historyStore.saveHistory([], for: constant)
         }
     }
     
-    /// Resets all statistics (for debugging or user request)
     func reset() {
         stats = [:]
         persistence.saveStats([:])
         
-        // Clear all history files
         Task { @MainActor in
             try? await historyStore.clearAllHistory()
             self.historyCache = [:]
@@ -327,13 +328,14 @@ class StatsStore: ObservableObject {
             NotificationService.shared.cancelPendingReminders()
             await PersonalBestStore.shared.reset()
             SegmentStore.shared.reset()
+            self.totalCorrectDigits = 0
+            persistence.saveTotalCorrectDigits(0)
         }
     }
     
     // MARK: - Private Methods
     
     private func loadStats() {
-        // 1. Load basic preferences
         if let layoutString = persistence.loadKeypadLayout(),
            let layout = KeypadLayout(rawValue: layoutString) {
             keypadLayout = layout
@@ -348,13 +350,10 @@ class StatsStore: ObservableObject {
             selectedConstant = .pi
         }
         
-
-        
         if let modeString = persistence.loadSelectedMode(),
            let mode = SessionMode(rawValue: modeString) {
             selectedMode = mode
         } else {
-            // New V2 default is .learn
             selectedMode = .learn
         }
         
@@ -368,81 +367,19 @@ class StatsStore: ObservableObject {
         if let autoAdvance = persistence.loadAutoAdvance() {
             isAutoAdvanceEnabled = autoAdvance
         } else {
-            isAutoAdvanceEnabled = false // Default
+            isAutoAdvanceEnabled = false
         }
         
-        // 2. Load Stats
         if let decodedStats = persistence.loadStats() {
             stats = decodedStats
-        } else {
-            // Check for migration
-            migrateIfNeeded()
-        }
-    }
-    
-    private func migrateIfNeeded() {
-        // Define temporary legacy struct for migration
-        struct LegacySessionSnapshot: Codable {
-            let attempts: Int
-            let errors: Int
-            let bestStreak: Int
-            let elapsedTime: TimeInterval
-            let digitsPerMinute: Double
-            let date: Date
         }
         
-        // Check if legacy keys exist in UserDefaults directly (one last time)
-        // Check if legacy keys exist in UserDefaults directly (one last time)
-        let legacyUserDefaults = UserDefaults.standard
-        let hasLegacyData = legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.globalBestStreak") != nil ||
-                           legacyUserDefaults.object(forKey: "com.alexandre.pitrainer.lastSession") != nil
-        
-        if hasLegacyData {
-            let legacyStreak = legacyUserDefaults.integer(forKey: "com.alexandre.pitrainer.globalBestStreak")
-            
-            var legacySessionRecord: SessionRecord?
-            if let sessionData = legacyUserDefaults.data(forKey: "com.alexandre.pitrainer.lastSession"),
-               let session = try? JSONDecoder().decode(LegacySessionSnapshot.self, from: sessionData) {
-                
-                    legacySessionRecord = SessionRecord(
-                        id: UUID(),
-                        date: session.date,
-                        constant: .pi,
-                        mode: .strict, // Map .test back to .strict for legacy engine
-                        sessionMode: .test,
-                        attempts: session.attempts,
-                        errors: session.errors,
-                        bestStreakInSession: session.bestStreak,
-                        durationSeconds: session.elapsedTime,
-                        digitsPerMinute: session.digitsPerMinute,
-                        revealsUsed: 0
-                    )
-            }
-            
-            var piStats = ConstantStats.empty
-            piStats.bestStreak = legacyStreak
-            if let rec = legacySessionRecord {
-                piStats.lastSession = rec
-                Task { @MainActor in
-                    try? await historyStore.saveHistory([rec], for: .pi)
-                    self.historyCache[.pi] = [rec]
-                }
-            }
-            
-            stats[.pi] = piStats
-            persistStats()
-            
-            // Cleanup legacy keys
-            legacyUserDefaults.removeObject(forKey: "com.alexandre.pitrainer.globalBestStreak")
-            legacyUserDefaults.removeObject(forKey: "com.alexandre.pitrainer.lastSession")
-        }
+        // Story 11.2: Load XP
+        totalCorrectDigits = persistence.loadTotalCorrectDigits()
     }
     
-    /// Story 8.5: Rebuilds best streaks and session records from the history files
-    /// This is a safety mechanism in case UserDefaults stats are lost or corrupted.
     @MainActor
     func repairStatsFromHistory() async {
-        print("debug: StatsStore starting stats repair from history...")
         var needsUpdate = false
         
         for constant in Constant.allCases {
@@ -455,42 +392,26 @@ class StatsStore: ObservableObject {
             
             if !records.isEmpty {
                 var currentStats = stats[constant] ?? .empty
-                
-                // 1. Repair Best Streak & Best Session
-                // 1. Repair Best Streak & Best Session
-                // Treat History as the Source of Truth.
-                // If the history file shows a best streak of X, then the stats must show X.
-                // This fixes issues where a phantom high score persists after history corruption/deletion.
-                //
-                // Fix for Story 8.5/9.5: Exclude Learn Mode AND require Certification for Best Streak calculation
-                // Note: We also explicitly include Test mode sessions with 0 reveals even if not marked certified, 
-                // to retroactively fix valid fails that were saved before the certification rule was refined.
                 let eligibleRecords = records.filter { 
                     $0.sessionMode != .learn && ($0.isCertified || ($0.sessionMode == .test && $0.revealsUsed == 0 && $0.errors <= 1))
                 }
                 let bestInHistory = eligibleRecords.max(by: { $0.bestStreakInSession < $1.bestStreakInSession })
                 
                 if let best = bestInHistory {
-                    // Update if there is a mismatch (either higher OR lower)
                     if currentStats.bestStreak != best.bestStreakInSession || currentStats.bestSession?.id != best.id {
-                         print("debug: syncing best streak for \(constant). Old: \(currentStats.bestStreak), New: \(best.bestStreakInSession)")
                          currentStats.bestStreak = best.bestStreakInSession
                          currentStats.bestSession = best
                          needsUpdate = true
                     }
                 } else {
-                    // If no eligible history (or all learn mode), result should be 0.
                     if currentStats.bestStreak > 0 {
-                        print("debug: no eligible history for \(constant) (maybe all learn mode?), resetting best streak to 0.")
                         currentStats.bestStreak = 0
                         currentStats.bestSession = nil
                         needsUpdate = true
                     }
                 }
                 
-                // 2. Repair Last Session
                 if currentStats.lastSession == nil, let last = records.first {
-                    print("debug: repairing last session for \(constant)")
                     currentStats.lastSession = last
                     needsUpdate = true
                 }
@@ -503,14 +424,26 @@ class StatsStore: ObservableObject {
         
         if needsUpdate {
             persistStats()
-            print("debug: stats repair completed and persisted.")
-        } else {
-            print("debug: no stats repair needed.")
         }
     }
     
     private func persistStats() {
         persistence.saveStats(stats)
+    }
+    
+    func recalculateTotalXP() async {
+        var total = 0
+        for constant in Constant.allCases {
+            let records = (try? await historyStore.loadHistory(for: constant)) ?? []
+            for record in records {
+                total += max(0, record.attempts - record.errors)
+            }
+        }
+        
+        await MainActor.run {
+            self.totalCorrectDigits = total
+            persistence.saveTotalCorrectDigits(total)
+        }
     }
 }
 // MARK: - Learning Store (Consolidated)

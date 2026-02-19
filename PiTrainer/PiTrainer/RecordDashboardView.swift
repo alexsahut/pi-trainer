@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct RecordDashboardView: View {
-    @ObservedObject var statsStore: StatsStore
+    private var statsStore = StatsStore.shared
     
     private let constants: [Constant] = [.pi, .e, .phi, .sqrt2]
     
@@ -147,6 +147,6 @@ struct RecordRow: View {
 #Preview {
     ZStack {
         DesignSystem.Colors.blackOLED.ignoresSafeArea()
-        RecordDashboardView(statsStore: StatsStore())
+        RecordDashboardView()
     }
 }

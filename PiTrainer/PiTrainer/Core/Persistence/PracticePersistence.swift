@@ -8,6 +8,7 @@
 import Foundation
 
 /// Protocol defining persistence operations for practice sessions and statistics.
+@MainActor
 protocol PracticePersistenceProtocol {
     /// Saves the highest index reached in a practice session for a specific constant.
     func saveHighestIndex(_ index: Int, for constantKey: String)
@@ -36,10 +37,19 @@ protocol PracticePersistenceProtocol {
     // Story 10.1: Auto-Advance Persistence
     func saveAutoAdvance(_ enabled: Bool)
     func loadAutoAdvance() -> Bool?
+    
+    // Story 11.1: Challenge Persistence
+    func saveLastChallengeDate(_ date: Date)
+    func loadLastChallengeDate() -> Date?
+    
+    // Story 11.2: XP Persistence
+    func saveTotalCorrectDigits(_ count: Int)
+    func loadTotalCorrectDigits() -> Int
 }
 
 /// Concrete implementation of PracticePersistence using UserDefaults.
 /// This class centralizes all small data persistence to guarantee <1ms access time.
+@MainActor
 class PracticePersistence: PracticePersistenceProtocol {
     let userDefaults: UserDefaults
     private let highestIndexKeyPrefix = "practice_highest_index_"
@@ -49,6 +59,8 @@ class PracticePersistence: PracticePersistenceProtocol {
     private let selectedModeKey = "com.alexandre.pitrainer.selectedMode"
     private let selectedGhostTypeKey = "com.alexandre.pitrainer.selectedGhostType"
     private let autoAdvanceKey = "com.alexandre.pitrainer.autoAdvance"
+    private let lastChallengeDateKey = "com.alexandre.pitrainer.lastChallengeDate"
+    private let totalCorrectDigitsKey = "com.alexandre.pitrainer.totalCorrectDigits"
     
     init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
@@ -127,5 +139,25 @@ class PracticePersistence: PracticePersistenceProtocol {
         // Return nil if not set, allows default handling in Store
         guard userDefaults.object(forKey: autoAdvanceKey) != nil else { return nil }
         return userDefaults.bool(forKey: autoAdvanceKey)
+    }
+    
+    // MARK: - Challenge Persistence
+    
+    func saveLastChallengeDate(_ date: Date) {
+        userDefaults.set(date, forKey: lastChallengeDateKey)
+    }
+    
+    func loadLastChallengeDate() -> Date? {
+        return userDefaults.object(forKey: lastChallengeDateKey) as? Date
+    }
+    
+    // MARK: - XP Persistence
+    
+    func saveTotalCorrectDigits(_ count: Int) {
+        userDefaults.set(count, forKey: totalCorrectDigitsKey)
+    }
+    
+    func loadTotalCorrectDigits() -> Int {
+        return userDefaults.integer(forKey: totalCorrectDigitsKey)
     }
 }

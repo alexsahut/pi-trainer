@@ -1,6 +1,7 @@
 import XCTest
 @testable import PiTrainer
 
+@MainActor
 final class ProPadViewModelTests: XCTestCase {
     
     var viewModel: ProPadViewModel!

@@ -1,4 +1,4 @@
-# generated: 2026-01-16
+# generated: 2026-01-24
 # project: pi-trainer
 # project_key: pi-trainer
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-01-16
+generated: 2026-01-24
 project: pi-trainer
 project_key: pi-trainer
 tracking_system: file-system
@@ -63,7 +63,7 @@ development_status:
   epic-3-retrospective: done
 
   epic-4: done
-  4-1-systeme-de-persistance-hybride      4.1-P-Records-Histoire: done
+  4-1-systeme-de-persistance-hybride-records-histoire: done
   4-2-dashboard-des-records-personnels-pb: done
   4-3-historique-detaille-des-performances: done
   epic-4-retrospective: done
@@ -81,12 +81,13 @@ development_status:
   epic-6-retrospective: done
 
   epic-7: done
-  7-1-mode-selector-home: done
+  7-1-mode-selector-sur-home-dual-selector-pattern: done
+  7-2-suppression-du-mode-des-reglages: done
   epic-7-retrospective: done
 
   epic-8: done
-  8-1-segment-selection-slider: done
-  8-2-permanent-overlay-learn: done
+  8-1-dual-slider-pour-selection-de-segment: done
+  8-2-overlay-permanent-en-mode-learn: done
   8-3-visualisation-segment-offset: done
   8-4-refined-learn-ux: done
   8-5-session-mode-persistence: done
@@ -109,7 +110,25 @@ development_status:
   10-3-fix-learn-mode-ui: done
   epic-10-retrospective: done
 
-  epic-11: backlog
-  11-1-systeme-de-defis-quotidiens-static-curated: backlog
-  11-2-systeme-d-xp-zero-code-grades: backlog
-  11-3-animation-double-bang-reward: backlog
+  epic-11: done
+  11-1-systeme-de-defis-quotidiens-static-curated: done
+  11-2-systeme-d-xp-zero-code-grades: done
+  11-3-animation-double-bang-reward: done
+  epic-11-retrospective: done
+
+  epic-12: done
+  12-1-home-screen-zen-layout-refactor: done
+  12-2-challenge-hub-navigation: done
+  12-3-visual-polish-fixes: done
+  epic-12-retrospective: done
+
+  epic-13: done
+  13-1-dedicated-challenge-ui: done
+  13-2-logic-integration-feedback: done
+  13-3-on-demand-training-mode: done
+  epic-13-retrospective: done
+
+  epic-14: done
+  14-1-contextual-ux: done
+  14-2-logic-integrity-scope: done
+  14-3-zen-keyboard-alignment: done

@@ -8,6 +8,7 @@
 import XCTest
 @testable import PiTrainer
 
+@MainActor
 final class PersonalBestStoreTests: XCTestCase {
     
     var store: PersonalBestStore!

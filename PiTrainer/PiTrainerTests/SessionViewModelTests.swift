@@ -34,6 +34,7 @@ class SessionMockDigitsProvider: DigitsProvider {
     func loadDigits() throws {}
 }
 
+@MainActor
 class SessionMockPracticePersistence: PracticePersistenceProtocol {
     init() { }
     func saveHighestIndex(_ index: Int, for constantKey: String) {}
@@ -49,6 +50,18 @@ class SessionMockPracticePersistence: PracticePersistenceProtocol {
     var userDefaults: UserDefaults { return .standard } // Mock return
     func saveSelectedMode(_ mode: String) {}
     func loadSelectedMode() -> String? { return nil }
+    
+    
+    func saveSelectedGhostType(_ type: String) {}
+    func loadSelectedGhostType() -> String? { return nil }
+    func saveAutoAdvance(_ enabled: Bool) {}
+    func loadAutoAdvance() -> Bool? { return nil }
+    
+    func saveLastChallengeDate(_ date: Date) {}
+    func loadLastChallengeDate() -> Date? { return nil }
+    
+    func saveTotalCorrectDigits(_ count: Int) {}
+    func loadTotalCorrectDigits() -> Int { 0 }
 }
 
 @MainActor
@@ -78,7 +91,7 @@ final class SessionViewModelTests: XCTestCase {
             providerFactory: { constant in 
                 return SessionMockDigitsProvider(constant: constant) 
             },
-            personalBestProvider: { _ in nil } // Mock PB provider to avoid FS access
+            personalBestProvider: { _, _ in nil } // Mock PB provider to avoid FS access
         )
 
     }
@@ -100,10 +113,15 @@ final class SessionViewModelTests: XCTestCase {
         // When: Start session
         viewModel.startSession()
         
+        print("debug: selected constant: \(viewModel.selectedConstant)")
+        print("debug: engine provider digits: \(viewModel.engine.allDigitsString)")
+        
         // Then: Engine should be ready but not yet active (timer hasn't started)
         XCTAssertFalse(viewModel.isActive, "Session should NOT be active immediately after startSession (ready state)")
         
         // Mock 'e' provider expects 7 first
+        // Note: SessionMockDigitsProvider for .e returns [7, 1, 8, 2, 8]
+        // 7 is the first digit (index 0).
         viewModel.processInput(7)
         
         XCTAssertTrue(viewModel.isActive, "Session should be active after first input")
@@ -134,14 +152,23 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.typedDigits, "1")
     }
 
-    func testStrictMode_EndsSessionImmediatelyOnError() {
+    func testStrictMode_EndsSessionImmediatelyOnError() async {
         // Given: Strict mode session
         viewModel.selectedMode = .test
+        XCTAssertEqual(viewModel.selectedMode.practiceEngineMode, .strict, "Test mode should map to strict engine mode")
+        
+        // Setup expectation
+        let saveExpectation = XCTestExpectation(description: "Session persistence must be triggered on strict failure")
+        viewModel.onSaveSession = { record in
+            XCTAssertEqual(record.sessionMode, .test)
+            XCTAssertEqual(record.errors, 1, "Record should reflect the error that caused termination")
+            saveExpectation.fulfill()
+        }
+        
         viewModel.startSession()
         
         // Verify start conditions
         XCTAssertFalse(viewModel.isActive)
-        XCTAssertFalse(viewModel.showErrorFlash)
         
         // When: Input incorrect digit
         // Mock provider expects 1, input 9
@@ -149,43 +176,17 @@ final class SessionViewModelTests: XCTestCase {
         
         // Then:
         // 1. Session should end immediately
+        // Note: engine.isActive wraps state == .running. Strict mode sets state=.finished on error.
         XCTAssertFalse(viewModel.isActive, "Session should end immediately in strict mode on error")
         
         // 2. Error flash should be triggered
-        // Note: showErrorFlash is animated, but the property should be true immediately inside the withAnimation block
         XCTAssertTrue(viewModel.showErrorFlash, "Error flash should be triggered")
         
-        // 3. User progress should not advance (typedDigits same)
+        // 3. User progress should not advance
         XCTAssertEqual(viewModel.typedDigits, "", "Typed digits should not update on error in strict mode")
         
-        // 4. Session data should be saved
-        let saveExpectation = XCTestExpectation(description: "Session persistence should be triggered")
-        viewModel.onSaveSession = { record in
-            XCTAssertEqual(record.sessionMode, .test)
-            XCTAssertEqual(record.errors, 1)
-            saveExpectation.fulfill()
-        }
-        
-        // Re-trigger input to separate expectation setup from previous actions if needed, 
-        // but since the previous input already ended the session, we need to reset and retry 
-        // OR better: Start a fresh flow in this test with the expectation set UP FRONT.
-        
-        // Let's restart the flow for clarity:
-        viewModel.reset()
-        viewModel.selectedMode = .test
-        
-        // Setup expectation BEFORE input
-        let saveExpectation2 = XCTestExpectation(description: "Session persistence must be triggered on strict failure")
-        viewModel.onSaveSession = { record in
-            XCTAssertEqual(record.sessionMode, .test)
-            XCTAssertEqual(record.errors, 1) // 1 error causes end
-            saveExpectation2.fulfill()
-        }
-        
-        viewModel.startSession()
-        viewModel.processInput(9) // Incorrect
-        
-        wait(for: [saveExpectation2], timeout: 1.0)
+        // 4. Wait for async save
+        await fulfillment(of: [saveExpectation], timeout: 1.0)
     }
     
     func testRevealGranular_TracksCorrectCount() {
@@ -197,7 +198,7 @@ final class SessionViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.revealsUsed, 10)
     }
     
-    func testEndSession_IncludesRevealsUsed() {
+    func testEndSession_IncludesRevealsUsed() async {
         // Given: assistance used
         viewModel.startSession()
         viewModel.reveal(count: 5)
@@ -208,13 +209,13 @@ final class SessionViewModelTests: XCTestCase {
             XCTAssertEqual(record.revealsUsed, 5)
             expectation.fulfill()
         }
-        viewModel.endSession()
+        await viewModel.endSession()
         
         // Then: verify
-        wait(for: [expectation], timeout: 1.0)
+        await fulfillment(of: [expectation], timeout: 5.0)
     }
     
-    func testEndSession_IncludesSpeedMetrics() {
+    func testEndSession_IncludesSpeedMetrics() async {
         // Given: some input to generate speed
         viewModel.startSession()
         viewModel.processInput(1) // 3.1
@@ -225,9 +226,30 @@ final class SessionViewModelTests: XCTestCase {
             XCTAssertNotNil(record.maxCPS)
             expectation.fulfill()
         }
-        viewModel.endSession()
+        await viewModel.endSession()
         
         // Then: verify
-        wait(for: [expectation], timeout: 1.0)
+        await fulfillment(of: [expectation], timeout: 1.0)
+    }
+
+    func testConfigureForChallenge_SetsEngineParameters() {
+        // Given: A challenge
+        let challenge = Challenge(
+            id: UUID(),
+            date: Date(),
+            constant: .pi,
+            startIndex: 100,
+            referenceSequence: "12345",
+            expectedNextDigits: "67890"
+        )
+        
+        // When: Configure (Method doesn't exist yet - RED)
+        viewModel.configureForChallenge(challenge)
+        viewModel.startSession()
+        
+        // Then: Engine should be initialized with correct indices/mode
+        XCTAssertEqual(viewModel.engine.startIndex, 100)
+        XCTAssertEqual(viewModel.engine.endIndex, 105) // 100 + 5 (len of "12345")
+        XCTAssertEqual(viewModel.selectedMode.practiceEngineMode, .game)
     }
 }

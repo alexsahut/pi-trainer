@@ -6,16 +6,17 @@ import XCTest
 /// Acceptance Criteria:
 /// - A discreet indicator displays the index of the next expected decimal
 /// - The indicator increments instantly after each correct validation
+@MainActor
 final class PositionTrackerTests: XCTestCase {
     
     var provider: MockDigitsProvider!
-    var persistence: MockPracticePersistence!
+    var persistence: EngineMockPersistence!
     var engine: PracticeEngine!
     
     override func setUp() {
         super.setUp()
         provider = MockDigitsProvider()
-        persistence = MockPracticePersistence()
+        persistence = EngineMockPersistence()
         engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
         try? engine.start(mode: .strict)
     }

@@ -18,45 +18,46 @@ struct HistoryRow: View {
                     .font(DesignSystem.Fonts.monospaced(size: 13, weight: .bold))
                     .foregroundColor(.white)
                 
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Image(systemName: iconForMode(session.sessionMode))
-                        .font(.system(size: 8))
+                        .font(.system(size: 14))
                     
                     Text(session.sessionMode.displayName)
-                        .font(DesignSystem.Fonts.monospaced(size: 9, weight: .bold))
+                        .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
                     
                     if session.sessionMode == .game {
                         if session.wasVictory == true {
                              Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 8))
+                                .font(.system(size: 14))
                                 .foregroundColor(.green)
                         } else if session.wasVictory == false {
                              Image(systemName: "xmark.seal.fill")
-                                .font(.system(size: 8))
+                                .font(.system(size: 14))
                                 .foregroundColor(.orange)
                         }
                     }
                     
                     if session.isCertified {
                         Image(systemName: "checkmark.shield.fill")
-                            .font(.system(size: 8))
+                            .font(.system(size: 14))
                             .foregroundColor(DesignSystem.Colors.cyanElectric)
                     }
                     
                     if let types = session.beatenPRTypes {
                         if types.contains(.crown) {
                             Image(systemName: "crown.fill")
-                                .font(.system(size: 8))
+                                .font(.system(size: 14))
                                 .foregroundColor(.yellow)
                         }
                         if types.contains(.lightning) {
                             Image(systemName: "bolt.fill")
-                                .font(.system(size: 8))
+                                .font(.system(size: 14))
                                 .foregroundColor(.orange)
                         }
                     }
                 }
                 .foregroundColor(DesignSystem.Colors.textSecondary)
+                .padding(.top, 2)
             }
             
             Spacer()
@@ -69,7 +70,7 @@ struct HistoryRow: View {
                         .foregroundColor(DesignSystem.Colors.cyanElectric)
                     
                     Text("stats.history.loops_label")
-                        .font(DesignSystem.Fonts.monospaced(size: 8, weight: .bold))
+                        .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 } else {
                     Text("\(session.bestStreakInSession)")
@@ -77,7 +78,7 @@ struct HistoryRow: View {
                         .foregroundColor(DesignSystem.Colors.cyanElectric)
                     
                     Text("stats.history.record_label")
-                        .font(DesignSystem.Fonts.monospaced(size: 8, weight: .bold))
+                        .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
                         .foregroundColor(DesignSystem.Colors.textSecondary)
                 }
             }
@@ -92,7 +93,7 @@ struct HistoryRow: View {
                 let errorLabel = String(localized: "stats.history.error_label")
                 let cpsLabel = String(localized: "stats.history.cps")
                 Text(session.errors > 0 ? "\(session.errors) \(errorLabel)" : cpsLabel)
-                    .font(DesignSystem.Fonts.monospaced(size: 8, weight: .bold))
+                    .font(DesignSystem.Fonts.monospaced(size: 12, weight: .bold))
                     .foregroundColor(session.errors > 0 ? .red : DesignSystem.Colors.textSecondary)
             }
             .frame(width: 50)

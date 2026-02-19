@@ -3,12 +3,14 @@ import SwiftUI
 
 struct SessionSettingsView: View {
     @ObservedObject var viewModel: SessionViewModel
-    @ObservedObject var statsStore: StatsStore
+    var statsStore = StatsStore.shared
+
     @Environment(\.dismiss) var dismiss
     
     @State private var hapticsEnabled = HapticService.shared.isEnabled
     
     var body: some View {
+        @Bindable var statsStore = statsStore
         NavigationStack {
             ZStack {
                 DesignSystem.Colors.blackOLED.ignoresSafeArea()

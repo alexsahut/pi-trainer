@@ -13,6 +13,7 @@ final class PiTrainerTests: XCTestCase {
     
     // MARK: - Mocks for Integration
     
+    @MainActor
     class MockPracticePersistence: PracticePersistenceProtocol {
         var savedIndex: Int?
         var savedKey: String?
@@ -40,6 +41,18 @@ final class PiTrainerTests: XCTestCase {
         var userDefaults: UserDefaults { return .standard } // Mock return
         func saveSelectedMode(_ mode: String) {}
         func loadSelectedMode() -> String? { return nil }
+        
+        
+        func saveSelectedGhostType(_ type: String) {}
+        func loadSelectedGhostType() -> String? { return nil }
+        func saveAutoAdvance(_ enabled: Bool) {}
+        func loadAutoAdvance() -> Bool? { return nil }
+        
+        func saveLastChallengeDate(_ date: Date) {}
+        func loadLastChallengeDate() -> Date? { return nil }
+        
+        func saveTotalCorrectDigits(_ count: Int) {}
+        func loadTotalCorrectDigits() -> Int { 0 }
     }
     
     // MARK: - FileDigitsProvider Tests

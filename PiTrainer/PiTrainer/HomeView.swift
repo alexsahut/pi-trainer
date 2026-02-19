@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct HomeView: View {
-    @StateObject private var statsStore = StatsStore()
-    @StateObject private var sessionViewModel = SessionViewModel()
+    private var statsStore = StatsStore.shared
+
+    @StateObject private var sessionViewModel = SessionViewModel(persistence: PracticePersistence())
     
     // Story 8.1: Learning Store for segment management
     @StateObject private var segmentStore = SegmentStore()
@@ -19,23 +20,22 @@ struct HomeView: View {
     @State private var showingSettings = false
     
     var body: some View {
+        @Bindable var statsStore = statsStore
         ZStack {
             DesignSystem.Colors.blackOLED.ignoresSafeArea()
             
-            VStack(spacing: 40) {
-                // Header Massif
-                VStack(spacing: 0) {
-                    Text(statsStore.selectedConstant.symbol)
-                        .font(.system(size: 120, weight: .ultraLight))
-                        .foregroundColor(DesignSystem.Colors.cyanElectric)
-                        .shadow(color: DesignSystem.Colors.cyanElectric.opacity(0.3), radius: 20)
+            VStack(spacing: 10) { // Reduced from 40 to 10 to fix top clipping
+                // Header Massif avec GradeBadge et XPProgressBar
+                VStack(spacing: 15) { // Reduced from 20
+                    GradeBadge(grade: statsStore.currentGrade, xp: statsStore.totalCorrectDigits)
+                        .scaleEffect(1.0) // Reduced scale from 1.2 to save space
+                        .padding(.top, 5) // Reduced from 10
                     
-                    Text(constantTitle)
-                        .font(DesignSystem.Fonts.monospaced(size: 16, weight: .bold))
-                        .foregroundColor(DesignSystem.Colors.textSecondary)
-                        .tracking(4)
+                    XPProgressBar(xp: statsStore.totalCorrectDigits, grade: statsStore.currentGrade)
+                        .frame(width: 200)
+                        .padding(.top, 2) // Reduced from 5
                 }
-                .padding(.top, 40)
+                .padding(.top, 5) // Reduced from 10
                 
                 // Stats Highlights (PR & Streak)
                 HStack(spacing: 12) {
@@ -75,7 +75,9 @@ struct HomeView: View {
                 }
                 
                 // Selectors Stack
-                VStack(spacing: 32) {
+                // Responsive Spacing: Use a flexible Spacer instead of fixed spacing in parent VStack
+                // We keep efficient internal spacing here
+                VStack(spacing: 16) { // Reduced from 20 to 16 for better compact layout
                     ZenSegmentedControl(
                         title: "CONSTANTE",
                         options: Constant.allCases,
@@ -104,27 +106,46 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 20)
                 
-                Spacer()
+                if statsStore.selectedMode != .learn {
+                    Spacer().frame(height: 20) // Fixed spacing for compact layout
+                } else {
+                    Spacer().frame(height: 10) // Fixed minimal spacing in Learn mode to keep Start button visible
+                }
                 
                 // Start Button (Action Pivot)
-                ZenPrimaryButton(title: "START SESSION", accessibilityIdentifier: "home.start_button") {
+                ZenPrimaryButton(
+                    title: "START SESSION",
+                    style: .compact, // Story 12.1: Compact Pill
+                    accessibilityIdentifier: "home.start_button"
+                ) {
                     // Configure ViewModel with latest settings
-                    configureSession()
                     configureSession()
                     coordinator.push(.session(mode: sessionViewModel.selectedMode.practiceEngineMode))
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 40) // Increased horizontal padding for pill look
                 
                 // Footer Dashboard Access (Zen-Athlete 2.0 Patch)
-                HStack(spacing: 40) {
+                HStack(spacing: 20) { // Reduced spacing to fit 3 items
+                    Button(action: { coordinator.push(.challengeHub) }) {
+                        VStack(spacing: 8) {
+                            Image(systemName: "trophy")
+                                .font(.system(size: 20))
+                            Text("DÉFIS")
+                                .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
+                        }
+                        .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                    }
+                    
                     Button(action: { showingStats = true }) {
                         VStack(spacing: 8) {
                             Image(systemName: "chart.bar.fill")
                                 .font(.system(size: 20))
-                            Text("RECORDS")
+                            Text("STATS")
                                 .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
                         }
                         .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .frame(maxWidth: .infinity)
                     }
                     
                     Button(action: { showingSettings = true }) {
@@ -135,29 +156,44 @@ struct HomeView: View {
                                 .font(DesignSystem.Fonts.monospaced(size: 10, weight: .black))
                         }
                         .foregroundColor(DesignSystem.Colors.textSecondary)
+                        .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(.bottom, 30)
+                .padding(.bottom, 12)
+                .padding(.horizontal, 20)
             }
         }
         .navigationBarHidden(true)
         .navigationDestination(for: NavigationCoordinator.Destination.self) { destination in
             switch destination {
-            case .session(_):
-                SessionView(viewModel: sessionViewModel, statsStore: statsStore)
-                    .navigationBarBackButtonHidden(true)
-            case .session(_):
-                SessionView(viewModel: sessionViewModel, statsStore: statsStore)
+            case .session(let mode):
+                // Note: mode is preserved in NavigationPath, but viewModel is already configured.
+                SessionView(viewModel: sessionViewModel)
                     .navigationBarBackButtonHidden(true)
             case .stats:
-                StatsView(statsStore: statsStore)
+                StatsView()
+            case .challengeHub:
+                ChallengeHubView()
+                    .environment(coordinator) // Explicitly inject coordinator to ensure availability
+                    .environmentObject(sessionViewModel) // Pass ViewModel for session start
+            case .challengeSession(let challenge, let isDaily):
+                ChallengeSessionView(challenge: challenge) { date in
+                    // Instantiate service explicitly to mark completion
+                    let persistence = PracticePersistence()
+                    let service = ChallengeService(persistence: persistence, digitsProviderFactory: { FileDigitsProvider(constant: $0) })
+                    
+                    if isDaily {
+                        service.markChallengeAsCompleted(for: date)
+                    }
+                }
+                .environment(coordinator)
             }
         }
         .sheet(isPresented: $showingStats) {
-            StatsView(statsStore: statsStore)
+            StatsView()
         }
         .sheet(isPresented: $showingSettings) {
-             SettingsView(sessionViewModel: sessionViewModel, statsStore: statsStore)
+             SettingsView(sessionViewModel: sessionViewModel)
         }
         .onAppear {
             // Initial sync
@@ -166,7 +202,7 @@ struct HomeView: View {
     }
     
     private func configureSession() {
-        sessionViewModel.syncSettings(from: statsStore, segmentStore: segmentStore)
+        sessionViewModel.syncSettings(segmentStore: segmentStore)
         sessionViewModel.onSaveSession = { record in
             statsStore.addSessionRecord(record)
         }

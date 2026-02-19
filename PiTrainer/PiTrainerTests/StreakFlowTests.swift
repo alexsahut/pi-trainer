@@ -8,16 +8,17 @@ import XCTest
 /// - At 10 consecutive successes, a subtle Cyan aura activates around the input zone
 /// - At 20 successes, visual intensity increases (fluid Glow)
 /// - Animations must not cause framerate drops (<16ms)
+@MainActor
 final class StreakFlowTests: XCTestCase {
     
     var provider: MockDigitsProvider!
-    var persistence: MockPracticePersistence!
+    var persistence: EngineMockPersistence!
     var engine: PracticeEngine!
     
     override func setUp() {
         super.setUp()
         provider = MockDigitsProvider()
-        persistence = MockPracticePersistence()
+        persistence = EngineMockPersistence()
         engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
         try? engine.start(mode: .strict)
     }

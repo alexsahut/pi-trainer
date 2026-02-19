@@ -8,16 +8,14 @@
 import SwiftUI
 
 struct StatsView: View {
-    @ObservedObject var statsStore: StatsStore
+    private var statsStore = StatsStore.shared
 
     @Environment(\.dismiss) var dismiss
     
-    @State private var selectedConstantForStats: Constant
+    @State private var selectedConstantForStats: Constant = StatsStore.shared.selectedConstant
     
-    init(statsStore: StatsStore) {
-        self.statsStore = statsStore
-        // Initialize with the currently global selected constant, or default to Pi
-        _selectedConstantForStats = State(initialValue: statsStore.selectedConstant)
+    init() {
+        // Initialize with the currently global selected constant
     }
     
     var body: some View {
@@ -258,5 +256,5 @@ struct QuickStat: View {
 }
 
 #Preview {
-    StatsView(statsStore: StatsStore())
+    StatsView()
 }

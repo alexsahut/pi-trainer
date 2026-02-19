@@ -1,7 +1,7 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 'v2-extensions']
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 'v2-extensions', 'epic-11-extension']
 workflowType: 'architecture'
-lastStep: 'v2-extensions-resumed'
+lastStep: 'epic-11-extension-finalized'
 status: 'in-progress'
 completedAt: '2026-01-17'
 resumedAt: '2026-01-21'
@@ -558,4 +558,42 @@ Au lieu d'un générateur procédural risqué, nous utilisons un contenu éditor
 
 **Raisonnement :**
 Cette approche élimine 80% de la complexité technique tout en délivrant 100% de la valeur utilisateur (Sentiment de progression + Rendez-vous quotidien).
+
+### V2.9 Challenge Service & moteur MUS
+
+Pour le défi "Quelle est la décimale suivante ?", nous avons besoin d'une implémentation performante de l'algorithme MUS (Minimal Unique Sequence).
+
+- **Composant :** `ChallengeService`.
+- **Algorithme MUS :** Recherche d'une sous-séquence unique de longueur minimale commençant à `pos`. 
+- **Optimisation :** Utilisation de `[Character]` ou `[UInt8]` pré-chargés par `DigitsProvider` pour éviter les allocations de `String` dans la boucle. Complexité visée < 1ms pour 10k chiffres.
+- **Définition Défi :**
+```swift
+struct Challenge: Codable {
+    let id: UUID
+    let date: Date
+    let startIndex: Int
+    let length: Int
+    let referenceSequence: String // Séquence MUS identifiée
+    let expectedDigits: [Character] // Les 1-3 chiffres suivants à trouver
+}
+```
+
+### V2.10 Synchronisation du "Double Bang"
+
+Le moment de la récompense doit être parfaitement synchronisé pour maximiser l'impact sensoriel.
+
+- **RewardManager :** Un coordinateur léger qui écoute la fin de session et déclenche les célébrations.
+- **Pipeline de Synchronisation :**
+  1. `StatsStore` valide le nouveau PB (Personal Best) ou la montée en Grade.
+  2. `RewardManager` reçoit l'event via une notification @Observable ou un callback.
+  3. `HapticService` pré-chauffe le moteur Core Haptics.
+  4. Déclenchement simultané : `Flash Visuel` + `Signature Haptique` + `Injection Particules`.
+- **Haptic Pattern :** Utilisation d'un `CHHapticPattern` composite (un "Transient" impactant suivi d'un "Continuous" granulaire simulant l'explosion).
+
+### V2.11 Persistance de l'état des Défis
+
+- **UserDefaults :** Stockage de `lastChallengeCompletionDate`.
+- **Validation :** Le défi est marqué comme "réussi" uniquement si la séquence MUS est complétée sans erreur. L'XP est alors créditée via la `StatsStore`.
+- **Indulgence :** Contrairement au mode Strict, une erreur unique dans le défi n'arrête pas la session mais redirige vers le mode Learn pour la révision de ce segment précis.
+
 

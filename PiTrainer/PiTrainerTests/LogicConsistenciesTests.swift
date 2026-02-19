@@ -19,14 +19,14 @@ final class LogicConsistenciesTests: XCTestCase {
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let historyStore = try SessionHistoryStore(customDirectory: tempDir)
         
-        statsStore = StatsStore(historyStore: historyStore)
+        statsStore = StatsStore(persistence: PracticePersistence(), historyStore: historyStore)
         
         // Mock PB for all tests to ensure ghost is available if needed
         // 3.141592653...
         // Index 1: 1, Index 2: 4, Index 3: 1, Index 4: 5, Index 5: 9...
         let mockPB = PersonalBestRecord(constant: .pi, type: .crown, digitCount: 10, totalTime: 10, cumulativeTimes: Array(repeating: 1.0, count: 10))
         
-        viewModel = SessionViewModel(personalBestProvider: { _ in
+        viewModel = SessionViewModel(persistence: PracticePersistence(), personalBestProvider: { _, _ in
             return mockPB
         })
         viewModel.onSaveSession = { [weak statsStore] record in
@@ -45,7 +45,7 @@ final class LogicConsistenciesTests: XCTestCase {
         
         viewModel.processInput(1) 
         viewModel.isDefeatedByGhost = true
-        viewModel.endSession() 
+        await viewModel.endSession() 
         
         // Wait for async update
         try? await Task.sleep(nanoseconds: 500_000_000) 
@@ -64,29 +64,51 @@ final class LogicConsistenciesTests: XCTestCase {
     }
     
     func testGameMode_SuddenDeath_IsCertified() async {
+        // Setup: Ensure Ghost has a record to enable "Sudden Death" condition
+        let times = [1.0]
+        let record = PersonalBestRecord(constant: .pi, type: .crown, digitCount: 1, totalTime: 1.0, cumulativeTimes: times)
+        
+        // Re-initialize ViewModel to use a direct closure capture for PB
+        // This avoids PersonalBestStore race conditions or init issues
+        viewModel = SessionViewModel(
+            persistence: PracticePersistence(),
+            personalBestProvider: { constant, type in
+                print("debug: Provider returning direct capture PB")
+                return record
+            }
+        )
+        viewModel.onSaveSession = { [weak statsStore] record in
+            statsStore?.addSessionRecord(record)
+        }
+        
         viewModel.selectedMode = .game
         viewModel.startSession()
         
-        viewModel.processInput(1) // Correct (pos 1)
-        viewModel.processInput(4) // Correct (pos 2)
+        print("debug: Ghost initialized? \(viewModel.ghostEngine != nil)")
+        print("debug: Ghost total digits: \(viewModel.ghostEngine?.totalDigits ?? -100)")
         
-        // Ensure ghost is started and we have a delta
-        let delta = viewModel.atmosphericDelta(at: Date())
-        print("debug: suddenDeath delta: \(delta)")
-        XCTAssertTrue(delta > 0, "Player should be ahead of ghost for Sudden Death")
+        // Action:
+        // 1. Enter correct digit 1 (Index 1)
+        viewModel.processInput(1) 
         
-        viewModel.processInput(3) // Error -> Sudden Death
+        // 2. Enter correct digit 4 (Index 2)
+        // Now Index (2) > Ghost Total (1)
+        viewModel.processInput(4)
         
-        // Wait for async update
+        // 3. Make an ERROR while ahead
+        // Input 3 (wrong, expected 1).
+        viewModel.processInput(3) 
+        
+        // Wait for async update (endSession)
         try? await Task.sleep(nanoseconds: 500_000_000) 
         
-        print("debug: suddenDeath isActive: \(viewModel.isActive)")
+        // Assertions
         XCTAssertFalse(viewModel.isActive, "Session should have ended by Sudden Death")
         
         let history = statsStore.history(for: .pi)
         if let session = history.first {
-            print("debug: suddenDeath record isCertified: \(session.isCertified)")
             XCTAssertTrue(session.isCertified, "Sudden Death Victory SHOULD be certified")
+            // Note: If reachedEnd (Index 2 >= Ghost 1) AND !isDefeated -> Victory
             XCTAssertEqual(session.wasVictory, true, "Sudden Death should have wasVictory = true")
         } else {
             XCTFail("Record should have been saved")
@@ -103,15 +125,19 @@ final class LogicConsistenciesTests: XCTestCase {
         viewModel.processInput(4) // Correct
         viewModel.processInput(3) // Error (Correct is 1)
         
-        viewModel.endSession()
+        await viewModel.endSession()
         
         try? await Task.sleep(nanoseconds: 500_000_000)
         
         let session = statsStore.history(for: .pi).first
         XCTAssertNotNil(session)
-        XCTAssertFalse(session!.isCertified, "Practice session with error should NOT be certified")
-        XCTAssertEqual(statsStore.bestStreak(for: .pi), 0, "Non-certified run should not update Best Streak")
-        XCTAssertNil(statsStore.stats(for: .pi).bestSession, "Non-certified run should not set Best Session")
+        
+        // Story 9.6 Change: Practice sessions with errors ARE certified (via Snapshot logic)
+        // provided no reveals were used.
+        XCTAssertTrue(session!.isCertified, "Practice session with error SHOULD be certified (Snapshot Logic)")
+        
+        // Best Streak should validly update based on the certified run's actual streak
+        XCTAssertEqual(statsStore.bestStreak(for: .pi), 2, "Certified run with error should update Best Streak based on valid segment")
     }
     
     func testTestMode_Perfect_IsCertified() async {
@@ -122,7 +148,7 @@ final class LogicConsistenciesTests: XCTestCase {
         viewModel.processInput(4)
         viewModel.processInput(1)
         
-        viewModel.endSession() 
+        await viewModel.endSession() 
         
         try? await Task.sleep(nanoseconds: 500_000_000)
         

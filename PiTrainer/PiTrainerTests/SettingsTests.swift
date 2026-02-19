@@ -2,13 +2,14 @@
 import XCTest
 @testable import PiTrainer
 
+@MainActor
 class SettingsTests: XCTestCase {
     var statsStore: StatsStore!
-    var mockPersistence: MockPracticePersistence!
+    var mockPersistence: SettingsMockPersistence!
 
     override func setUp() {
         super.setUp()
-        mockPersistence = MockPracticePersistence()
+        mockPersistence = SettingsMockPersistence()
         // Initialize with dependencies
         statsStore = StatsStore(persistence: mockPersistence, historyStore: nil)
     }
@@ -33,7 +34,8 @@ class SettingsTests: XCTestCase {
     }
 }
 
-class MockPracticePersistence: PracticePersistenceProtocol {
+@MainActor
+class SettingsMockPersistence: PracticePersistenceProtocol {
     var userDefaults: UserDefaults = .standard // Unused in mock logic
     var savedAutoAdvance: Bool?
     
@@ -63,4 +65,10 @@ class MockPracticePersistence: PracticePersistenceProtocol {
     func loadAutoAdvance() -> Bool? { 
         return savedAutoAdvance 
     }
+    
+    func saveLastChallengeDate(_ date: Date) {}
+    func loadLastChallengeDate() -> Date? { return nil }
+    
+    func saveTotalCorrectDigits(_ count: Int) {}
+    func loadTotalCorrectDigits() -> Int { 0 }
 }

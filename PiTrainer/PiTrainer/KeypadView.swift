@@ -22,8 +22,8 @@ struct KeypadView: View {
     ]
     
     var body: some View {
-        VStack(spacing: 12) {
-            LazyVGrid(columns: columns, spacing: 12) {
+        VStack(spacing: 16) {
+            LazyVGrid(columns: columns, spacing: 16) {
                 // Digits based on layout
                 ForEach(layout.digits, id: \.self) { digit in
                     KeypadButton(label: "\(digit)") {
@@ -32,7 +32,7 @@ struct KeypadView: View {
                 }
                 
                 // Bottom row: Reset, 0, Backspace
-                KeypadButton(label: String(localized: "keypad.reset"), color: .orange) {
+                KeypadButton(label: String(localized: "keypad.reset", defaultValue: "RESET"), color: DesignSystem.Colors.orangeElectric.opacity(0.1), strokeColor: DesignSystem.Colors.orangeElectric.opacity(0.5)) {
                     onReset()
                 }
                 
@@ -40,21 +40,18 @@ struct KeypadView: View {
                     onDigit(0)
                 }
                 
-                KeypadButton(label: "⌫", color: .gray) {
+                KeypadButton(label: "⌫", color: DesignSystem.Colors.textSecondary.opacity(0.1), strokeColor: DesignSystem.Colors.textSecondary.opacity(0.5)) {
                     onBackspace()
                 }
             }
             
-            // Quit button
-            Button(action: onQuit) {
-                Text("keypad.quit")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.red)
-                    .cornerRadius(12)
-            }
+            // Zen Quit button
+            ZenPrimaryButton(
+                title: String(localized: "keypad.quit", defaultValue: "QUIT"),
+                style: .secondary,
+                accessibilityIdentifier: "keypad.quit_button",
+                action: onQuit
+            )
             .padding(.top, 8)
         }
         .padding()
@@ -63,18 +60,48 @@ struct KeypadView: View {
 
 struct KeypadButton: View {
     let label: String
-    var color: Color = .blue
+    var color: Color = DesignSystem.Colors.blackOLED.opacity(0.3)
+    var strokeColor: Color = Color.white.opacity(0.1)
     let action: () -> Void
     
+    @State private var isFlashing = false
+    
     var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(DesignSystem.Fonts.monospaced(size: 28, weight: .bold)) // Using DesignSystem for digits
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 64)
-                .background(color)
-                .cornerRadius(12)
+        Button(action: {
+            triggerFlash()
+            action()
+        }) {
+            ZStack {
+                // Background Frame
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(color)
+                    .frame(height: 60)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(strokeColor, lineWidth: 1)
+                    )
+                
+                // Label
+                Text(label)
+                    .font(DesignSystem.Fonts.monospaced(size: 28, weight: .bold))
+                    .foregroundColor(DesignSystem.Colors.textPrimary)
+                
+                // Flash Overlay (Cyan)
+                if isFlashing {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(DesignSystem.Colors.cyanElectric)
+                        .opacity(0.6)
+                }
+            }
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func triggerFlash() {
+        isFlashing = true
+        withAnimation(.easeOut(duration: 0.1)) {
+            isFlashing = false
         }
     }
 }

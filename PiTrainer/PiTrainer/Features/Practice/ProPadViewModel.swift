@@ -1,5 +1,6 @@
 import SwiftUI
 
+@MainActor
 @Observable
 final class ProPadViewModel {
     
@@ -93,11 +94,14 @@ final class ProPadViewModel {
         guard currentStreak >= 20 else { return }
         
         inactivityTimer = Timer.scheduledTimer(withTimeInterval: inactivityThreshold, repeats: false) { [weak self] _ in
-            self?.updateOpacity(animated: true, fastTransition: false)
+            Task { @MainActor in
+                self?.updateOpacity(animated: true, fastTransition: false)
+            }
         }
     }
     
     deinit {
-        inactivityTimer?.invalidate()
+        // inactivityTimer invalidate removed to avoid isolation issues in deinit.
+        // The [weak self] in the timer block ensures no leak.
     }
 }

@@ -67,6 +67,7 @@ class SessionViewModel: ObservableObject {
     
     // Configuration for the current session
     var onSaveSession: ((SessionRecord) -> Void)?
+    var onChallengeCompleted: ((Date) -> Void)?
 
     
     // MARK: - Derived Properties
@@ -153,11 +154,11 @@ class SessionViewModel: ObservableObject {
     
     // MARK: - Initialization
     
-    init(persistence: PracticePersistenceProtocol? = nil,
+    init(persistence: PracticePersistenceProtocol,
          providerFactory: ((Constant) -> any DigitsProvider)? = nil,
          segmentStore: SegmentStore? = nil,
          personalBestProvider: ((Constant, PRType) -> PersonalBestRecord?)? = nil) {
-        let actualPersistence = persistence ?? PracticePersistence()
+        let actualPersistence = persistence
         let actualFactory = providerFactory ?? { FileDigitsProvider(constant: $0) }
         
         self.persistence = actualPersistence
@@ -197,9 +198,13 @@ class SessionViewModel: ObservableObject {
     // MARK: - Public Methods
     
     /// Synchronizes settings from the global stores
-    func syncSettings(from store: StatsStore, segmentStore: SegmentStore) {
+    func syncSettings(segmentStore: SegmentStore) {
+        let store = StatsStore.shared
         self.keypadLayout = store.keypadLayout
         self.selectedConstant = store.selectedConstant
+        
+        // Reset challenge state when syncing settings (returning to home/standard flow)
+        self.activeChallenge = nil
 
         self.selectedMode = store.selectedMode
         self.selectedGhostType = store.selectedGhostType
@@ -241,7 +246,19 @@ class SessionViewModel: ObservableObject {
             self.engine = PracticeEngine(constant: constant, provider: provider, persistence: persistence)
             
             // Story 8.1: Apply segment if in Learn mode
-            if selectedMode == .learn {
+            if let challenge = activeChallenge {
+                // Story 12.2 (Revised): Adaptive Challenge Mode Configuration
+                // The engine should start EXPECTING input *after* the reference sequence.
+                // We pre-filled `typedDigits` with `referenceSequence`.
+                
+                let refLength = challenge.referenceSequence.count
+                let engineStartIndex = challenge.startIndex + refLength
+                let engineEndIndex = engineStartIndex + challenge.expectedNextDigits.count // Target is reference + expected count
+                
+                // Start engine at the point where user input begins
+                engine.start(mode: .game, startIndex: engineStartIndex, endIndex: engineEndIndex)
+                print("debug: engine started for ADAPTIVE CHALLENGE (Start: \(engineStartIndex), End: \(engineEndIndex))")
+            } else if selectedMode == .learn {
                 engine.start(mode: selectedMode.practiceEngineMode, startIndex: segmentStore.segmentStart, endIndex: segmentStore.segmentEnd)
                 
                 // Story 8.4: Training Mode Configuration
@@ -581,43 +598,49 @@ class SessionViewModel: ObservableObject {
                         await PersonalBestStore.shared.save(record: newLightning)
                     }
                 }
+
+                // Story 12.2: Mark Challenge Completion
+                if let challenge = activeChallenge {
+                    print("🏆 CHALLENGE COMPLETED: \(challenge.id)")
+                    onChallengeCompleted?(challenge.date)
+                }
             } else {
                 print("ℹ️ Session NOT CERTIFIED (Errors: \(engine.errors), Reveals: \(revealsUsed), Mode: \(selectedMode)). PB will not be updated.")
             }
 
             // Result tracking for Game Mode (Story 9.5)
-        var wasVictory: Bool? = nil
-        if selectedMode == .game {
-            if isDefeatedByGhost {
-                wasVictory = false
-            } else {
-                // If not defeated, check if player is at the end
-                let reachedEnd = engine.currentIndex >= (ghostEngine?.totalDigits ?? 0)
-                wasVictory = reachedEnd && !isDefeatedByGhost
+            var wasVictory: Bool? = nil
+            if selectedMode == .game {
+                if isDefeatedByGhost {
+                    wasVictory = false
+                } else {
+                    // If not defeated, check if player is at the end
+                    let reachedEnd = engine.currentIndex >= (ghostEngine?.totalDigits ?? 0)
+                    wasVictory = reachedEnd && !isDefeatedByGhost
+                }
             }
-        }
-        
-        let record = SessionRecord(
-            id: UUID(),
-            date: Date(),
-            constant: selectedConstant,
-            mode: selectedMode.practiceEngineMode,
-            sessionMode: selectedMode,
-            attempts: engine.attempts,
-            errors: engine.errors,
-            bestStreakInSession: engine.bestStreak,
-            durationSeconds: engine.elapsedTime,
-            digitsPerMinute: engine.digitsPerMinute,
-            revealsUsed: revealsUsed,
-            minCPS: engine.minCPS == .infinity ? nil : engine.minCPS,
-            maxCPS: engine.maxCPS,
-            segmentStart: selectedMode == .learn ? segmentStore.segmentStart : nil,
-            segmentEnd: selectedMode == .learn ? segmentStore.segmentEnd : nil,
-            loops: loops,
-            isCertified: isCertified,
-            wasVictory: wasVictory,
-            beatenPRTypes: beatenPRTypes.isEmpty ? nil : beatenPRTypes
-        )
+            
+            let record = SessionRecord(
+                id: UUID(),
+                date: Date(),
+                constant: selectedConstant,
+                mode: selectedMode.practiceEngineMode,
+                sessionMode: selectedMode,
+                attempts: engine.attempts,
+                errors: engine.errors,
+                bestStreakInSession: engine.bestStreak,
+                durationSeconds: engine.elapsedTime,
+                digitsPerMinute: engine.digitsPerMinute,
+                revealsUsed: revealsUsed,
+                minCPS: engine.minCPS == .infinity ? nil : engine.minCPS,
+                maxCPS: engine.maxCPS,
+                segmentStart: selectedMode == .learn ? segmentStore.segmentStart : nil,
+                segmentEnd: selectedMode == .learn ? segmentStore.segmentEnd : nil,
+                loops: loops,
+                isCertified: isCertified,
+                wasVictory: wasVictory,
+                beatenPRTypes: beatenPRTypes.isEmpty ? nil : beatenPRTypes
+            )
             
             isSessionSaved = true
             if let onSaveSession = onSaveSession {
@@ -644,5 +667,21 @@ class SessionViewModel: ObservableObject {
             engine.reset()
             self.shouldDismiss = true
         }
+    }
+    
+    // MARK: - Challenge Integration
+    
+    private var activeChallenge: Challenge?
+    
+    /// Configures the session for a specific challenge
+    func configureForChallenge(_ challenge: Challenge) {
+        self.activeChallenge = challenge
+        self.selectedConstant = challenge.constant // Override constant
+        self.selectedMode = .game // Challenges are always game mode (for now)
+        
+        // Critical UX: Pre-fill the reference sequence so the user sees the prompt
+        // The engine will be initialized in startSession() with the correct range 
+        // to expect only the NEW digits.
+        self.typedDigits = challenge.referenceSequence
     }
 }

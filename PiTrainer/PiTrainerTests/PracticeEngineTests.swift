@@ -1,7 +1,8 @@
 import XCTest
 @testable import PiTrainer
 
-class MockPracticePersistence: PracticePersistenceProtocol {
+@MainActor
+class EngineMockPersistence: PracticePersistenceProtocol {
     var savedIndex: Int?
     var savedKey: String?
     var highestIndexToReturn: Int = 0
@@ -28,6 +29,17 @@ class MockPracticePersistence: PracticePersistenceProtocol {
     var userDefaults: UserDefaults { return .standard } // Mock return
     func saveSelectedMode(_ mode: String) {}
     func loadSelectedMode() -> String? { return nil }
+    
+    func saveSelectedGhostType(_ type: String) {}
+    func loadSelectedGhostType() -> String? { return nil }
+    func saveAutoAdvance(_ enabled: Bool) {}
+    func loadAutoAdvance() -> Bool? { return nil }
+    
+    func saveLastChallengeDate(_ date: Date) {}
+    func loadLastChallengeDate() -> Date? { return nil }
+    
+    func saveTotalCorrectDigits(_ count: Int) {}
+    func loadTotalCorrectDigits() -> Int { 0 }
 }
 
 final class MockDigitsProvider: DigitsProvider {
@@ -48,16 +60,17 @@ final class MockDigitsProvider: DigitsProvider {
     }
 }
 
+@MainActor
 final class PracticeEngineTests: XCTestCase {
     
     var provider: MockDigitsProvider!
-    var persistence: MockPracticePersistence!
+    var persistence: EngineMockPersistence!
     var engine: PracticeEngine!
     
     override func setUp() {
         super.setUp()
         provider = MockDigitsProvider()
-        persistence = MockPracticePersistence()
+        persistence = EngineMockPersistence()
         // Default to Pi for general tests
         engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
     }
@@ -242,16 +255,17 @@ final class PracticeEngineTests: XCTestCase {
 
 // MARK: - Story 9.4: Game Mode
 
+@MainActor
 final class PracticeEngineGameModeTests: XCTestCase {
     
     var provider: MockDigitsProvider!
-    var persistence: MockPracticePersistence!
+    var persistence: EngineMockPersistence!
     var engine: PracticeEngine!
     
     override func setUp() {
         super.setUp()
         provider = MockDigitsProvider()
-        persistence = MockPracticePersistence()
+        persistence = EngineMockPersistence()
         // Default to Pi
         engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
     }
@@ -312,16 +326,17 @@ final class PracticeEngineGameModeTests: XCTestCase {
 
 // MARK: - Story 10.2: Loop Reset
 
+@MainActor
 final class PracticeEngineLoopResetTests: XCTestCase {
     
     var provider: MockDigitsProvider!
-    var persistence: MockPracticePersistence!
+    var persistence: EngineMockPersistence!
     var engine: PracticeEngine!
     
     override func setUp() {
         super.setUp()
         provider = MockDigitsProvider()
-        persistence = MockPracticePersistence()
+        persistence = EngineMockPersistence()
         engine = PracticeEngine(constant: .pi, provider: provider, persistence: persistence)
     }
     
@@ -367,7 +382,8 @@ final class PracticeEngineLoopResetTests: XCTestCase {
 
 // MARK: - SessionViewModel Integration Tests (Story 10.2 Loop Reset)
 
-fileprivate class ResetLoopMockPersistence: PracticePersistenceProtocol {
+@MainActor
+class ResetLoopMockPersistence: PracticePersistenceProtocol {
     var userDefaults: UserDefaults = .standard
     func saveHighestIndex(_ index: Int, for constantKey: String) {}
     func getHighestIndex(for constantKey: String) -> Int { return 0 }
@@ -383,6 +399,11 @@ fileprivate class ResetLoopMockPersistence: PracticePersistenceProtocol {
     func loadSelectedGhostType() -> String? { return nil }
     func saveAutoAdvance(_ enabled: Bool) {}
     func loadAutoAdvance() -> Bool? { return nil }
+    func saveLastChallengeDate(_ date: Date) {}
+    func loadLastChallengeDate() -> Date? { return nil }
+    
+    func saveTotalCorrectDigits(_ count: Int) {}
+    func loadTotalCorrectDigits() -> Int { 0 }
 }
 
 @MainActor

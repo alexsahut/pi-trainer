@@ -1,73 +1,67 @@
 {
     "workflow_version": "1.2.0",
     "timestamps": {
-        "started": "2026-01-15T21:59:13Z",
-        "last_updated": "2026-01-15T21:59:13Z"
+        "started": "2026-01-23T22:41:40Z",
+        "last_updated": "2026-01-23T22:48:00Z"
     },
-    "mode": "initial_scan",
-    "scan_level": "quick",
+    "mode": "full_rescan",
+    "scan_level": "exhaustive",
     "project_root": "/Users/alexandre/Dev/antigravity/pi-trainer",
     "output_folder": "/Users/alexandre/Dev/antigravity/pi-trainer/_bmad-output/project-knowledge",
     "completed_steps": [
         {
             "step": "step_1",
             "status": "completed",
-            "timestamp": "2026-01-15T21:59:13Z",
-            "summary": "Classified as monolith with 1 parts"
+            "timestamp": "2026-01-23T22:42:00Z",
+            "summary": "Classified as monolith with 1 part (iOS/Mobile)"
         },
         {
             "step": "step_2",
             "status": "completed",
-            "timestamp": "2026-01-15T22:00:00Z",
-            "summary": "Found 2 existing docs (README.md, DEVLOG.md)"
+            "timestamp": "2026-01-23T22:42:30Z",
+            "summary": "Found existing docs: README.md, DEVLOG.md, project-context.md"
         },
         {
             "step": "step_3",
             "status": "completed",
-            "timestamp": "2026-01-15T22:00:30Z",
-            "summary": "Tech stack: SwiftUI (iOS), native localization (xcstrings)"
+            "timestamp": "2026-01-23T22:43:00Z",
+            "summary": "Tech stack: SwiftUI (iOS 17+), MVVM + @Observable, Hybrid Persistence"
         },
         {
             "step": "step_4",
             "status": "completed",
-            "timestamp": "2026-01-15T22:05:00Z",
-            "summary": "Conditional analysis complete, 1 files written (data-models-root.md)"
+            "timestamp": "2026-01-23T22:45:00Z",
+            "summary": "Exhaustive scan complete for all source files"
         },
         {
             "step": "step_5",
             "status": "completed",
-            "timestamp": "2026-01-15T22:05:30Z",
-            "summary": "Source tree documented in source-tree-analysis.md"
+            "timestamp": "2026-01-23T22:45:30Z",
+            "summary": "Source tree analysis generated"
         },
         {
             "step": "step_6",
             "status": "completed",
-            "timestamp": "2026-01-15T22:15:00Z",
-            "summary": "Development and operational info extracted"
-        },
-        {
-            "step": "step_7",
-            "status": "completed",
-            "timestamp": "2026-01-15T22:15:30Z",
-            "summary": "Integration analysis (monolith - N/A)"
+            "timestamp": "2026-01-23T22:46:00Z",
+            "summary": "Development guide generated"
         },
         {
             "step": "step_8",
             "status": "completed",
-            "timestamp": "2026-01-15T22:16:00Z",
-            "summary": "Architecture document generated"
+            "timestamp": "2026-01-23T22:46:30Z",
+            "summary": "Architecture documentation generated"
         },
         {
             "step": "step_9",
             "status": "completed",
-            "timestamp": "2026-01-15T22:16:30Z",
-            "summary": "Supporting docs generated (Overview, Data Models)"
+            "timestamp": "2026-01-23T22:47:00Z",
+            "summary": "Supporting docs (Overview, Component Inventory) generated"
         },
         {
             "step": "step_10",
             "status": "completed",
-            "timestamp": "2026-01-15T22:17:00Z",
-            "summary": "Master index generated"
+            "timestamp": "2026-01-23T22:47:30Z",
+            "summary": "Data models and Master index generated"
         }
     ],
     "current_step": "completed",
@@ -75,31 +69,7 @@
         "project_classification": {
             "repository_type": "monolith",
             "parts_count": 1,
-            "primary_tech": "Swift (iOS)"
-        },
-        "existing_documentation": [
-            {
-                "path": "README.md",
-                "type": "readme",
-                "part_id": "root"
-            },
-            {
-                "path": "DEVLOG.md",
-                "type": "devlog",
-                "part_id": "root"
-            }
-        ],
-        "technology_stack": {
-            "root": {
-                "framework": "SwiftUI",
-                "language": "Swift",
-                "version": "iOS 17+",
-                "features": [
-                    "Native Localization (Localizable.xcstrings)",
-                    "Asset Catalogs (Assets.xcassets)",
-                    "Unit Testing (XCTest)"
-                ]
-            }
+            "primary_tech": "SwiftUI (iOS)"
         },
         "project_types": [
             {
@@ -107,15 +77,26 @@
                 "project_type_id": "mobile",
                 "display_name": "iOS/Mobile"
             }
-        ]
+        ],
+        "technology_stack": {
+            "root": {
+                "framework": "SwiftUI",
+                "language": "Swift",
+                "version": "iOS 17+",
+                "architecture": "MVVM + @Observable",
+                "persistence": "UserDefaults + JSON"
+            }
+        }
     },
     "outputs_generated": [
         "project-scan-report.json",
-        "data-models-root.md",
         "source-tree-analysis.md",
+        "development-guide.md",
         "architecture.md",
         "project-overview.md",
+        "component-inventory-root.md",
+        "data-models-root.md",
         "index.md"
     ],
-    "resume_instructions": "Starting from step 1"
+    "resume_instructions": "Scan complete"
 }

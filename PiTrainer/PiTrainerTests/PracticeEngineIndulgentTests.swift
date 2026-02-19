@@ -2,6 +2,7 @@
 import XCTest
 @testable import PiTrainer
 
+@MainActor
 class PracticeEngineIndulgentTests: XCTestCase {
     
     var engine: PracticeEngine!
@@ -9,7 +10,9 @@ class PracticeEngineIndulgentTests: XCTestCase {
     override func setUp() {
         super.setUp()
         // Use PI for testing
-        engine = PracticeEngine(constant: .pi, provider: FileDigitsProvider.pi)
+        // Note: We use strict PI provider. Assuming it exists.
+        // If FileDigitsProvider.pi was a helper that was removed, we use constructor
+        engine = PracticeEngine(constant: .pi, provider: FileDigitsProvider(constant: .pi), persistence: PracticePersistence())
     }
     
     // MARK: - Strict Mode Tests

@@ -22,7 +22,7 @@ class SessionViewModelIntegrationTests: XCTestCase {
             persistence: mockPersistence,
             providerFactory: { _ in SVM_MockDigitsProvider() },
             segmentStore: mockSegmentStore,
-            personalBestProvider: { constant in
+            personalBestProvider: { constant, type in
                 return PersonalBestStore.shared.getRecord(for: constant, type: .crown)
             }
         )
@@ -42,7 +42,7 @@ class SessionViewModelIntegrationTests: XCTestCase {
         // Errors: 1
         
         // Then: Finish session
-        viewModel.endSession(shouldDismiss: false)
+        await viewModel.endSession(shouldDismiss: false)
         
         // Expectation: Not certified because errors > 0 (Strict Requirement)
         // With current legacy code (errors <= 1), this SHOULD be certified.
@@ -106,7 +106,7 @@ class SessionViewModelIntegrationTests: XCTestCase {
         viewModel.processInput(1) // 1
         
         // Then
-        viewModel.endSession()
+        await viewModel.endSession()
         
         // Check Status (assuming it beat previous null record)
         let status = viewModel.sessionEndStatus
@@ -172,6 +172,7 @@ class SessionViewModelIntegrationTests: XCTestCase {
 
 // MARK: - Mocks
 
+@MainActor
 class SVM_MockPersistence: PracticePersistenceProtocol {
     var userDefaults: UserDefaults = .standard // Dummy
     
@@ -185,6 +186,17 @@ class SVM_MockPersistence: PracticePersistenceProtocol {
     func loadSelectedMode() -> String? { return nil }
     func saveHighestIndex(_ index: Int, for constantKey: String) {}
     func getHighestIndex(for constantKey: String) -> Int { return 0 }
+    
+    func saveSelectedGhostType(_ type: String) {}
+    func loadSelectedGhostType() -> String? { return nil }
+    func saveAutoAdvance(_ enabled: Bool) {}
+    func loadAutoAdvance() -> Bool? { return nil }
+    
+    func saveLastChallengeDate(_ date: Date) {}
+    func loadLastChallengeDate() -> Date? { return nil }
+    
+    func saveTotalCorrectDigits(_ count: Int) {}
+    func loadTotalCorrectDigits() -> Int { 0 }
 }
 
 class MockPersonalBestStore {

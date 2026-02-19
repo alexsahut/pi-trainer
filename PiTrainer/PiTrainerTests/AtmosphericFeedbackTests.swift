@@ -9,7 +9,7 @@ final class AtmosphericFeedbackTests: XCTestCase {
     
     override func setUp() async throws {
         // Initialize ViewModel
-        viewModel = SessionViewModel()
+        viewModel = SessionViewModel(persistence: PracticePersistence())
         
         // Setup Game Mode which has the Ghost
         viewModel.selectedMode = .game

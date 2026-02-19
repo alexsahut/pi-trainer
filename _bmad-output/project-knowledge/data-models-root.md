@@ -1,40 +1,54 @@
-# Data Models - root
+# Data Models - pi-trainer
 
-## Core Models
+The project utilizes a hybrid persistence approach, combining `UserDefaults` for lightweight metadata and the file system (JSON) for voluminous historical data.
 
-### `Constant` (Enum)
-Represents the mathematical constants supported by the app.
-- **Cases:** `pi`, `e`, `sqrt2`, `phi`
-- **Properties:**
-  - `symbol`: The mathematical symbol (π, e, √2, φ)
-  - `integerPart`: The integer part of the constant.
-  - `resourceName`: Filename of the digit resource.
+## 1. Core Enumerations
 
-### `SessionRecord` (Struct)
-Detailed record of a practice session, persisted via `StatsStore`.
-- **Properties:**
-  - `id`: Unique identifier (UUID).
-  - `date`: Timestamp of the session.
-  - `constant`: The `Constant` practiced.
-  - `mode`: legacy bridging property (maps to `test`/`learning`).
-  - `sessionMode`: **(V2)** The explicit mode (`learn`, `practice`, `test`, `game`).
-  - `attempts`: Total digits entered.
-  - `errors`: Total errors made.
-  - `bestStreakInSession`: Highest streak during the session.
-  - `durationSeconds`: Total time spent.
-  - `digitsPerMinute`: Calculated speed.
-  - `loops`: **(V2)** Number of segment completions (Learn Mode).
-  - `segmentStart`: **(V2)** Start index of practice segment.
-  - `segmentEnd`: **(V2)** End index of practice segment.
+### `Constant`
+Defines the mathematical constants supported by the app.
+- **Cases**: `pi`, `e`, `phi`.
+- **Properties**: `id`, `symbol`, `resourceName` (for digit files), `integerPart`.
 
-### `ConstantStats` (Struct)
-Summarized stats and history for a specific constant.
-- **Properties:**
-  - `bestStreak`: Lifetime best streak (excludes Learn Mode).
-  - `bestSession`: The full `SessionRecord` representing the PR.
-  - `lastSession`: Most recent `SessionRecord`.
-  - `sessionHistory`: List of recent `SessionRecord` (FIFO, max 200).
+### `SessionMode`
+Defines the operational rules for a practice session.
+- **Cases**: `learn`, `practice`, `game`, `test` (Strict).
+- **Behavior Flags**: `allowsReveal`, `hasGhost`, `showsPermanentOverlay`.
 
-## Persistence
+## 2. Persistence Models
 
-Statistics are managed by `StatsStore` and persisted using **UserDefaults** under the key `com.alexandre.pitrainer.stats`. Data is encoded/decoded using `JSONEncoder`/`JSONDecoder`.
+### `PersonalBestRecord` (JSON)
+Stored in `Application Support/PersonalBests/`.
+- `constant`: The targeted constant.
+- `type`: `.crown` (Distance) or `.lightning` (Speed).
+- `digitCount`: Maximum digits reached.
+- `totalTime`: Time taken to reach the score.
+- `cumulativeTimes`: Array of `TimeInterval` representing the exact timestamp of every digit entered (critical for Ghost replay).
+
+### `SessionRecord` (JSON)
+Stored in `Application Support/session_history_{id}.json`.
+- `id`: Unique session identifier.
+- `date`: Completion timestamp.
+- `score`: Number of correct digits.
+- `errors`: Total errors committed.
+- `durationSeconds`: Total active time.
+- `digitsPerMinute`: Average speed.
+- `revealsUsed`: Count of "reveal" assistance triggered.
+- `wasVictory`: Boolean flag for Game Mode outcomes.
+
+### `ConstantStats` (UserDefaults JSON)
+Summary metrics per constant.
+- `bestStreak`: Longest error-free run.
+- `totalCorrectDigits`: Aggregate sum of all successful inputs (XP).
+- `lastSessionDate`: Timestamp of most recent activity.
+
+## 3. Metadata & Preferences
+
+### Streak Data (UserDefaults)
+- `zen_athlete_daily_streak`: Current consecutive day count.
+- `zen_athlete_last_practice_date`: Last recorded activity timestamp.
+
+### Preferences (UserDefaults)
+- `selectedConstant`: Preferred starting constant.
+- `selectedMode`: Preferred starting mode.
+- `keypadLayout`: User preference for `.phone` vs `.calculator` layout.
+- `autoAdvance`: Boolean for "Indulgent Mode" settings.

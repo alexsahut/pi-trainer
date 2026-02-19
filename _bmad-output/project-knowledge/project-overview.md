@@ -1,23 +1,36 @@
-# Project Overview - Pi Trainer
+# Project Overview - pi-trainer
 
-## Purpose
-Pi Trainer is an iOS application designed to help users memorize mathematical constants like Pi (π), Euler's number (e), the Square Root of 2 (√2), and the Golden Ratio (φ). It provides both a "Strict" practice mode and a "Training" mode with assistance.
+## Executive Summary
+`pi-trainer` is a dedicated Pi decimal memorization and practice application for iOS. It leverages SwiftUI and high-performance validation logic to provide an immersive, gamified experience for "memory athletes" and Pi enthusiasts.
 
-## Tech Stack Summary
-| Category | Technology |
-| --- | --- |
-| **Platform** | iOS (17.0+) |
-| **Language** | Swift |
-| **Framework** | SwiftUI |
-| **Persistence** | UserDefaults |
-| **Localization** | native .xcstrings (21+ languages) |
+## Core Value Proposition
+- **High-Performance Saisie**: Real-time validation with zero latency perception.
+- **Multilingual Mastery**: Localization for 21+ languages including robust RTL support for Arabic.
+- **Gamified Progress**: Compete against your personal best via the "Ghost Engine" and visual feedback system.
+- **Persistent Progress**: Detailed session history and record tracking.
 
-## Repository Structure
-- **Type:** Monolith
-- **Source:** `PiTrainer/PiTrainer/`
-- **Tests:** `PiTrainer/PiTrainerTests/`, `PiTrainer/PiTrainerUITests/`
+## Technology Stack Summary
+- **Platform**: iOS 18.0+ (SwiftUI).
+- **Language**: Swift 5.10+.
+- **Architecture**: MVVM with `@Observable` state.
+- **Sensory**: Core Haptics (Custom patterns).
+- **Localization**: Localizable String Catalogs (`.xcstrings`).
 
-## Documentation Links
+## Key Project Features
+- **Learning Mode**: Practice specific segments of Pi (e.g., first 50-100 digits).
+- **Practice Mode**: Standard freeform practice with Zen focus.
+- **Game Mode**: Compete against a ghost representing your personal record.
+- **Strict Mode**: Ends immediately upon any error.
+- **Record Dashboard**: Displays Personal Bests (PB) for various mathematical constants (Pi, e, Phi).
+
+## Repository Classification
+- **Type**: Monolith.
+- **Language**: Swift.
+- **Primary Domain**: Mobile (iOS).
+
+## Quick Links
 - [Architecture](./architecture.md)
 - [Source Tree Analysis](./source-tree-analysis.md)
+- [Development Guide](./development-guide.md)
+- [Component Inventory](./component-inventory-root.md)
 - [Data Models](./data-models-root.md)

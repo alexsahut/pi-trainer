@@ -25,7 +25,18 @@ class HorizonMockPersistence: PracticePersistenceProtocol {
     func saveSelectedConstant(_ constant: String) {}
     func loadSelectedConstant() -> String? { nil }
     func saveSelectedMode(_ mode: String) {}
-    func loadSelectedMode() -> String? { nil }
+    func loadSelectedMode() -> String? { return nil }
+    
+    func saveSelectedGhostType(_ type: String) {}
+    func loadSelectedGhostType() -> String? { return nil }
+    func saveAutoAdvance(_ enabled: Bool) {}
+    func loadAutoAdvance() -> Bool? { return nil }
+    
+    func saveLastChallengeDate(_ date: Date) {}
+    func loadLastChallengeDate() -> Date? { return nil }
+    
+    func saveTotalCorrectDigits(_ count: Int) {}
+    func loadTotalCorrectDigits() -> Int { 0 }
 }
 
 @MainActor
@@ -50,7 +61,7 @@ final class HorizonLineTests: XCTestCase {
         viewModel = SessionViewModel(
             persistence: mockPersistence,
             providerFactory: { _ in HorizonMockDigitsProvider() },
-            personalBestProvider: { _ in self.mockPB }
+            personalBestProvider: { _, _ in self.mockPB }
         )
     }
     

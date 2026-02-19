@@ -233,4 +233,50 @@ class HapticService {
             print("Failed to play selection haptic: \(error)")
         }
     }
+    
+    /// Plays a composite "Double Bang" haptic pattern (Reward celebration).
+    /// Combines success transient with heavy impact and rumble.
+    func playDoubleBang() {
+        guard isEnabled else { return }
+        
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+            // Reinforced fallback for older devices
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                let heavy = UIImpactFeedbackGenerator(style: .heavy)
+                heavy.impactOccurred()
+            }
+            return
+        }
+        
+        if !isEngineRunning {
+            try? engine?.start()
+            isEngineRunning = true
+        }
+        
+        // Pattern: Success Transient -> Heavy Impact -> Rumble
+        // 0.0s: Success
+        let intensityS = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0)
+        let sharpnessS = CHHapticEventParameter(parameterID: .hapticSharpness, value: 1.0)
+        let success = CHHapticEvent(eventType: .hapticTransient, parameters: [intensityS, sharpnessS], relativeTime: 0)
+        
+        // 0.1s: Impact
+        let intensityI = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0)
+        let sharpnessI = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
+        let impact = CHHapticEvent(eventType: .hapticTransient, parameters: [intensityI, sharpnessI], relativeTime: 0.1)
+        
+        // 0.2s - 0.5s: Rumble
+        let intensityR = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.6)
+        let sharpnessR = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.3)
+        let transientR = CHHapticEvent(eventType: .hapticContinuous, parameters: [intensityR, sharpnessR], relativeTime: 0.2, duration: 0.3)
+        
+        do {
+            let pattern = try CHHapticPattern(events: [success, impact, transientR], parameters: [])
+            let player = try engine?.makePlayer(with: pattern)
+            try player?.start(atTime: 0)
+        } catch {
+            print("Failed to play Double Bang haptic: \(error)")
+        }
+    }
 }

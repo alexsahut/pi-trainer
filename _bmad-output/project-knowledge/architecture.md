@@ -1,35 +1,49 @@
-# Architecture
+# Architecture Documentation - pi-trainer
 
-## Executive Summary
-Pi Trainer is a native iOS application built with **SwiftUI** and **Swift**. It follows an **MVVM (Model-View-ViewModel)** architectural pattern with specialized **Service** layers for digit management and persistence.
+## 1. Architectural Overview
 
-## Technology Stack
-- **Language:** Swift 5.9+
-- **Framework:** SwiftUI
-- **Persistence:** UserDefaults (via `StatsStore`)
-- **Localization:** String Catalog (`.xcstrings`) supporting 21+ languages.
-- **Testing:** XCTest (Unit and UI tests).
+The `pi-trainer` application is built using a modern **SwiftUI** architecture, evolving towards a **Feature-Sliced Hybrid MVVM** pattern. It prioritizes low-latency user interaction and robust mathematical validation.
 
-## Architecture Pattern: MVVM + Services
+### Design Principles
+- **Performance First**: Core validation logic is designed for <16ms latency to ensure fluid typing at high speeds.
+- **Sensory Immersion**: Core Haptics and dynamic visual feedback (Ghost Mode, Atmospheric colors) are integrated deeply into the user experience.
+- **Safety & Stability**: Use of value-based state management (Observable structs) to avoid reference-related regressions.
 
-### Models
-- `Constant`: Represents π, e, etc.
-- `SessionRecord`: Data structure for practiced sessions.
-- `ConstantStats`: Aggregated stats for a constant.
+## 2. Core Components
 
-### ViewModels
-- `SessionViewModel`: Manages the state of a practice session, interacting with the `PracticeEngine`.
-- `LearningSessionViewModel`: Manages the spaced-repetition learning flow.
+### PracticeEngine
+The central logic engine for digit validation.
+- **State**: Tracks the current index, streaks, errors, and session time.
+- **Validation**: Performs direct comparison against preloaded digit data.
+- **Mode Aware**: Supports Learn (segment-based), Practice (zen), Game (ghost), and Strict modes.
 
-### Views (SwiftUI)
-- `HomeView`: Main navigation hub.
-- `SessionView`: Interactive practice screen with keypad.
-- `StatsView`: Visualization of progress and history.
+### SessionViewModel
+The main orchestrator for a practice session.
+- **Reactive State**: Uses `@Published` and `@Observable` to drive the UI.
+- **Flow Control**: Manages the lifecycle of a session (Start, Input, End, Save).
+- **Service Integration**: Communicates with `PracticeEngine`, `GhostEngine`, and `StatsStore`.
 
-### Services
-- `PracticeEngine`: Core business logic for validating digit entry and tracking streaks.
-- `DigitsProvider`: Handles loading of large digit sequences from text resources.
-- `StatsStore`: Handles persistence and migration of user statistics.
+### GhostEngine
+A specialized engine for replaying personal best performances.
+- **Interpolation**: Calculates the "ghost's position" in real-time based on cumulative timestamps from previous best sessions.
+- **Async Monitoring**: Runs a background task to check for victory/defeat transitions.
 
-## Data Architecture
-The app uses a simple but robust persistence layer based on `UserDefaults`. Large digit sequences are stored in bundled `.txt` files to keep the binary size manageable while ensuring fast access.
+## 3. Persistence Strategy
+
+The project uses a **Hybrid Persistence** model:
+1. **UserDefaults (`PracticePersistence`)**: Used for high-frequency, low-volume data like current settings, personal best scores, and streak metadata.
+2. **File System (`SessionStore` / JSON)**: Used for high-volume data like historical session records (limit: 200 items) and cumulative timestamps for ghost replays.
+3. **Asynchronous Saving**: All persistent operations are performed off the main thread to prevent UI hitches during session completion.
+
+## 4. Design System
+
+The app utilizes a custom **Design System** (`DesignSystem.swift`) rather than standard iOS components to maintain a "Dark & Sharp" athlete-focused aesthetic.
+- **Colors**: OLED-perfect blacks, Cyan Electric for success, Orange Electric for ghost lead.
+- **Typography**: SF Mono for all digit displays to ensure perfect grid alignment.
+- **Components**: Custom `KeypadView`, `TerminalGridView`, and `ZenPrimaryButton`.
+
+## 5. Implementation Patterns
+
+- **Observation**: Leverages the Swift 5.10+ `@Observable` macro for high-performance UI updates.
+- **Swift Concurrency**: Uses `Task` and `MainActor` for managing asynchronous operations (ghost monitoring, persistence).
+- **Protocol-Oriented**: Dependency injection is used for persistence and data providers to facilitate unit testing.

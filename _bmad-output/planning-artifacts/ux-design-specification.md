@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 'v2-extensions']
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 'v2-extensions', 'epic-11-core', 'epic-11-emotion', 'epic-11-inspiration', 'epic-11-design-system', 'epic-11-visual', 'epic-11-direction', 'epic-11-journeys', 'epic-11-components', 'epic-11-patterns', 'epic-11-responsive', 'epic-11-complete']
 inputDocuments:
   - '_bmad-output/planning-artifacts/prd.md'
   - '_bmad-output/planning-artifacts/prd-validation-report.md'
@@ -464,3 +464,221 @@ graph TD
     K -->|Battu Ghost?| L[Célébration Speed]
     K -->|Ghost gagne| M[Affichage Écart]
 ```
+
+## Core User Experience (Epic 11 Extension)
+
+### Defining Experience : Le Rituel Quotidien
+L'expérience centrale de l'Epic 11 est la transformation de la pratique en un rituel quotidien gratifiant. Ce n'est plus seulement s'entraîner, c'est "valider son rang" et "relever le défi du jour".
+
+### Platform Strategy
+- **Notifications Locales :** Utilisation des notifications iOS pour stimuler le rituel sans dépendance serveur.
+- **Haptique "Double Bang" :** Exploitation du Taptic Engine pour une signature de récompense haute intensité.
+
+### Effortless Interactions
+- **Progression Automatique :** L'XP (total des décimales) et les Grades sont calculés en arrière-plan sans intervention de l'utilisateur.
+- **Accès au Défi :** Le défi du jour est accessible en un tap depuis l'accueil ou via une notification directe.
+
+### Critical Success Moments
+- **Double Bang :** Le moment où l'utilisateur bat son record ET monte en grade simultanément. C'est l'apogée de la gratification sensorielle (visuel + haptique).
+- **Streak de Défi :** La réussite du défi 7 jours consécutifs.
+
+### Experience Principles
+1. **Zen-Reward :** Les récompenses (XP, Badges) doivent être élégantes et minimalistes, jamais intrusives.
+2. **Deterministic Fairness :** Le défi doit être le même pour tous, créant un sentiment de communauté.
+3. **Frictionless Ritual :** Le passage de la notification au défi doit être instantané.
+
+## Desired Emotional Response (Epic 11 Extension)
+
+### Primary Emotional Goals
+- **Fierté Silencieuse :** Un sentiment de progression constante vers la maîtrise (via les Grades).
+- **Exaltation Sensorielle (Double Bang) :** Une montée d'adrénaline courte et intense lors d'une performance exceptionnelle (Record + Grade).
+- **Résilience Constructive :** L'échec au défi n'est pas une fin, mais le début d'une révision ciblée.
+
+### Emotional Journey Mapping
+- **Échec au Défi :** Passage de la déception à la détermination grâce à la redirection fluide vers le mode Learn sur la séquence exacte.
+
+### Micro-Emotions
+- **Anticipation :** Attendre le moment où la barre d'XP va se remplir.
+- **Sentiment de Maîtrise :** Relever un défi MUS complexe renforce la confiance en sa "carte mentale" de Pi.
+
+### Design Implications
+- **Boucle de Récupération :** En cas d'échec, proposer un bouton "S'entraîner sur ce segment" qui ouvre le Mode Learn avec le dual-slider déjà calé sur la séquence du défi.
+
+### Emotional Design Principles
+1. **Zen-Reward :** Les récompenses (XP, Badges) sont élégantes et minimalistes.
+2. **Resilient Ritual :** L'échec est un levier d'apprentissage ; le pont vers le mode Learn est l'action de sortie par défaut.
+
+## UX Pattern Analysis & Inspiration (Epic 11 Extension)
+
+### Inspiring Products Analysis (Focus Rétention)
+- **Duolingo :** Utilisation du "Daily Ritual" et des "Streaks" pour l'engagement à long terme.
+- **Strava :** Le concept de "Segments" personnels et de compétition contre son "Ghost" (PR).
+- **Monkeytype :** Feedback de performance minimaliste et précis.
+
+### Transferable UX Patterns
+- **Daily Seed :** Un défi unique par jour (Wordle-style) pour créer un rendez-vous communautaire.
+- **Goal Gradient Effect :** Visualisation claire du prochain palier de Grade pour motiver l'effort.
+- **Recovery Bridge :** Lien direct entre l'échec au défi et le Mode Learn pour une révision immédiate.
+
+### Anti-Patterns to Avoid
+- **Gamification Enfantine :** Pas de mascottes ou de confettis ; rester dans le "Zen-Athlete".
+- **Punition d'XP :** L'XP mesure l'effort cumulé, elle ne doit jamais décroître.
+
+### Design Inspiration Strategy
+- **Adopter :** Le système de progression Novice -> Grandmaster.
+- **Adapter :** La boucle de "récupération" vers le mode Learn.
+- **Éviter :** Toute distraction visuelle pendant l'exécution du défi.
+
+## Design System Foundation (Epic 11 Extension)
+
+### 1.1 Design System Choice
+**Custom SwiftUI (Extension)**. Nous utilisons les fondations V2 existantes en ajoutant des primitives de gamification.
+
+### Rationale for Selection
+- **Coherence :** L'aspect "Zen" doit être préservé même dans le système de récompenses.
+- **Performance :** L'utilisation de particules natives SwiftUI garantit que la célébration "Double Bang" n'impacte pas la fluidité système.
+
+### Implementation Approach
+- **Badges :** Utilisation de SF Symbols retravaillés avec une aura monochrome.
+- **UX Particles :** Système de particules Canvas SwiftUI pour les effets de récompense.
+
+### Customization Strategy
+- **Zéro Chrome :** Pas de boites, d'ombres ou de bordures pour les éléments de grade ; la hiérarchie est uniquement définie par la typographie (SF Mono) et l'éclat (Glow).
+
+## Visual Design Foundation (Epic 11 Extension)
+
+### Color System
+- **XP / Endurance :** Cyan Électrique (`#00F2FF`). Couleur de l'effort cumulé.
+- **Record / Speed :** Orange Électrique (`#FF6B00`). Couleur du dépassement de soi.
+- **Grades :** Monochrome (SF Symbols) avec une aura Cyan proportionnelle au rang.
+
+### Typography System
+- **XP Counters :** SF Mono Medium (cohérence avec les chiffres de Pi).
+- **Grade Labels :** SF Pro Bold All-Caps (Style "Elite").
+
+### Spacing & Layout Foundation
+- **Dashboard :** Éléments de progression flottants en haut de l'écran d'accueil.
+- **Minimalist Rewards :** Zéro conteneur ou bordures pour les badges.
+
+### Accessibility Considerations
+- **High Contrast :** Respect strict des contrastes sur fond Noir OLED.
+- **Haptic Redundancy :** Chaque feedback visuel de récompense est doublé d'une signature haptique unique.
+
+## Design Direction Decision (Epic 11 Extension)
+
+### Design Directions Explored
+Exploration d'une direction **"Sharp & Neo-Zen"** :
+- **Visuals :** Particules carrées (pixels) pour l'explosion, lueur néon Cyan/Orange.
+- **Hierarchy :** Zéro bouton pendant l'animation, focus sur le chiffre (+XP).
+
+### Chosen Direction : The Double Bang Reward
+L'approche finale privilégie l'exaltation sensorielle immédiate tout en restant dans le cadre épuré de l'application.
+
+### Design Rationale
+- **Identité :** Le "Double Bang" crée un pic de dopamine qui renforce la rétention sans dénaturer le côté instrument de précision de PiTrainer.
+- **Clarté :** L'utilisation de couleurs sémantiques (Cyan=XP, Orange=Record) permet une lecture instantanée du succès.
+
+### Implementation Approach
+- **Canvas SwiftUI :** Utilisation d'un calque `Canvas` pour le rendu des particules haute performance.
+- **Haptic Sync :** Déclenchement d'un `CHHapticPattern` complexe synchronisé avec le flash initial.
+
+## User Journey Flows (Epic 11 Extension)
+
+### Le Défi Quotidien (Daily Challenge)
+L'utilisateur découvre son défi personnalisé et tente de le relever pour obtenir son Double Bang.
+
+```mermaid
+graph TD
+    A[Notification Locale: 'Défi Prêt!'] -->|Tap| B[Écran Challenge]
+    B --> C{User Start}
+    C --> D[Saisie de la Séquence MUS]
+    D --> E{Résultat}
+    
+    E -->|Succès + Nouveau PR| F[Animation DOUBLE BANG]
+    F --> G[Gain XP + Upgrade Grade]
+    G --> H[Retour Home: Dashboard mis à jour]
+    
+    E -->|Échec| I[Alerte: 'Segment à réviser']
+    I --> J[Bouton: 'S'entraîner maintenant']
+    J --> K[Mode Learn: Segment pré-chargé]
+    K --> L[Pratique assistée]
+```
+
+### Journey Patterns
+- **The "Recovery Bridge" :** Transformer l'échec au défi en une opportunité d'apprentissage immédiate vers le Mode Learn.
+- **The "Goal Gradient" :** Utilisation d'un indicateur de grade suivant pour stimuler la progression.
+
+### Flow Optimization Principles
+1. **Frictionless Entry :** La notification ouvre directement le défi pour minimiser le nombre de taps.
+2. **Haptic Validation :** Signature haptique renforcée pendant le défi pour souligner l'importance de la session.
+
+## Component Strategy (Epic 11 Extension)
+
+### Design System Components
+Utilisation massive des fondations SwiftUI natives pour garantir la performance des animations de gamification.
+
+### Custom Components
+
+#### XPProgressBar
+- **Purpose :** Visualisation de l'effort cumulé (Endurance).
+- **Anatomy :** Ligne de 2px, remplissage Cyan (`#00F2FF`). Pas de bordures.
+- **Interaction :** Animation `.spring()` lors de l'incrémentation.
+
+#### GradeBadge
+- **Purpose :** Statut social et accomplissement à long terme.
+- **Anatomy :** SF Symbol (monochrome) + Calque de flou (Glow) Cyan.
+- **States :** `locked` (opacité 10%), `active` (100% + Glow).
+
+#### DoubleBangView
+- **Purpose :** Célébration ultime (Record + Grade).
+- **Anatomy :** Vue `Canvas` plein écran. Particules carrées (pixels).
+- **Behavior :** Durée < 800ms. Explosion radiale depuis le centre.
+
+### Component Implementation Strategy
+- **Zéro Dépendance :** Particules créées via l'API `Canvas` de SwiftUI (Metal-backed).
+- **Atomic Layout :** Les badges flottent librement sans conteneurs carte ("Card-less UI").
+
+### Implementation Roadmap
+- **Phase 1 (Core) :** `XPProgressBar` + Logique de Grade dynamique.
+- **Phase 2 (Experience) :** `GradeBadge` sur l'écran Home.
+- **Phase 3 :** `DoubleBangView` (système de particules complet).
+
+## UX Consistency Patterns (Epic 11 Extension)
+
+### Feedback Patterns (Tiered Success)
+- **Standard (+1) :** Flash Cyan + Haptic Sec.
+- **Streak Milestone :** Aura Cyan persistante.
+- **Epic Reward (Double Bang) :** Explosion de particules + Haptic Intense (déclenché sur Nouveau PB + Passage de Grade).
+
+### Notification Patterns
+- **Rituel Quotidien :** Notification locale à heure fixe personnalisant le défi ("Record actuel: X. Prêt à le battre ?").
+- **Auto-Silence :** Arrêt automatique des notifications après 7 jours d'inactivité.
+
+### Navigation Patterns
+- **Direct Entry :** Le tap sur la notification de défi bypass l'accueil et ouvre directement le `ChallengeService`.
+- **The Bridge :** Lien systématique vers le Mode Learn après un échec au défi pour encourager la résilience.
+
+## Responsive Design & Accessibility (Epic 11 Extension)
+
+### Responsive Strategy
+- **One-Handed Focus :** Animations Double Bang centrées pour l'ergonomie mobile.
+- **iPad Adaptation :** Champ de particules élargi (Canvas) exploitant la surface tout en préservant le focus central.
+
+### Accessibility Strategy (WCAG AA)
+- **Haptic Redundancy :** Vibrations distinctes pour le gain d'XP et le passage de Grade, permettant un feedback physique indépendant du visuel.
+- **Reduce Motion Compatibility :** Remplacement du système de particules par un fondu statique si l'option système est activée.
+- **VoiceOver Integration :** Labels sémantiques sur les badges de Grade et annonce parlée du gain d'XP.
+
+### Testing Strategy
+- **Haptic Audit :** Validation manuelle des signatures vibratoires.
+- **Accessibility Inspector :** Vérification des labels VoiceOver sur le Dashboard.
+
+### Implementation Guidelines
+1. **Performance :** Utilisation impérative de l'API `Canvas` (Metal) pour les effets plein écran.
+2. **Dynamic UI :** Adaptabilité du compteur d'XP aux tailles de polices extrêmes.
+
+
+
+
+
+

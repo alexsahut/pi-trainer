@@ -10,7 +10,11 @@ import SwiftUI
 struct SessionView: View {
     
     @ObservedObject var viewModel: SessionViewModel
-    @ObservedObject var statsStore: StatsStore
+    
+    init(viewModel: SessionViewModel) {
+        self.viewModel = viewModel
+    }
+    private var statsStore = StatsStore.shared
     @Environment(\.dismiss) var dismiss
     
     @State private var showOptions = false
@@ -167,7 +171,24 @@ struct SessionView: View {
                         ZStack {
                             Color.black.opacity(0.8)
                             
+                            if RewardManager.shared.isDoubleBangActive {
+                                DoubleBangView()
+                                    .ignoresSafeArea()
+                            }
+                            
                             VStack(spacing: 24) {
+                                if RewardManager.shared.isDoubleBangActive {
+                                    Text("DOUBLE BANG")
+                                        .font(DesignSystem.Fonts.monospaced(size: 40, weight: .black))
+                                        .foregroundColor(DesignSystem.Colors.cyanElectric)
+                                        .shadow(color: DesignSystem.Colors.cyanElectric.opacity(0.8), radius: 15)
+                                        .transition(.scale.combined(with: .opacity))
+                                        .padding(.bottom, -10)
+                                        .onAppear {
+                                            UIAccessibility.post(notification: .announcement, argument: "Double Bang! Nouveau record et passage de grade !")
+                                        }
+                                }
+                                
                                 let status = viewModel.sessionEndStatus
                                 Text(status.title)
                                     .font(DesignSystem.Fonts.monospaced(size: 32, weight: .black))
@@ -299,7 +320,7 @@ struct SessionView: View {
         .navigationBarBackButtonHidden(true)
         .interactiveDismissDisabled(viewModel.isActive)
         .sheet(isPresented: $showOptions) {
-            SessionSettingsView(viewModel: viewModel, statsStore: statsStore)
+            SessionSettingsView(viewModel: viewModel)
         }
         .sheet(isPresented: $showingRulesSheet) {
             GameModeRulesView()

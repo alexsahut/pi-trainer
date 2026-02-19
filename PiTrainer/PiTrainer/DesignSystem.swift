@@ -7,11 +7,16 @@ enum DesignSystem {
         static let orangeElectric = Color(red: 1.0, green: 0.42, blue: 0.0) // #FF6B00
         static let textPrimary = Color.white
         static let textSecondary = Color.gray
+        static let surface = Color(white: 0.1) // Near black for cards/surfaces
     }
     
     enum Fonts {
         static func monospaced(size: CGFloat, weight: Font.Weight = .regular) -> Font {
             return Font.system(size: size, weight: weight, design: .monospaced)
+        }
+        
+        static func primary(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+            return Font.system(size: size, weight: weight, design: .default)
         }
     }
     
@@ -24,5 +29,6 @@ enum DesignSystem {
     
     enum Constants {
         static let maxAtmosphericDelta: Double = 5.0
+        static let chunkSize: Int = 10
     }
 }

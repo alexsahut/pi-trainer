@@ -5,6 +5,8 @@ import SwiftUI
     enum Destination: Hashable {
         case session(mode: PracticeEngine.Mode)
         case stats
+        case challengeHub
+        case challengeSession(Challenge, isDaily: Bool)
     }
     
     var path = NavigationPath()

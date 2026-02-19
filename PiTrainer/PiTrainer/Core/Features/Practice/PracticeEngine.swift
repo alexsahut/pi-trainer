@@ -125,7 +125,7 @@ class PracticeEngine {
     
     // MARK: - Initialization
     
-    init(constant: Constant, provider: any DigitsProvider, persistence: PracticePersistenceProtocol = PracticePersistence()) {
+    init(constant: Constant, provider: any DigitsProvider, persistence: PracticePersistenceProtocol) {
         self.constant = constant
         self.digitsProvider = provider
         self.persistence = persistence

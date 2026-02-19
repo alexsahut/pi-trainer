@@ -150,7 +150,7 @@ L'approche MVP instaure la structure tripolaire de l'application :
 - **FR6 (Ghost System) :** Le système calcule et anime un "Ghost" (curseur) basé sur le Personal Best (PR) de l'utilisateur.
 - **FR7 (Horizon Line) :** Une barre de progression minimaliste (1px) en haut d'écran visualise la course entre le joueur (Point Blanc) et le Ghost (Point Gris).
 - **FR8 (Atmospheric Feedback) :** La couleur d'ambiance de l'écran évolue dynamiquement selon le delta Vitesse (Chaud = En avance, Froid = En retard).
-- **FR9 (Error Tolerance) :** Contrairement au mode strict, les erreurs sont signalées (Haptique/Visuel) mais n'arrêtent pas la session. Elles appliquent une pénalité de temps/score.
+- **FR9 (Error Tolerance) :** Contrairement au mode strict, les erreurs n'arrêtent pas la session. **Ce mode impose le comportement "Indulgent" (FR15)** : le curseur avance automatiquement après une erreur pour maintenir le flow, tout en appliquant une pénalité.
 
 ### 4. Mode Play - Compétition (Ex-Strict)
 - **FR10 (Strict Rules) :** La session s'arrête immédiatement à la première erreur saisie.
@@ -165,7 +165,7 @@ L'approche MVP instaure la structure tripolaire de l'application :
 - **FR14 (Streak Flow) : Epic 2 - Story 2.3** Le mécanisme de streak flow (animations visuelles de combo) est actif dans tous les modes (Learn/Practice/Play).
 
 ### 6. User Experience & Refinements (Community Feedback)
-- **FR15 (Forgiving Flow) : Epic 10 - Story 10.1** Option "Mode Indulgent" permettant d'avancer le curseur même en cas d'erreur (avec pénalité) pour préserver le flow.
+- **FR15 (Forgiving Flow) : Epic 10 - Story 10.1** Option "Mode Indulgent" permettant d'avancer le curseur même en cas d'erreur. **Cette option est configurable par l'utilisateur pour le mode Practice, mais est activée par défaut et obligatoire pour le Game Mode (FR9).**
 - **FR16 (Loop Reset) : Epic 10 - Story 10.2** En mode Learn, possibilité de réinitialiser le segment en cours sans perdre les statistiques globales de la session.
 
 ---

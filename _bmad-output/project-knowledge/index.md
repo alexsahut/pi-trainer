@@ -1,29 +1,44 @@
-# Project Documentation Index
+# Project Documentation Index - pi-trainer
 
-### Project Overview
-- **Type:** Monolith
-- **Primary Language:** Swift
-- **Architecture:** MVVM + Services
+Welcome to the comprehensive documentation for `pi-trainer`. This documentation set provides a detailed overview of the project's architecture, patterns, and implementation details, optimized for both human developers and AI assistants.
 
-### Quick Reference
-- **Tech Stack:** SwiftUI, Swift, UserDefaults, Localizable.xcstrings
-- **Entry Point:** `PiTrainerApp.swift`
-- **Architecture Pattern:** MVVM
+## 📊 Quick Reference
 
-### Generated Documentation
-- [Project Overview](./project-overview.md)
-- [Architecture](./architecture.md)
-- [Source Tree Analysis](./source-tree-analysis.md)
-- [Data Models](./data-models-root.md)
-- [Development Guide](./development-guide.md) _(To be generated)_
-- [API Contracts](./api-contracts.md) _(N/A - Local App)_
+- **Project Name:** pi-trainer
+- **Language:** Swift (iOS 17+)
+- **Architecture:** Feature-Sliced MVVM + `@Observable`
+- **Primary Domain:** Mobile / Memory Athletics
 
-### Existing Documentation
-- [DEVLOG.md](../../DEVLOG.md) - History of development and milestones.
-- [README.md](../../README.md) - Project introduction.
+---
 
-### Getting Started
-1. Open `PiTrainer/PiTrainer.xcodeproj` in Xcode 15 or later.
-2. Select a simulator (e.g., iPhone 16) or a physical device.
-3. Press **Cmd+R** to run the app.
-4. Press **Cmd+U** to run the unit tests.
+## 📂 Documentation Set
+
+### [Project Overview](./project-overview.md)
+Start here for a high-level executive summary, key value propositions, and a feature inventory of the v2 platform.
+
+### [Architecture Guide](./architecture.md)
+Detailed breakdown of the MVVM structure, the `PracticeEngine` logic, and the high-performance `GhostEngine` implementation.
+
+### [Source Tree Analysis](./source-tree-analysis.md)
+An annotated guide to the directory structure and critical files, explaining the purpose of each layer in the feature-sliced architecture.
+
+### [Data Models](./data-models-root.md)
+Explanations of the persistence models (`PersonalBestRecord`, `SessionRecord`) and the hybrid storage strategy using `UserDefaults` and JSON.
+
+### [Component Inventory](./component-inventory-root.md)
+A catalog of UI components (ProPad, TerminalGrid) and core logic services (HapticService, StatsStore).
+
+### [Development Guide](./development-guide.md)
+Prerequisites, environment setup, build instructions, and testing strategies for the iOS platform.
+
+---
+
+## 🏁 Getting Started
+
+If you are new to the project or starting a new feature branch:
+1. Review the **[Architecture Guide](./architecture.md)** to understand the observation and persistence patterns.
+2. Check the **[Development Guide](./development-guide.md)** for setup and testing commands.
+3. Consult **[project-context.md](../../project-context.md)** for critical V2-specific rules.
+
+---
+*Documentation generated on 2026-01-23*
