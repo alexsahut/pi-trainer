@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-01-24
+generated: 2026-02-19
 project: pi-trainer
 project_key: pi-trainer
 tracking_system: file-system
@@ -132,3 +132,10 @@ development_status:
   14-1-contextual-ux: done
   14-2-logic-integrity-scope: done
   14-3-zen-keyboard-alignment: done
+
+  epic-15: in-progress
+  15-1-crash-prevention: backlog
+  15-2-challenge-mode-cold-start-fix: backlog
+  15-3-ui-ux-fixes: backlog
+  15-4-test-repair: backlog
+  15-5-polish-technique: backlog
