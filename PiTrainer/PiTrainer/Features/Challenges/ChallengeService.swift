@@ -110,7 +110,6 @@ class ChallengeService: ChallengeServiceProtocol {
             print("ChallengeService: highestIndex (\(rawHighestIndex)) below minimum threshold (\(Self.minimumHighestIndex))")
             return nil
         }
-        let highestIndex = rawHighestIndex
         
         // Load digits (Main Thread OK for load, but logic should be background)
         var provider = digitsProviderFactory(constant)
@@ -141,7 +140,7 @@ class ChallengeService: ChallengeServiceProtocol {
             var rng = LinearCongruentialGenerator(seed: finalSeed)
             
             // Random start index bounded by user's highest index (Known Segment)
-            let maxStart = max(0, min(highestIndex, allDigits.count) - 1)
+            let maxStart = max(0, min(rawHighestIndex, allDigits.count) - 1)
             let rangeSize = UInt64(maxStart + 1)
             let initialStartIndex = Int(rng.next() % rangeSize)
             
@@ -151,7 +150,7 @@ class ChallengeService: ChallengeServiceProtocol {
                 if let challenge = ChallengeService.createChallenge(
                     startIndex: candidateStartIndex,
                     allDigits: allDigits,
-                    highestIndex: highestIndex,
+                    highestIndex: rawHighestIndex,
                     grade: grade,
                     constant: constant,
                     date: seedDate
@@ -169,7 +168,6 @@ class ChallengeService: ChallengeServiceProtocol {
             print("ChallengeService: highestIndex (\(rawHighestIndex)) below minimum threshold (\(Self.minimumHighestIndex))")
             return nil
         }
-        let highestIndex = rawHighestIndex
         
         var provider = digitsProviderFactory(constant)
         do {
@@ -183,7 +181,7 @@ class ChallengeService: ChallengeServiceProtocol {
         
         return await Task.detached(priority: .userInitiated) {
             var rng = SystemRandomNumberGenerator()
-            let maxStart = max(0, min(highestIndex, allDigits.count) - 1)
+            let maxStart = max(0, min(rawHighestIndex, allDigits.count) - 1)
             let rangeSize = UInt64(maxStart + 1)
             let initialStartIndex = Int(rng.next() % rangeSize)
             
@@ -193,7 +191,7 @@ class ChallengeService: ChallengeServiceProtocol {
                 if let challenge = ChallengeService.createChallenge(
                     startIndex: candidateStartIndex,
                     allDigits: allDigits,
-                    highestIndex: highestIndex,
+                    highestIndex: rawHighestIndex,
                     grade: grade,
                     constant: constant,
                     date: Date()
@@ -264,12 +262,18 @@ class ChallengeService: ChallengeServiceProtocol {
             expectedNextDigits: expected
         )
         
-        // Story 15.2: E2E Validation — verify the generated sequence matches actual digits
+        // Story 15.2: E2E Validation — verify the generated sequence bytes are valid ASCII digits
         let fullSequence = refSeq + expected
         let fullSequenceBytes = Array(fullSequence.utf8)
-        let actualBytes = Array(allDigits[startIndex..<(startIndex + fullSequenceBytes.count)])
-        guard fullSequenceBytes == actualBytes else {
-            print("ChallengeService: E2E VALIDATION FAILED. Expected \(fullSequence) at index \(startIndex) but got \(String(decoding: actualBytes, as: UTF8.self))")
+        // Validate that all bytes are in the ASCII digit range (0x30 = '0', 0x39 = '9')
+        let allAsciiDigits = fullSequenceBytes.allSatisfy { $0 >= 0x30 && $0 <= 0x39 }
+        guard allAsciiDigits else {
+            print("ChallengeService: E2E VALIDATION FAILED. Sequence '\(fullSequence)' contains non-digit bytes.")
+            return nil
+        }
+        // Verify sequence length matches expectations
+        guard fullSequenceBytes.count == length + actualTargetLength else {
+            print("ChallengeService: E2E VALIDATION FAILED. Expected \(length + actualTargetLength) bytes but got \(fullSequenceBytes.count)")
             return nil
         }
         

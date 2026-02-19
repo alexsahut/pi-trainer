@@ -1,6 +1,6 @@
 # Story 15.2: Challenge Mode Cold Start Fix
 
-Status: review
+Status: done
 
 ## Story
 
@@ -35,6 +35,12 @@ Afin de pouvoir utiliser les Défis Quotidiens sans rencontrer de bugs liés à 
 - [x] **Task 4 — Validation Finale**
   - [x] 4.1 BUILD SUCCEEDED
   - [x] 4.2 Tests ChallengeService + ChallengeHubViewModel : exit code 0
+
+### Review Follow-ups (AI)
+- [x] [AI-Review][HIGH] Add missing localization keys `challenge_locked_title` + `challenge_locked_body` to Localizable.xcstrings
+- [x] [AI-Review][HIGH] Deduplicate threshold constant — VM now uses `ChallengeService.minimumHighestIndex`
+- [x] [AI-Review][MEDIUM] Fix tautological E2E validation — now checks ASCII digit range + sequence length
+- [x] [AI-Review][LOW] Remove redundant `let highestIndex = rawHighestIndex` assignment
 
 ## Dev Notes
 

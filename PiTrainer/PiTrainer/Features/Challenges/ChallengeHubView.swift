@@ -53,12 +53,12 @@ struct ChallengeHubView: View {
                                     .font(.system(size: 40))
                                     .foregroundColor(DesignSystem.Colors.textSecondary)
                                 
-                                Text(String(localized: "challenge_locked_title"))
+                                Text("challenge_locked_title")
                                     .font(DesignSystem.Fonts.monospaced(size: 16, weight: .bold))
                                     .foregroundColor(DesignSystem.Colors.textPrimary)
                                     .multilineTextAlignment(.center)
                                 
-                                Text(String(localized: "challenge_locked_body \(viewModel.digitsRemainingToUnlock)"))
+                                Text("challenge_locked_body \(viewModel.digitsRemainingToUnlock)")
                                     .font(DesignSystem.Fonts.primary(size: 14))
                                     .foregroundColor(DesignSystem.Colors.textSecondary)
                                     .multilineTextAlignment(.center)

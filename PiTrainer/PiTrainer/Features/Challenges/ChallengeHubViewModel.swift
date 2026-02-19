@@ -10,18 +10,16 @@ class ChallengeHubViewModel {
     var isDailyCompleted: Bool = false
     var errorText: String?
     
-    /// Minimum number of digits the user must have practiced before challenges unlock
-    static let minimumDigitsForChallenge = 50
-    
-    /// Whether the user has practiced enough digits to access challenges
+    /// Whether the user has practiced enough digits to access challenges.
+    /// Uses ChallengeService.minimumHighestIndex as single source of truth.
     var isChallengeEligible: Bool {
-        persistence.getHighestIndex(for: statsStore.selectedConstant.id) >= Self.minimumDigitsForChallenge
+        persistence.getHighestIndex(for: statsStore.selectedConstant.id) >= ChallengeService.minimumHighestIndex
     }
     
     /// How many more digits the user needs to unlock challenges
     var digitsRemainingToUnlock: Int {
         let current = persistence.getHighestIndex(for: statsStore.selectedConstant.id)
-        return max(0, Self.minimumDigitsForChallenge - current)
+        return max(0, ChallengeService.minimumHighestIndex - current)
     }
     
     private let service: ChallengeServiceProtocol
