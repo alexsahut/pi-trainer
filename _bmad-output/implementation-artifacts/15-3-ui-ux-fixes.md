@@ -1,6 +1,6 @@
 # Story 15.3: UI & UX Fixes — Keypad, Navigation et Localisation
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -39,6 +39,9 @@ Afin de ne pas rencontrer de problèmes visuels, de navigation fragile ou de tex
 - [x] **Task 5 — Validation Finale**
   - [x] 5.1 `xcodebuild build` — BUILD SUCCEEDED
   - [x] 5.2 Lancer les tests unitaires pertinents
+
+### Review Follow-ups (AI)
+- [x] [AI-Review][LOW] Nettoyage des commentaires exploratoires obsolètes dans `ChallengeSessionView` (shouldNavigateToPractice handler)
 
 ## Dev Notes
 

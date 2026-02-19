@@ -75,18 +75,7 @@ struct ChallengeSessionView: View {
         }
         .onChange(of: viewModel.shouldNavigateToPractice) { _, shouldNavigate in
             if shouldNavigate {
-                // Navigate to standard session (configured by VM via shared stores)
-                coordinator.pop() // Exit Challenge
-                // We rely on Home View appearing and user manually tapping start?
-                // OR we want DYNAMIC navigation?
-                // The coordinator has `push(.session(mode: .learn))`?
-                // Coordinator stack is: Home -> ChallengeHub -> ChallengeSession.
-                // We want to go to Practice. 
-                // Best flow: Switch "tab" or push Practice session.
-                
-                // Since this is a modal/overlay flow, we might need to be careful.
-                // Assuming Coordinator can handle pushing a session from here or replacing.
-                // Ideally: Pop to Root, then Push Session.
+                // Pop to root, then push practice session after pop animation settles
                 coordinator.popToRoot()
                 
                 // Small delay to allow pop animation
