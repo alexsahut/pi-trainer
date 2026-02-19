@@ -32,6 +32,14 @@ final class SessionHistoryStore {
         try ensureDirectoryExists()
     }
     
+    /// Fallback initializer for catastrophic filesystem failure scenarios. Always safe.
+    private init(fallback: Bool) {
+        self.storageURL = URL(fileURLWithPath: "/dev/null")
+    }
+    
+    /// A guaranteed safe fallback instance that writes to /dev/null
+    static let fallback = SessionHistoryStore(fallback: true)
+    
     /// Saves the given records to a JSON file for the specified constant.
     /// This operation is performed asynchronously on a background utility queue.
     func saveHistory(_ records: [SessionRecord], for constant: Constant) async throws {

@@ -179,7 +179,6 @@ class StatsStore {
          historyStore: SessionHistoryStore? = nil) {
         self.persistence = persistence
         
-        // Handle throwing initializer of SessionHistoryStore
         if let providedStore = historyStore {
             self.historyStore = providedStore
         } else {
@@ -187,21 +186,12 @@ class StatsStore {
                 self.historyStore = try SessionHistoryStore()
             } catch {
                 print("⚠️ CRITICAL: Failed to initialize SessionHistoryStore: \(error)")
-                // Fallback: Create a store in a guaranteed-writable temporary directory
+                // Fallback: Create a store in a consistent guaranteed-writable temporary directory
                 let fallbackURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("PiTrainer_fallback_\(UUID().uuidString)")
+                    .appendingPathComponent("PiTrainer_fallback_store")
                 try? FileManager.default.createDirectory(at: fallbackURL, withIntermediateDirectories: true)
-                // Use nil-coalescing with do/catch to avoid any crash path
-                if let fallbackStore = try? SessionHistoryStore(customDirectory: fallbackURL) {
-                    self.historyStore = fallbackStore
-                } else {
-                    // Last resort: use /tmp directly — this should never fail on iOS
-                    let lastResortURL = URL(fileURLWithPath: NSTemporaryDirectory())
-                        .appendingPathComponent("PiTrainer_emergency")
-                    try? FileManager.default.createDirectory(at: lastResortURL, withIntermediateDirectories: true)
-                    self.historyStore = (try? SessionHistoryStore(customDirectory: lastResortURL))!
-                    // Note: If even /tmp fails, the app has bigger problems than history storage
-                }
+                // Use nil-coalescing to avoid any crash path, routing to .fallback if even temp dir fails
+                self.historyStore = (try? SessionHistoryStore(customDirectory: fallbackURL)) ?? .fallback
             }
         }
         

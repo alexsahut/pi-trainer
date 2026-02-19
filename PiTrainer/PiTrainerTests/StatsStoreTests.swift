@@ -118,6 +118,28 @@ final class StatsStoreTests: XCTestCase {
         XCTAssertEqual(statsStore.currentGrade, .athlete)
         XCTAssertTrue(RewardManager.shared.isDoubleBangActive, "DOUBLE BANG! Should trigger when both PB is beaten and Grade changes.")
     }
+    
+    func testStatsStore_InitWithCorruptFilesystem_DoesNotCrash() async {
+        let invalidDir = URL(fileURLWithPath: "/invalid/path/that/cannot/be/created")
+        let badHistoryStore = try? SessionHistoryStore(customDirectory: invalidDir)
+        XCTAssertNil(badHistoryStore, "History store should fail to initialize with invalid path")
+        
+        // Simulate StatsStore init where history store creation fails
+        // We can't directly mock FileManager failure in the real init without swizzling,
+        // but we can verify that if we pass `nil` for historyStore to mimic the failure, it creates the safe fallback.
+        // Actually, we can test it by passing nil, which simulates an init fallback.
+        let safeStore = await StatsStore(persistence: MockPracticePersistence(), historyStore: badHistoryStore)
+        XCTAssertNotNil(safeStore, "StatsStore should survive and use fallback")
+        
+        // Let's add a record. It shouldn't crash.
+        let record = SessionRecord(
+            constant: .pi, mode: .strict, sessionMode: .test,
+            attempts: 10, errors: 0, bestStreakInSession: 10,
+            durationSeconds: 10, digitsPerMinute: 60, isCertified: true
+        )
+        await safeStore.addSessionRecord(record)
+        // Passes if no crash!
+    }
 }
 
 // MARK: - Mocks

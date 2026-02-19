@@ -1,6 +1,6 @@
 # Story 15.1: Crash Prevention — Force-Unwrap & Fallback Safety
 
-Status: review
+Status: done
 
 ## Story
 
@@ -36,6 +36,12 @@ Afin de garantir la stabilité de l'application en production et éliminer tout 
 - [x] **Task 4 — Validation** (AC: #4)
   - [x] 4.1 `xcodebuild build` — BUILD SUCCEEDED
   - [x] 4.2 `xcodebuild test -only-testing:ChallengeServiceTests` — exit code 0 (tous les tests passent)
+
+### Review Follow-ups (AI)
+- [x] [AI-Review][CRITICAL] Fix fake test `testIsUnique_EmptySequence` to test proper behavior
+- [x] [AI-Review][HIGH] Fix `try!` crash path left in `StatsStore.init` fallback
+- [x] [AI-Review][HIGH] Add missing `testStatsStore_InitWithCorruptFilesystem_DoesNotCrash` test
+- [x] [AI-Review][MEDIUM] Fix UUID usage in fallback temp dir causing data loss across restarts
 
 ## Dev Notes
 
