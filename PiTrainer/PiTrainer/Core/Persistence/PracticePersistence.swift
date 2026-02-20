@@ -9,7 +9,7 @@ import Foundation
 
 /// Protocol defining persistence operations for practice sessions and statistics.
 @MainActor
-protocol PracticePersistenceProtocol {
+protocol PracticePersistenceProtocol: AnyObject {
     /// Saves the highest index reached in a practice session for a specific constant.
     func saveHighestIndex(_ index: Int, for constantKey: String)
     /// Retrieves the highest index reached for a specific constant.

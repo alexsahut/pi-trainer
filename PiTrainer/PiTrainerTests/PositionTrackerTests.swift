@@ -87,14 +87,14 @@ final class PositionTrackerTests: XCTestCase {
     
     func testPositionTracker_TracksMultipleDigits() {
         // GIVEN: A session in progress
-        // Expected sequence: 1, 2, 3, 4, 5...
+        // Mock provider returns Pi decimals: 1, 4, 1, 5, 9, ...
         
-        // WHEN: Entering 5 correct digits
+        // WHEN: Entering 5 correct digits matching mock sequence
         _ = engine.input(digit: 1) // Index 0 -> 1
-        _ = engine.input(digit: 2) // Index 1 -> 2
-        _ = engine.input(digit: 3) // Index 2 -> 3
-        _ = engine.input(digit: 4) // Index 3 -> 4
-        _ = engine.input(digit: 5) // Index 4 -> 5
+        _ = engine.input(digit: 4) // Index 1 -> 2
+        _ = engine.input(digit: 1) // Index 2 -> 3
+        _ = engine.input(digit: 5) // Index 3 -> 4
+        _ = engine.input(digit: 9) // Index 4 -> 5
         
         // THEN: Position should be at 6 (next expected)
         XCTAssertEqual(engine.currentIndex, 5, "Engine should be at index 5 (0-based)")

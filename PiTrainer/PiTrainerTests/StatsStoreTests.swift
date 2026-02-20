@@ -35,7 +35,7 @@ final class StatsStoreTests: XCTestCase {
         try await super.tearDown()
     }
     
-    func testDoubleBangTriggerConditions() async {
+    func testDoubleBangTriggerConditions() async throws {
         // Initial state: 0 XP, Novice grade, no record
         XCTAssertEqual(statsStore.totalCorrectDigits, 0)
         XCTAssertEqual(statsStore.currentGrade, .novice)
@@ -114,6 +114,11 @@ final class StatsStoreTests: XCTestCase {
         
         RewardManager.shared.resetDoubleBang()
         statsStore.addSessionRecord(record4)
+        
+        // DoubleBang trigger is dispatched inside an async Task in addSessionRecord,
+        // so we need to yield to allow it to execute.
+        try await Task.sleep(for: .milliseconds(100))
+        
         XCTAssertGreaterThanOrEqual(statsStore.totalCorrectDigits, 5000)
         XCTAssertEqual(statsStore.currentGrade, .athlete)
         XCTAssertTrue(RewardManager.shared.isDoubleBangActive, "DOUBLE BANG! Should trigger when both PB is beaten and Grade changes.")

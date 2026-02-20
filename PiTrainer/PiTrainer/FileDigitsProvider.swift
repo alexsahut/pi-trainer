@@ -10,7 +10,7 @@ import Foundation
 private final class BundleToken {}
 
 /// Provides access to digits stored in a text file in the app bundle
-struct FileDigitsProvider: DigitsProvider {
+final class FileDigitsProvider: DigitsProvider {
     
     // MARK: - Error Types
     
@@ -57,7 +57,7 @@ struct FileDigitsProvider: DigitsProvider {
         return digits.map { String($0) }.joined()
     }
     
-    mutating func loadDigits() throws {
+    func loadDigits() throws {
         // If already loaded, return
         if !digits.isEmpty { return }
         

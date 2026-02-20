@@ -163,7 +163,7 @@ class SessionViewModel: ObservableObject {
         
         self.persistence = actualPersistence
         self.providerFactory = actualFactory
-        self.segmentStore = segmentStore ?? SegmentStore()
+        self.segmentStore = segmentStore ?? SegmentStore.shared
         self.personalBestProvider = personalBestProvider ?? { constant, type in
             let crown = PersonalBestStore.shared.getRecord(for: constant, type: .crown)
             let lightning = PersonalBestStore.shared.getRecord(for: constant, type: .lightning)

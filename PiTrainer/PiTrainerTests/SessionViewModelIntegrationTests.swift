@@ -203,7 +203,7 @@ class MockPersonalBestStore {
     // Helper to reset singleton for tests
 }
 
-struct SVM_MockDigitsProvider: DigitsProvider {
+class SVM_MockDigitsProvider: DigitsProvider {
     var totalDigits: Int = 1000
     var allDigitsString: String = "14159265358979323846264338327950288419716939937510"
     
@@ -216,5 +216,5 @@ struct SVM_MockDigitsProvider: DigitsProvider {
         return nil
     }
     
-    mutating func loadDigits() throws {}
+    func loadDigits() throws {}
 }

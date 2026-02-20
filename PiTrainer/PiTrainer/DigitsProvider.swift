@@ -8,7 +8,7 @@
 import Foundation
 
 /// Protocol for providing digits for practice
-protocol DigitsProvider {
+protocol DigitsProvider: AnyObject {
     /// Total number of available digits
     var totalDigits: Int { get }
     
@@ -22,5 +22,5 @@ protocol DigitsProvider {
     
     /// Preloads or prepares the digits for use
     /// - Throws: Error if loading fails
-    mutating func loadDigits() throws
+    func loadDigits() throws
 }

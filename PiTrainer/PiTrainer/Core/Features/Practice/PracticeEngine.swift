@@ -20,6 +20,7 @@ enum ValidationResult: Equatable {
 
 
 /// Core practice engine for Pi digit training
+@MainActor
 class PracticeEngine {
     
     // MARK: - Types
@@ -69,8 +70,11 @@ class PracticeEngine {
     // MARK: - Properties
     
     private let constant: Constant
-    private var digitsProvider: any DigitsProvider
-    private let persistence: PracticePersistenceProtocol
+    private var _digitsProviderBox: AnyObject
+    private var digitsProvider: any DigitsProvider { _digitsProviderBox as! (any DigitsProvider) }
+    
+    private let _persistenceBox: AnyObject
+    private var persistence: PracticePersistenceProtocol { _persistenceBox as! PracticePersistenceProtocol }
     
     // Session state
     private(set) var currentIndex: Int = 0
@@ -127,8 +131,16 @@ class PracticeEngine {
     
     init(constant: Constant, provider: any DigitsProvider, persistence: PracticePersistenceProtocol) {
         self.constant = constant
-        self.digitsProvider = provider
-        self.persistence = persistence
+        self._digitsProviderBox = provider
+        self._persistenceBox = persistence
+    }
+    
+    deinit {
+        print("DEBUG: PracticeEngine deinit starting for \(constant.rawValue)")
+        // Do not touch isolated properties in deinit directly to avoid concurrency traps,
+        // but since this class is MainActor, and we are on iOS 17+, deinit on executor might handle it.
+        // Actually, we can just print.
+        print("DEBUG: PracticeEngine deinit completed")
     }
     
     // MARK: - Public Methods

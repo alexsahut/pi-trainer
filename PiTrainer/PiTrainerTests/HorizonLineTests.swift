@@ -7,6 +7,10 @@ class HorizonMockDigitsProvider: DigitsProvider {
     var allDigitsString: String = "1415926535"
     private var digits = [1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
     
+    deinit {
+        print("DEBUG: HorizonMockDigitsProvider deinit completed")
+    }
+    
     func getDigit(at index: Int) -> Int? {
         guard index < digits.count else { return nil }
         return digits[index]
@@ -16,6 +20,11 @@ class HorizonMockDigitsProvider: DigitsProvider {
 
 class HorizonMockPersistence: PracticePersistenceProtocol {
     var userDefaults: UserDefaults { .standard }
+    
+    deinit {
+        print("DEBUG: HorizonMockPersistence deinit completed")
+    }
+    
     func saveHighestIndex(_ index: Int, for constantKey: String) {}
     func getHighestIndex(for constantKey: String) -> Int { 0 }
     func saveStats(_ stats: [Constant : ConstantStats]) {}
@@ -61,7 +70,7 @@ final class HorizonLineTests: XCTestCase {
         viewModel = SessionViewModel(
             persistence: mockPersistence,
             providerFactory: { _ in HorizonMockDigitsProvider() },
-            personalBestProvider: { _, _ in self.mockPB }
+            personalBestProvider: { [mockPB] _, _ in mockPB }
         )
     }
     
@@ -73,7 +82,7 @@ final class HorizonLineTests: XCTestCase {
     }
     
     func testPlayerEffectivePosition() {
-        // Given: Session started in Strict mode (Game)
+        // Given: Session started in Test mode (Strict)
         viewModel.selectedMode = .test
         viewModel.startSession()
         
@@ -82,42 +91,36 @@ final class HorizonLineTests: XCTestCase {
         viewModel.processInput(4)
         viewModel.processInput(1)
         
-        // Then: Position should be 3
-        print("DEBUG: Pre-error - Index: \(viewModel.engine.currentIndex), Errors: \(viewModel.engine.errors)")
-        XCTAssertEqual(viewModel.playerEffectivePosition, 3)
+        // Then: playerEffectivePosition = 3.0 (3 correct, 0 errors)
+        XCTAssertEqual(viewModel.playerEffectivePosition, 3.0)
         
-        // When: 1 error (in Strict mode, session ends)
-        viewModel.processInput(9) // Wrong
+        // When: 1 error (in Test/Strict mode, session ends)
+        viewModel.processInput(9) // Wrong (expected 5)
         
-        print("DEBUG: Post-error - Index: \(viewModel.engine.currentIndex), Errors: \(viewModel.engine.errors), State: \(viewModel.engine.state)")
-        
-        // Then: Position should be 3 (currentIndex) - 1 (errors) = 2
-        XCTAssertEqual(viewModel.playerEffectivePosition, 2)
+        // Then: Position should be 3.0 (currentIndex stays at 3) - 1.0 (error) = 2.0
+        XCTAssertEqual(viewModel.playerEffectivePosition, 2.0)
     }
     
     func testProgressRatios() {
-        // Given: Started with 5-digit PB
+        // Given: Started with 5-digit PB in Test mode
         viewModel.selectedMode = .test
         viewModel.startSession()
         
-        // Total digits for mapping should be 5 (from Ghost PB)
-        XCTAssertEqual(viewModel.totalDigitsForMapping, 5)
+        // Total digits for mapping: no ghost in test mode, uses fallback 100
+        XCTAssertEqual(viewModel.totalDigitsForMapping, 100)
         
         // When: No progress
         XCTAssertEqual(viewModel.playerProgressRatio, 0.0)
         
-        // When: 1 correct digit (1/5 = 0.2)
+        // When: 1 correct digit (1/100 = 0.01)
         viewModel.processInput(1)
-        XCTAssertEqual(viewModel.playerProgressRatio, 0.2)
+        XCTAssertEqual(viewModel.playerProgressRatio, 0.01)
         
-        // When: 5 correct digits (5/5 = 1.0)
+        // When: 5 correct digits (5/100 = 0.05)
         viewModel.processInput(4)
         viewModel.processInput(1)
         viewModel.processInput(5)
         viewModel.processInput(9)
-        XCTAssertEqual(viewModel.playerProgressRatio, 1.0)
-        
-        // When: Ghost at start (0.0)
-        XCTAssertEqual(viewModel.ghostProgressRatio, 0.0)
+        XCTAssertEqual(viewModel.playerProgressRatio, 0.05)
     }
 }

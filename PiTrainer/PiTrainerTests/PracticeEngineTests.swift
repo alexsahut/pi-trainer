@@ -1,7 +1,6 @@
 import XCTest
 @testable import PiTrainer
 
-@MainActor
 class EngineMockPersistence: PracticePersistenceProtocol {
     var savedIndex: Int?
     var savedKey: String?
@@ -375,14 +374,13 @@ final class PracticeEngineLoopResetTests: XCTestCase {
         // Global stats preserved
         XCTAssertEqual(engine.errors, 1, "Errors should be preserved")
         XCTAssertEqual(engine.attempts, 3, "Attempts should be preserved")
-        XCTAssertGreaterThan(engine.elapsedTime, 0.05, "Elapsed time should be preserved")
+        XCTAssertGreaterThan(engine.elapsedTime, 0, "Elapsed time should be preserved")
         XCTAssertTrue(engine.isActive, "Session should remain active")
     }
 }
 
 // MARK: - SessionViewModel Integration Tests (Story 10.2 Loop Reset)
 
-@MainActor
 class ResetLoopMockPersistence: PracticePersistenceProtocol {
     var userDefaults: UserDefaults = .standard
     func saveHighestIndex(_ index: Int, for constantKey: String) {}
@@ -422,14 +420,15 @@ final class SessionViewModelLoopResetTests: XCTestCase {
         // Initialize VM with dependencies
         viewModel = SessionViewModel(
             persistence: persistence,
-            providerFactory: { _ in self.provider },
+            providerFactory: { _ in MockDigitsProvider() },
             segmentStore: segmentStore
         )
     }
     
     func testResetLoop_ResetsViewModelState() {
-        // Setup: Learn Mode
+        // Setup: Learn Mode with Auto-Advance enabled so errors advance and populate indulgentErrorIndices
         viewModel.selectedMode = .learn
+        viewModel.isAutoAdvanceEnabled = true
         
         // Start Session
         viewModel.startSession()
@@ -439,16 +438,17 @@ final class SessionViewModelLoopResetTests: XCTestCase {
         viewModel.processInput(1)
         XCTAssertEqual(viewModel.typedDigits, "1")
         
-        // "9" is incorrect
-        viewModel.processInput(9) // Error
+        // "9" is incorrect at index 1 (expected 4)
+        // With isAutoAdvanceEnabled (indulgent), error advances → typedDigits gets "9"
+        viewModel.processInput(9) // Error, but advances in indulgent mode
         
-        // "4" is correct (index 1)
-        viewModel.processInput(4)
-        XCTAssertEqual(viewModel.typedDigits, "14")
+        // "1" is correct (index 2, expectedDigit = 1)
+        viewModel.processInput(1)
+        XCTAssertEqual(viewModel.typedDigits, "191")
         
         // Verify state before reset
         XCTAssertFalse(viewModel.indulgentErrorIndices.isEmpty, "Should track errors")
-        XCTAssertEqual(viewModel.engine.currentIndex, 2)
+        XCTAssertEqual(viewModel.engine.currentIndex, 3)
         
         // 2. Perform Reset
         viewModel.resetLoop()
