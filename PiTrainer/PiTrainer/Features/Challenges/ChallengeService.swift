@@ -45,6 +45,7 @@ class ChallengeService: ChallengeServiceProtocol {
     ///   - digits: The full sequence of digits (as UInt8) to search within.
     ///   - pos: The starting index of the sequence candidate.
     /// - Returns: The length of the smallest sequence starting at `pos` that appears only once in `digits`, or -1 if none found.
+    // O(n³) worst case — monitoré via testPerformance_CalculateMUS, perf acceptable sur données réelles
     static func calculateMUS(in digits: [UInt8], at pos: Int) -> Int {
         let digitsCount = digits.count
         var length = 1

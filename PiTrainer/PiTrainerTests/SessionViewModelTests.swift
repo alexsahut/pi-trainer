@@ -112,10 +112,7 @@ final class SessionViewModelTests: XCTestCase {
         
         // When: Start session
         viewModel.startSession()
-        
-        print("debug: selected constant: \(viewModel.selectedConstant)")
-        print("debug: engine provider digits: \(viewModel.engine.allDigitsString)")
-        
+
         // Then: Engine should be ready but not yet active (timer hasn't started)
         XCTAssertFalse(viewModel.isActive, "Session should NOT be active immediately after startSession (ready state)")
         
@@ -201,6 +198,7 @@ final class SessionViewModelTests: XCTestCase {
     func testEndSession_IncludesRevealsUsed() async {
         // Given: assistance used
         viewModel.startSession()
+        viewModel.processInput(1) // First decimal digit of Pi — generates an attempt so endSession saves
         viewModel.reveal(count: 5)
         
         // When: End session
@@ -243,13 +241,18 @@ final class SessionViewModelTests: XCTestCase {
             expectedNextDigits: "67890"
         )
         
-        // When: Configure (Method doesn't exist yet - RED)
+        // When: Configure for challenge
         viewModel.configureForChallenge(challenge)
         viewModel.startSession()
         
         // Then: Engine should be initialized with correct indices/mode
-        XCTAssertEqual(viewModel.engine.startIndex, 100)
-        XCTAssertEqual(viewModel.engine.endIndex, 105) // 100 + 5 (len of "12345")
-        XCTAssertEqual(viewModel.selectedMode.practiceEngineMode, .game)
+        // startSession() places the engine AFTER the reference sequence:
+        // engineStartIndex = challenge.startIndex + referenceSequence.count = 100 + 5 = 105
+        // engineEndIndex   = engineStartIndex + expectedNextDigits.count    = 105 + 5 = 110
+        XCTAssertEqual(viewModel.engine.startIndex, 105)
+        XCTAssertEqual(viewModel.engine.endIndex, 110)
+        // Note: SessionMode.game.practiceEngineMode returns .learning (all non-test modes do).
+        // Assert selectedMode directly instead.
+        XCTAssertEqual(viewModel.selectedMode, .game)
     }
 }

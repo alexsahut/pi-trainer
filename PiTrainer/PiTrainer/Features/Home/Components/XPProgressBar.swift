@@ -11,21 +11,21 @@ struct XPProgressBar: View {
     let xp: Int
     let grade: Grade
     
+    private static let xpRanges: [Grade: ClosedRange<Double>] = [
+        .novice: 0...1000,
+        .apprentice: 1000...5000,
+        .athlete: 5000...20000,
+        .expert: 20000...100000,
+        .grandmaster: 100000...1000000 // Arbitrary high limit
+    ]
+
     // Calculate progress towards next grade
     var progress: Double {
         let currentXP = Double(xp)
-        let ranges: [Grade: ClosedRange<Double>] = [
-            .novice: 0...1000,
-            .apprentice: 1000...5000,
-            .athlete: 5000...20000,
-            .expert: 20000...100000,
-            .grandmaster: 100000...1000000 // Arbitrary high limit
-        ]
-        
-        guard let range = ranges[grade] else { return 0 }
+        guard let range = XPProgressBar.xpRanges[grade] else { return 0 }
         let min = range.lowerBound
         let max = range.upperBound
-        
+
         if xp >= Int(max) { return 1.0 }
         return (currentXP - min) / (max - min)
     }

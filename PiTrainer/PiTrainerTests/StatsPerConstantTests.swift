@@ -99,7 +99,7 @@ final class StatsPerConstantTests: XCTestCase {
             date: Date(),
             constant: .phi,
             mode: .strict,
-            sessionMode: .test, // Added missing parameter
+            sessionMode: .test,
             attempts: 100,
             errors: 0,
             bestStreakInSession: 50,
@@ -107,7 +107,8 @@ final class StatsPerConstantTests: XCTestCase {
             digitsPerMinute: 30,
             revealsUsed: 0,
             minCPS: nil,
-            maxCPS: 0
+            maxCPS: 0,
+            isCertified: true
         )
         
         // When saving
@@ -124,7 +125,7 @@ final class StatsPerConstantTests: XCTestCase {
             date: Date(),
             constant: .phi,
             mode: .strict,
-            sessionMode: .test, // Added missing parameter
+            sessionMode: .test,
             attempts: 10,
             errors: 5,
             bestStreakInSession: 5,
@@ -132,7 +133,8 @@ final class StatsPerConstantTests: XCTestCase {
             digitsPerMinute: 10,
             revealsUsed: 0,
             minCPS: nil,
-            maxCPS: 0
+            maxCPS: 0,
+            isCertified: true
         )
         statsStore.addSessionRecord(worseRecord)
         

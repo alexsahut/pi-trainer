@@ -57,19 +57,14 @@ final class AtmosphericFeedbackTests: XCTestCase {
     }
     
     func testAtmosphericColor_WhenBehind_ReturnsOrange() {
-        // Arrange
-        // Player is at 0.
-        // Ghost needs to be at > 0.
-        
-        // Simulate time passing. 
-        // We know ghost position logic depends on Date(). 
-        // We can pass a date in the future to `atmosphericColor`.
-        let futureDate = Date().addingTimeInterval(10) // 10 seconds later
-        
-        // Act
+        // Ghost must be started before its position advances.
+        // ghostEngine?.start() is normally triggered by the first digit input,
+        // but we call it directly so the ghost can accumulate position by futureDate.
+        viewModel.ghostEngine?.start()
+
+        let futureDate = Date().addingTimeInterval(10) // 10 seconds later — ghost position > 0
         let color = viewModel.atmosphericColor(at: futureDate)
-        
-        // Assert
+
         XCTAssertEqual(color, DesignSystem.Colors.orangeElectric, "Should be Orange when behind")
     }
     
@@ -110,13 +105,13 @@ final class AtmosphericFeedbackTests: XCTestCase {
     }
     
     func testAtmosphericOpacity_WhenLowDiff_ReturnsMinOpacity() {
-        // Player at 1, Ghost at 0
-        viewModel.processInput(3) // "3" is first digit of Pi
-        
-        // Check immediately so ghost is approx 0
-        let date = Date()
-        let opacity = viewModel.atmosphericOpacity(at: date)
-        
+        // FallbackData.pi stores the decimal expansion: "1415926535..."
+        // The first decimal digit is "1" (not "3" — the integer part is excluded).
+        // Player at 1, Ghost at 0 (checked immediately, so ghost position ≈ 0).
+        viewModel.processInput(1) // Correct first decimal digit of Pi → effectivePosition = 1
+
+        let opacity = viewModel.atmosphericOpacity(at: Date())
+
         // Delta = 1. Ratio = 1/5 = 0.2.
         // Opacity = 0.05 + (0.2 * 0.15) = 0.08
         XCTAssertEqual(opacity, 0.08, accuracy: 0.01)

@@ -25,19 +25,23 @@ final class KeypadInteractionTests: XCTestCase {
         
         // When: We start a session
         app.buttons["home.start_button"].tap()
-        
+
+        // Barrier: Wait for session to be fully loaded before iterating all buttons.
+        // "1" is in the primary 3×3 grid (loads first); using 5s timeout guards against slow simulators.
+        XCTAssertTrue(app.buttons["1"].waitForExistence(timeout: 5), "Session should load within 5 seconds")
+
         // Then: All keypad buttons should exist and be hittable
         let digits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-        
+
         for digit in digits {
             let button = app.buttons[digit]
             XCTAssertTrue(button.waitForExistence(timeout: 2), "Button \(digit) should exist")
             XCTAssertTrue(button.isHittable, "Button \(digit) should be hittable (not obscured by padding/layout issues)")
         }
         
-        // Verify action buttons
-        XCTAssertTrue(app.buttons["⌫"].exists, "Backspace button should exist")
-        XCTAssertTrue(app.buttons["⌫"].isHittable, "Backspace should be hittable")
+        // Verify action buttons — Story 10.3: session always shows ⟳ (reset loop), not ⌫ (backspace)
+        XCTAssertTrue(app.buttons["⟳"].exists, "Reset loop button should exist (Story 10.3 replaced ⌫ with ⟳)")
+        XCTAssertTrue(app.buttons["⟳"].isHittable, "Reset loop button should be hittable")
         XCTAssertTrue(app.buttons["⚙️"].exists, "Options button should exist")
         XCTAssertTrue(app.buttons["⚙️"].isHittable, "Options should be hittable")
     }
@@ -66,6 +70,10 @@ final class KeypadInteractionTests: XCTestCase {
     }
     
     func testBackspaceRemovesLastDigit() throws {
+        // Story 10.3 replaced the backspace button ('⌫') with a reset loop button ('⟳').
+        // The session keypad no longer exposes a backspace UI element.
+        throw XCTSkip("Story 10.3 replaced backspace ('⌫') with reset loop ('⟳') in the session keypad. Backspace UI is no longer present in SessionView.")
+        // PRESERVED FOR REFERENCE — original test body kept to document what was tested
         // Given: Session started with one digit entered
         app.buttons["home.start_button"].tap()
         XCTAssertTrue(app.buttons["1"].waitForExistence(timeout: 2))

@@ -117,19 +117,25 @@ struct Particle {
 }
 
 struct LightningBranch {
-    var points: [CGPoint] = []
+    var relativeOffsets: [(dx: CGFloat, dy: CGFloat)]
+    var angle: Double
     var startTime: TimeInterval
     var lifeSpan: TimeInterval = 0.5
     var opacity: Double = 0
-    
+
     init(at now: TimeInterval) {
         self.startTime = now
+        let steps = 10
+        self.angle = Double.random(in: 0...(2 * .pi))
+        self.relativeOffsets = (1...steps).map { _ in
+            (dx: CGFloat.random(in: -1...1), dy: CGFloat.random(in: -1...1))
+        }
     }
-    
+
     mutating func update(at now: TimeInterval) {
         let elapsed = now - startTime
         let cycle = 0.2 // Flicker speed
-        
+
         if elapsed < lifeSpan {
             // Flicker effect
             opacity = (sin(elapsed * .pi * 2 / cycle) > 0) ? 0.8 : 0.2
@@ -137,26 +143,23 @@ struct LightningBranch {
             opacity = 0
         }
     }
-    
+
     func path(in size: CGSize) -> Path {
         var path = Path()
         let center = CGPoint(x: size.width / 2, y: size.height / 2)
         path.move(to: center)
-        
-        var current = center
-        let steps = 10
-        let angle = Double.random(in: 0...(2 * .pi))
+
         let totalLength = min(size.width, size.height) * 0.4
-        
-        for i in 1...steps {
-            let progress = CGFloat(i) / CGFloat(steps)
-            let segmentX = cos(angle) * totalLength * progress + CGFloat.random(in: -20...20)
-            let segmentY = sin(angle) * totalLength * progress + CGFloat.random(in: -20...20)
-            let next = CGPoint(x: center.x + segmentX, y: center.y + segmentY)
-            path.addLine(to: next)
-            current = next
+        let cosA = cos(angle)
+        let sinA = sin(angle)
+
+        for (i, offset) in relativeOffsets.enumerated() {
+            let progress = CGFloat(i + 1) / CGFloat(relativeOffsets.count)
+            let x = center.x + cosA * totalLength * progress + offset.dx * 20
+            let y = center.y + sinA * totalLength * progress + offset.dy * 20
+            path.addLine(to: CGPoint(x: x, y: y))
         }
-        
+
         return path
     }
 }
