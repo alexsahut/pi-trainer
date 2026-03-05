@@ -59,6 +59,17 @@ class ChallengeMockDigitsProvider: DigitsProvider {
     func loadDigits() throws {}
 }
 
+class ChallengeMockThrowingDigitsProvider: DigitsProvider {
+    var totalDigits: Int { 0 }
+    var allDigitsString: String { "" }
+
+    func getDigit(at index: Int) -> Int? { nil }
+
+    func loadDigits() throws {
+        throw NSError(domain: "MockError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock load error"])
+    }
+}
+
 // MARK: - Challenge Service Tests
 
 @MainActor
@@ -271,6 +282,298 @@ final class ChallengeServiceTests: XCTestCase {
         }
     }
     
+    // MARK: - Story 17.1: Progressive Reveal Fields
+
+    func testChallenge_BlockStartIndex_Calculated() async {
+        // Setup: 100 digits, highestIndex = 80
+        let piDigits = "14159265358979323846264338327950288419716939937510"
+        let longDigits = piDigits + piDigits
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+
+        guard let challenge = await service.generateRandomChallenge(for: .pi, grade: .novice) else {
+            XCTFail("Should generate a challenge")
+            return
+        }
+
+        // blockStartIndex should be startIndex rounded down to nearest 10
+        let expectedBlockStart = (challenge.startIndex / 10) * 10
+        XCTAssertEqual(challenge.blockStartIndex, expectedBlockStart,
+                       "blockStartIndex should be \(expectedBlockStart) for startIndex \(challenge.startIndex)")
+
+        // musOffsetInBlock should be the remainder
+        let expectedOffset = challenge.startIndex - expectedBlockStart
+        XCTAssertEqual(challenge.musOffsetInBlock, expectedOffset,
+                       "musOffsetInBlock should be \(expectedOffset) for startIndex \(challenge.startIndex)")
+    }
+
+    func testChallenge_RevealPool_NonEmpty() async {
+        // Setup: enough room after MUS for a reveal pool
+        let piDigits = "14159265358979323846264338327950288419716939937510"
+        let longDigits = piDigits + piDigits
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+
+        guard let challenge = await service.generateRandomChallenge(for: .pi, grade: .novice) else {
+            XCTFail("Should generate a challenge")
+            return
+        }
+
+        // revealPool should contain digits after the MUS
+        XCTAssertFalse(challenge.revealPool.isEmpty,
+                       "revealPool should not be empty when there is space after MUS")
+
+        // Verify revealPool contains only ASCII digits
+        XCTAssertTrue(challenge.revealPool.allSatisfy { $0.isNumber },
+                      "revealPool should contain only digits")
+    }
+
+    func testChallenge_RevealPool_RespectsHighestIndex() async {
+        // Setup: tight scope — highestIndex just barely enough
+        let piDigits = "14159265358979323846264338327950288419716939937510"
+        let longDigits = piDigits + piDigits
+        persistence.saveHighestIndex(60, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+
+        for _ in 0..<20 {
+            guard let challenge = await service.generateRandomChallenge(for: .pi, grade: .novice) else {
+                continue
+            }
+
+            let totalReached = challenge.startIndex + challenge.referenceSequence.count + challenge.revealPool.count
+            XCTAssertLessThanOrEqual(totalReached, 60,
+                                    "MUS + revealPool must not exceed highestIndex. startIndex=\(challenge.startIndex), MUS=\(challenge.referenceSequence.count), pool=\(challenge.revealPool.count)")
+        }
+    }
+
+    func testChallenge_RevealPool_MatchesActualDigits() async {
+        // E2E: verify revealPool matches actual digit data
+        let piDigits = "14159265358979323846264338327950288419716939937510"
+        let longDigits = piDigits + piDigits
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+
+        guard let challenge = await service.generateRandomChallenge(for: .pi, grade: .novice) else {
+            XCTFail("Should generate a challenge")
+            return
+        }
+
+        let poolStart = challenge.startIndex + challenge.referenceSequence.count
+        let poolStartIdx = longDigits.index(longDigits.startIndex, offsetBy: poolStart)
+        let poolEndIdx = longDigits.index(poolStartIdx, offsetBy: challenge.revealPool.count)
+        let expectedPool = String(longDigits[poolStartIdx..<poolEndIdx])
+
+        XCTAssertEqual(challenge.revealPool, expectedPool,
+                       "revealPool should match actual digits from provider")
+    }
+
+    func testChallenge_CodableBackwardCompatibility() throws {
+        // Simulate a legacy Challenge JSON without the new fields
+        let legacyJSON = """
+        {
+            "id": "12345678-1234-1234-1234-123456789012",
+            "date": 0,
+            "constant": "pi",
+            "startIndex": 25,
+            "referenceSequence": "926",
+            "expectedNextDigits": "535"
+        }
+        """
+
+        let data = legacyJSON.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        let challenge = try decoder.decode(Challenge.self, from: data)
+
+        XCTAssertEqual(challenge.startIndex, 25)
+        XCTAssertEqual(challenge.referenceSequence, "926")
+        XCTAssertEqual(challenge.blockStartIndex, 0, "Default blockStartIndex should be 0")
+        XCTAssertEqual(challenge.musOffsetInBlock, 0, "Default musOffsetInBlock should be 0")
+        XCTAssertEqual(challenge.revealPool, "", "Default revealPool should be empty")
+    }
+
+    func testChallenge_DailyChallenge_HasRevealFields() async {
+        let piDigits = "14159265358979323846264338327950288419716939937510"
+        let longDigits = piDigits + piDigits
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+
+        let date = Date(timeIntervalSince1970: 1700000000)
+        guard let challenge = await service.generateDailyChallenge(for: .pi, date: date, grade: .novice) else {
+            XCTFail("Should generate daily challenge")
+            return
+        }
+
+        // Daily challenges should also have the new fields populated
+        let expectedBlockStart = (challenge.startIndex / 10) * 10
+        XCTAssertEqual(challenge.blockStartIndex, expectedBlockStart)
+        XCTAssertEqual(challenge.musOffsetInBlock, challenge.startIndex - expectedBlockStart)
+        // revealPool may or may not be empty depending on available space, but should be valid
+        XCTAssertTrue(challenge.revealPool.allSatisfy { $0.isNumber } || challenge.revealPool.isEmpty)
+    }
+
+    func testChallenge_RevealPool_EmptyWhenMUSNearEnd() async {
+        // Edge case: MUS near the end of known sequence → revealPool should be empty or very short
+        // 100 digits of data, but highestIndex = 55 — tight scope
+        let piDigits = "14159265358979323846264338327950288419716939937510"
+        let longDigits = piDigits + piDigits // 100 digits available
+        // highestIndex = 55 — just barely above minimum threshold (50)
+        // With novice grade (challengeLength = 3), challenges near the end will have short pools
+        persistence.saveHighestIndex(55, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+
+        var foundShortPool = false
+        for _ in 0..<50 {
+            guard let challenge = await service.generateRandomChallenge(for: .pi, grade: .novice) else {
+                continue
+            }
+
+            // With highestIndex = 55, the revealPool is capped at min(55, musEnd + 20)
+            // For challenges near the end, the pool will be short
+            let musEnd = challenge.startIndex + challenge.referenceSequence.count
+            let maxPoolSize = 55 - musEnd
+            XCTAssertLessThanOrEqual(challenge.revealPool.count, min(20, max(0, maxPoolSize)),
+                                    "revealPool should be capped by highestIndex")
+            if challenge.revealPool.count <= 5 {
+                foundShortPool = true
+            }
+        }
+        // With tight scope, we should find at least one challenge with a short pool
+        XCTAssertTrue(foundShortPool, "Should find at least one challenge with short/empty revealPool near end of sequence")
+    }
+
+    func testChallenge_BlockStartIndex_Deterministic() async {
+        // Deterministic test: verify block calculation for a known startIndex
+        let piDigits = "14159265358979323846264338327950288419716939937510"
+        let longDigits = piDigits + piDigits
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        provider = ChallengeMockDigitsProvider(digits: longDigits)
+        service = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in self.provider }
+        )
+
+        // Use daily challenge with fixed date for deterministic startIndex
+        let date = Date(timeIntervalSince1970: 1700000000)
+        guard let challenge = await service.generateDailyChallenge(for: .pi, date: date, grade: .novice) else {
+            XCTFail("Should generate daily challenge")
+            return
+        }
+
+        // Verify block calculation is correct for the actual startIndex
+        let si = challenge.startIndex
+        XCTAssertEqual(challenge.blockStartIndex, (si / 10) * 10)
+        XCTAssertEqual(challenge.musOffsetInBlock, si % 10)
+
+        // Verify mathematical invariant: blockStartIndex + musOffsetInBlock == startIndex
+        XCTAssertEqual(challenge.blockStartIndex + challenge.musOffsetInBlock, si,
+                       "blockStartIndex + musOffsetInBlock must always equal startIndex")
+
+        // Verify offset is in valid range [0, 9]
+        XCTAssertGreaterThanOrEqual(challenge.musOffsetInBlock, 0)
+        XCTAssertLessThan(challenge.musOffsetInBlock, 10)
+
+        // Verify blockStartIndex is a multiple of 10
+        XCTAssertEqual(challenge.blockStartIndex % 10, 0)
+    }
+
+    // MARK: - Story 17.6: MUS at non-zero positions
+
+    func testCalculateMUS_AtNonZeroPosition() {
+        // sequence: "1415926535" — test MUS starting at pos=4
+        let digits = Array("1415926535".utf8)
+        let length = ChallengeService.calculateMUS(in: digits, at: 4)
+        // At pos=4: "9" appears once → MUS = 1
+        XCTAssertGreaterThan(length, 0, "MUS at non-zero position should find a unique sequence")
+    }
+
+    func testCalculateMUS_AtLastPosition() {
+        // sequence: "12345" — test MUS at pos=4 (last digit "5")
+        let digits = Array("12345".utf8)
+        let length = ChallengeService.calculateMUS(in: digits, at: 4)
+        XCTAssertEqual(length, 1, "Single last digit should be unique (MUS = 1)")
+    }
+
+    func testCalculateMUS_AtPositionEqualToCount_ReturnsMinusOne() {
+        let digits = Array("12345".utf8)
+        let length = ChallengeService.calculateMUS(in: digits, at: 5)
+        XCTAssertEqual(length, -1, "Position at digits.count should return -1")
+    }
+
+    func testCalculateMUS_AllIdenticalDigits_ReturnsFullLength() {
+        // All identical digits: only the full remaining string is unique
+        // "1111" at pos=0 → "1" repeats, "11" repeats, "111" repeats, "1111" appears once → MUS = 4
+        let digits = Array("1111".utf8)
+        let length = ChallengeService.calculateMUS(in: digits, at: 0)
+        XCTAssertEqual(length, 4, "MUS of all-identical digits is the full sequence length")
+    }
+
+    func testGenerateChallenge_RetryExhaustion_ReturnsNil() async {
+        // All-identical digits → MUS always returns -1 → all 50 retries fail
+        let identicalDigits = String(repeating: "1", count: 100)
+        let identicalProvider = ChallengeMockDigitsProvider(digits: identicalDigits)
+        persistence.saveHighestIndex(60, for: Constant.pi.id)
+        let exhaustService = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in identicalProvider }
+        )
+
+        let daily = await exhaustService.generateDailyChallenge(for: .pi, date: Date(), grade: .novice)
+        XCTAssertNil(daily, "Should return nil when all 50 retry attempts fail (MUS = -1 everywhere)")
+
+        let random = await exhaustService.generateRandomChallenge(for: .pi, grade: .novice)
+        XCTAssertNil(random, "Random challenge should also return nil on retry exhaustion")
+    }
+
+    // MARK: - Story 17.6: Error paths
+
+    func testGenerateDailyChallenge_DigitsLoadError_ReturnsNil() async {
+        let throwingProvider = ChallengeMockThrowingDigitsProvider()
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        let errorService = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in throwingProvider }
+        )
+
+        let challenge = await errorService.generateDailyChallenge(for: .pi, date: Date(), grade: .novice)
+        XCTAssertNil(challenge, "Should return nil when loadDigits() throws")
+    }
+
+    func testGenerateRandomChallenge_DigitsLoadError_ReturnsNil() async {
+        let throwingProvider = ChallengeMockThrowingDigitsProvider()
+        persistence.saveHighestIndex(80, for: Constant.pi.id)
+        let errorService = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in throwingProvider }
+        )
+
+        let challenge = await errorService.generateRandomChallenge(for: .pi, grade: .novice)
+        XCTAssertNil(challenge, "Should return nil when loadDigits() throws")
+    }
+
     // Story 15.1: CR-1 — Verify empty sequence doesn't crash (Real test)
     func testIsUnique_EmptySequence_DoesNotCrash() {
         let digits: [UInt8] = Array("12345".utf8)
@@ -345,5 +648,62 @@ final class ChallengeHubViewModelTests: XCTestCase {
         persistence.saveHighestIndex(5, for: Constant.pi.id)
         await vm.trainNow()
         XCTAssertNil(vm.presentedChallenge, "Should not generate challenge when not eligible")
+    }
+
+    // MARK: - Story 17.6: loadDailyChallenge and startDailyChallenge
+
+    func testLoadDailyChallenge_WhenEligible_SetsChallenge() async {
+        // persistence already has highestIndex=80 from setUp
+        XCTAssertTrue(vm.isChallengeEligible)
+        XCTAssertNil(vm.dailyChallenge)
+
+        await vm.loadDailyChallenge()
+
+        XCTAssertNotNil(vm.dailyChallenge, "Daily challenge should be generated when eligible")
+        XCTAssertNil(vm.errorText, "No error expected on success")
+    }
+
+    func testLoadDailyChallenge_WhenNotEligible_SetsNil() async {
+        persistence.saveHighestIndex(10, for: Constant.pi.id)
+        XCTAssertFalse(vm.isChallengeEligible)
+
+        await vm.loadDailyChallenge()
+
+        XCTAssertNil(vm.dailyChallenge, "Daily challenge should be nil when not eligible")
+        XCTAssertNil(vm.errorText, "No error — just a pre-requisite not met")
+    }
+
+    func testStartDailyChallenge_SetsPresentedChallenge() async {
+        await vm.loadDailyChallenge()
+        XCTAssertNotNil(vm.dailyChallenge)
+
+        vm.startDailyChallenge()
+
+        XCTAssertNotNil(vm.presentedChallenge, "presentedChallenge should be set")
+        XCTAssertTrue(vm.isPresentedChallengeDaily, "Should be flagged as daily challenge")
+        XCTAssertEqual(vm.presentedChallenge?.id, vm.dailyChallenge?.id, "Presented should match daily")
+    }
+
+    func testLoadDailyChallenge_AlreadyCompleted_SetsFlag() async {
+        service.markChallengeAsCompleted(for: Date())
+
+        await vm.loadDailyChallenge()
+
+        XCTAssertTrue(vm.isDailyCompleted, "isDailyCompleted should be true when today's challenge is completed")
+    }
+
+    func testTrainNow_Error_SetsErrorText() async {
+        // Create service with throwing provider but eligible highestIndex
+        let throwingProvider = ChallengeMockThrowingDigitsProvider()
+        let errorService = ChallengeService(
+            persistence: persistence,
+            digitsProviderFactory: { _ in throwingProvider }
+        )
+        let errorVM = ChallengeHubViewModel(service: errorService, persistence: persistence)
+
+        await errorVM.trainNow()
+
+        XCTAssertNotNil(errorVM.errorText, "Error text should be set when generation fails")
+        XCTAssertNil(errorVM.presentedChallenge, "No challenge should be presented on error")
     }
 }

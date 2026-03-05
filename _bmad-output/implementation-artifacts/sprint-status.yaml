@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-19
+generated: 2026-02-22
 project: pi-trainer
 project_key: pi-trainer
 tracking_system: file-system
@@ -133,9 +133,25 @@ development_status:
   14-2-logic-integrity-scope: done
   14-3-zen-keyboard-alignment: done
 
-  epic-15: in-progress
+  epic-15: done
   15-1-crash-prevention: done
   15-2-challenge-mode-cold-start-fix: done
   15-3-ui-ux-fixes: done
-  15-4-test-repair: in-progress
-  15-5-polish-technique: backlog
+  15-4-test-repair: done
+  15-5-polish-technique: done
+  epic-15-retrospective: done
+
+  epic-16: done
+  16-1-test-repair-remaining: done
+  16-2-validation-simulateur: done
+  16-3-merge-main: done
+  16-4-soumission-testflight: done
+
+  epic-17: done
+  17-1-etendre-challengeservice-devoilement-progressif: done
+  17-2-vue-challenge-bloc-10-devoilement-oeil: done
+  17-3-mode-saisie-je-sais-flux-reponse: done
+  17-4-scoring-malus-bonus-ecran-resultat: done
+  17-5-notifications-push-locales-quotidiennes: done
+  17-6-tests-unitaires-integration: done
+  epic-17-retrospective: done

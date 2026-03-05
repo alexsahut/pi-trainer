@@ -71,6 +71,21 @@ Afin de ne pas rencontrer de problèmes visuels, de navigation fragile ou de tex
 
 ### Agent Model Used
 
+Claude Sonnet 4 (claude-sonnet-4-20250514)
+
 ### Completion Notes List
 
+- Task 1: KeypadButton — Added `.minimumScaleFactor(0.7)` and `.lineLimit(1)` to prevent label overflow on long localized strings ("Réinitialiser").
+- Task 2: ChallengeSessionView — Replaced `DispatchQueue.main.asyncAfter` with `Task.sleep` annulable for post-challenge navigation.
+- Task 3: Localisation — Converted hardcoded English strings to `String(localized:)` in Challenge Hub/Session: "CHALLENGES", "TRAIN NOW", "Unlimited practice…", "XP".
+- Task 4: Dead code cleanup — Removed `constantTitle` computed property from HomeView, removed duplicate comment in ChallengeViewModel.
+- Code review (Story 15.3): 4 findings corrected in follow-up (stale comment, localization key consistency, threshold deduplication, E2E validation).
+
 ### File List
+
+- `PiTrainer/Features/Practice/KeypadButton.swift`
+- `PiTrainer/Features/Challenge/ChallengeSessionView.swift`
+- `PiTrainer/Features/Challenge/ChallengeHubView.swift`
+- `PiTrainer/Features/Challenge/ChallengeViewModel.swift`
+- `PiTrainer/Features/Home/HomeView.swift`
+- `PiTrainer/Localizable.xcstrings`

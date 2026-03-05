@@ -26,7 +26,7 @@ struct SessionSettingsView: View {
                             ZenSegmentedControl(
                                 title: String(localized: "DISPOSITION CLAVIER"),
                                 options: KeypadLayout.allCases,
-                                selection: $viewModel.keypadLayout
+                                selection: $statsStore.keypadLayout
                             )
                             
                             if viewModel.selectedMode.hasGhost {

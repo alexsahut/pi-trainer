@@ -67,20 +67,20 @@ final class PositionTrackerTests: XCTestCase {
         XCTAssertEqual(displayedPosition, 1, "Displayed position should remain 1")
     }
     
-    func testPositionTracker_IncrementsOnIncorrectDigit_LearningMode() {
+    func testPositionTracker_DoesNotIncrementOnIncorrectDigit_LearningMode() {
         // GIVEN: Position at 1 in learning mode
         try? engine.start(mode: .learning)
-        
+
         // WHEN: Entering incorrect digit
         _ = engine.input(digit: 9)
-        
-        // THEN: Position should still increment (learning mode continues)
-        XCTAssertEqual(engine.currentIndex, 1, "Learning mode: index advances even on error")
+
+        // THEN: Position stays — learning mode allows retry on same digit
+        XCTAssertEqual(engine.currentIndex, 0, "Learning mode: index stays on error (retry in place)")
         XCTAssertTrue(engine.isActive, "Session should continue in learning mode on error")
-        
-        // UI would display: engine.currentIndex + 1 = 1 + 1 = 2
+
+        // UI would display: engine.currentIndex + 1 = 0 + 1 = 1
         let displayedPosition = engine.currentIndex + 1
-        XCTAssertEqual(displayedPosition, 2, "Displayed position should be 2")
+        XCTAssertEqual(displayedPosition, 1, "Displayed position should remain 1")
     }
     
     // MARK: - Sequence Tests
@@ -105,9 +105,9 @@ final class PositionTrackerTests: XCTestCase {
     }
     
     func testPositionTracker_ResetOnSessionRestart() {
-        // GIVEN: A session with progress
-        _ = engine.input(digit: 1)
-        _ = engine.input(digit: 2)
+        // GIVEN: A session with progress (Pi decimals: 1, 4, 1, 5, 9...)
+        _ = engine.input(digit: 1) // Correct: index 0 → 1
+        _ = engine.input(digit: 4) // Correct: index 1 → 2
         XCTAssertEqual(engine.currentIndex, 2, "Index should be at 2 after 2 correct inputs")
         
         // WHEN: Resetting and starting new session

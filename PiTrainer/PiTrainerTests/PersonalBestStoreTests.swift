@@ -99,13 +99,13 @@ final class PersonalBestStoreTests: XCTestCase {
     // MARK: - Lightning PR (Speed)
     
     func testSave_LightningPR_UnderThreshold_Ignored() async {
-        // Threshold is > 50 digits.
-        let record = PersonalBestRecord(constant: .pi, type: .lightning, digitCount: 40, totalTime: 10.0, cumulativeTimes: [])
-        
+        // Threshold is digitCount >= 10. Use digitCount < 10 to verify rejection.
+        let record = PersonalBestRecord(constant: .pi, type: .lightning, digitCount: 5, totalTime: 2.0, cumulativeTimes: [])
+
         await store.save(record: record)
-        
+
         let saved = store.getRecord(for: .pi, type: .lightning)
-        XCTAssertNil(saved, "Should not save Lightning PR if distance <= 50")
+        XCTAssertNil(saved, "Should not save Lightning PR if digitCount < 10")
     }
     
     func testSave_LightningPR_AboveThreshold_NewRecord_Saves() async {
@@ -145,13 +145,22 @@ final class PersonalBestStoreTests: XCTestCase {
         XCTAssertEqual(saved?.totalTime, 30.0)
     }
     
-    func testSave_LightningPR_ExactlyThreshold_Saves() async {
-        // Boundary check: Exactly 50 digits
-        let record = PersonalBestRecord(constant: .pi, type: .lightning, digitCount: 50, totalTime: 25.0, cumulativeTimes: [])
+    func testSave_LightningPR_JustBelowThreshold_Ignored() async {
+        // Boundary: 9 digits (threshold is >= 10, so 9 must be rejected)
+        let record = PersonalBestRecord(constant: .pi, type: .lightning, digitCount: 9, totalTime: 4.0, cumulativeTimes: [])
         await store.save(record: record)
-        
+
+        let saved = store.getRecord(for: .pi, type: .lightning)
+        XCTAssertNil(saved, "Should not save Lightning PR if digitCount == 9 (< 10)")
+    }
+
+    func testSave_LightningPR_ExactlyThreshold_Saves() async {
+        // Boundary check: Exactly 10 digits (threshold is digitCount >= 10)
+        let record = PersonalBestRecord(constant: .pi, type: .lightning, digitCount: 10, totalTime: 5.0, cumulativeTimes: [])
+        await store.save(record: record)
+
         let saved = store.getRecord(for: .pi, type: .lightning)
         XCTAssertNotNil(saved)
-        XCTAssertEqual(saved?.digitCount, 50)
+        XCTAssertEqual(saved?.digitCount, 10)
     }
 }
