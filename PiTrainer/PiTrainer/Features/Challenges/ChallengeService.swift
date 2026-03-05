@@ -7,13 +7,63 @@ struct Challenge: Identifiable, Codable, Hashable {
     let startIndex: Int
     let referenceSequence: String
     let expectedNextDigits: String
-    
+    let blockStartIndex: Int
+    let musOffsetInBlock: Int
+    let revealPool: String
+
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     static func == (lhs: Challenge, rhs: Challenge) -> Bool {
         lhs.id == rhs.id
+    }
+
+    // MARK: - Codable backward compatibility (Story 17.1)
+
+    enum CodingKeys: String, CodingKey {
+        case id, date, constant, startIndex, referenceSequence, expectedNextDigits
+        case blockStartIndex, musOffsetInBlock, revealPool
+    }
+
+    init(id: UUID, date: Date, constant: Constant, startIndex: Int,
+         referenceSequence: String, expectedNextDigits: String,
+         blockStartIndex: Int = 0, musOffsetInBlock: Int = 0, revealPool: String = "") {
+        self.id = id
+        self.date = date
+        self.constant = constant
+        self.startIndex = startIndex
+        self.referenceSequence = referenceSequence
+        self.expectedNextDigits = expectedNextDigits
+        self.blockStartIndex = blockStartIndex
+        self.musOffsetInBlock = musOffsetInBlock
+        self.revealPool = revealPool
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        date = try container.decode(Date.self, forKey: .date)
+        constant = try container.decode(Constant.self, forKey: .constant)
+        startIndex = try container.decode(Int.self, forKey: .startIndex)
+        referenceSequence = try container.decode(String.self, forKey: .referenceSequence)
+        expectedNextDigits = try container.decode(String.self, forKey: .expectedNextDigits)
+        blockStartIndex = try container.decodeIfPresent(Int.self, forKey: .blockStartIndex) ?? 0
+        musOffsetInBlock = try container.decodeIfPresent(Int.self, forKey: .musOffsetInBlock) ?? 0
+        revealPool = try container.decodeIfPresent(String.self, forKey: .revealPool) ?? ""
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(date, forKey: .date)
+        try container.encode(constant, forKey: .constant)
+        try container.encode(startIndex, forKey: .startIndex)
+        try container.encode(referenceSequence, forKey: .referenceSequence)
+        try container.encode(expectedNextDigits, forKey: .expectedNextDigits)
+        try container.encode(blockStartIndex, forKey: .blockStartIndex)
+        try container.encode(musOffsetInBlock, forKey: .musOffsetInBlock)
+        try container.encode(revealPool, forKey: .revealPool)
     }
 }
 
@@ -204,6 +254,9 @@ class ChallengeService: ChallengeServiceProtocol {
         }.value
     }
 
+    /// Maximum number of decimals in the reveal pool for progressive challenge reveal (Story 17.1)
+    static let maxRevealPoolSize = 20
+
     private static func createChallenge(
         startIndex: Int,
         allDigits: [UInt8],
@@ -213,60 +266,77 @@ class ChallengeService: ChallengeServiceProtocol {
         date: Date
     ) -> Challenge? {
         guard startIndex < allDigits.count else { return nil }
-        
+
         // Restrict search to user's known segment (0...highestIndex)
         let searchSpace = Array(allDigits.prefix(highestIndex))
         guard startIndex < searchSpace.count else { return nil }
-        
+
         let length = ChallengeService.calculateMUS(in: searchSpace, at: startIndex)
-        
+
         if length == -1 {
             print("ChallengeService: Failed to find MUS at \(startIndex) in range 0..<\(highestIndex)")
             return nil
         }
-        
+
         let subslice = allDigits[startIndex..<(startIndex+length)]
         let refSeq = String(decoding: subslice, as: UTF8.self)
-        
+
         let challengeLength = grade.challengeLength
-        let expectedStart = startIndex + length
-        
+        let musEnd = startIndex + length
+
         // Story 14.2 Fix: Resilience for small knowledge bases
         // If the user's Grade requires more digits than they know, clamp to their knowledge.
         // This prevents "nil" results when the user is at the very beginning of their journey.
-        let availableSpace = highestIndex - expectedStart
+        let availableSpace = highestIndex - musEnd
         guard availableSpace >= 0 else {
-            print("ChallengeService: Out of scope. expectedStart \(expectedStart) > highestIndex \(highestIndex)")
+            print("ChallengeService: Out of scope. musEnd \(musEnd) > highestIndex \(highestIndex)")
             return nil
         }
-        
+
         let actualTargetLength = min(challengeLength, availableSpace)
         // We still want a challenge to have at least 1 digit to guess.
         guard actualTargetLength > 0 else {
-            print("ChallengeService: Not enough space for target digits at \(expectedStart)")
+            print("ChallengeService: Not enough space for target digits at \(musEnd)")
             return nil
         }
-        
-        let expectedEnd = expectedStart + actualTargetLength
-        
+
+        let expectedEnd = musEnd + actualTargetLength
+
         var expected = ""
-        if expectedStart < expectedEnd {
-            expected = String(decoding: allDigits[expectedStart..<expectedEnd], as: UTF8.self)
+        if musEnd < expectedEnd {
+            expected = String(decoding: allDigits[musEnd..<expectedEnd], as: UTF8.self)
         }
-        
+
+        // Story 17.1: Block position and reveal pool for progressive reveal
+        let blockStartIndex = (startIndex / 10) * 10
+        let musOffsetInBlock = startIndex - blockStartIndex
+
+        // revealPool starts at musEnd (same as expectedNextDigits) — they intentionally overlap.
+        // Story 17.3 will dynamically determine the split between revealed hints and user input.
+        let poolEnd = min(min(highestIndex, allDigits.count), musEnd + maxRevealPoolSize)
+        let revealPool: String
+        if musEnd < poolEnd {
+            revealPool = String(decoding: allDigits[musEnd..<poolEnd], as: UTF8.self)
+        } else {
+            revealPool = ""
+        }
+
         let challenge = Challenge(
             id: UUID(),
             date: date,
             constant: constant,
             startIndex: startIndex,
             referenceSequence: refSeq,
-            expectedNextDigits: expected
+            expectedNextDigits: expected,
+            blockStartIndex: blockStartIndex,
+            musOffsetInBlock: musOffsetInBlock,
+            revealPool: revealPool
         )
-        
+
         // Story 15.2: E2E Validation — verify the generated sequence bytes are valid ASCII digits
+        // Validate that all bytes are in the ASCII digit range (0x30 = '0', 0x39 = '9')
         let fullSequence = refSeq + expected
         let fullSequenceBytes = Array(fullSequence.utf8)
-        // Validate that all bytes are in the ASCII digit range (0x30 = '0', 0x39 = '9')
         let allAsciiDigits = fullSequenceBytes.allSatisfy { $0 >= 0x30 && $0 <= 0x39 }
         guard allAsciiDigits else {
             print("ChallengeService: E2E VALIDATION FAILED. Sequence '\(fullSequence)' contains non-digit bytes.")
@@ -277,7 +347,16 @@ class ChallengeService: ChallengeServiceProtocol {
             print("ChallengeService: E2E VALIDATION FAILED. Expected \(length + actualTargetLength) bytes but got \(fullSequenceBytes.count)")
             return nil
         }
-        
+
+        // Story 17.1: E2E Validation for revealPool
+        if !revealPool.isEmpty {
+            let poolBytes = Array(revealPool.utf8)
+            guard poolBytes.allSatisfy({ $0 >= 0x30 && $0 <= 0x39 }) else {
+                print("ChallengeService: E2E VALIDATION FAILED. RevealPool '\(revealPool)' contains non-digit bytes.")
+                return nil
+            }
+        }
+
         return challenge
     }
 }

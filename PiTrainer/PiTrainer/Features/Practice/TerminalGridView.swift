@@ -79,7 +79,19 @@ struct TerminalGridView: View {
     
     /// Indices of digits that were errors but auto-advanced (Story 10.1)
     var indulgentErrorIndices: Set<Int> = []
-    
+
+    /// Column offset where typedDigits starts rendering (Story 17.2: positions 0..<offset show "·")
+    /// Default 0 = Practice mode behavior unchanged.
+    var typedDigitsColumnOffset: Int = 0
+
+    /// Override for ghost globalIndex offset (Story 17.2: pass 0 when fullDigits is indexed from 0)
+    /// Default nil = uses startOffset (Practice mode behavior unchanged).
+    var fullDigitsOffset: Int? = nil
+
+    /// Override for row count (Story 17.2: drives growth from revealedCount instead of typedDigits.count)
+    /// Default nil = computed from typedDigits.count (Practice mode behavior unchanged).
+    var forcedRowCount: Int? = nil
+
     // MARK: - Computed Properties
     
     private var rows: [TerminalRow] {
@@ -89,8 +101,11 @@ struct TerminalGridView: View {
         // In Learn Mode, we show the full segment (using segmentLength if available, else fullDigits)
         // In Practice/Test/Game, we show rows based on typed digits + 1 potential empty row for the "cursor"
         let rowCount: Int
-        
-        if isLearnMode {
+
+        if let forced = forcedRowCount {
+            // Challenge Mode: row count driven by caller (grows with reveals, not typed digits)
+            rowCount = forced
+        } else if isLearnMode {
             // Learn Mode: Fixed size based on segment
             let sourceCount = segmentLength ?? fullDigits.count
             let effectiveCount = max(sourceCount, 1)
@@ -145,7 +160,15 @@ struct TerminalGridView: View {
                         HStack(alignment: .top, spacing: 0) {
                             // Line number and indicator
                             HStack(spacing: 0) {
-                                if row.isComplete || !allowsReveal {
+                                // Story 17.2: hide eye when all 10 visual positions are filled
+                            let isRowVisuallyFull: Bool = {
+                                guard typedDigitsColumnOffset > 0 else { return false }
+                                let colOffset = row.id == 0 ? typedDigitsColumnOffset : 0
+                                let revealed = revealedDigitsPerRow[row.id] ?? 0
+                                return colOffset + row.digits.count + revealed >= 10
+                            }()
+
+                            if row.isComplete || !allowsReveal || isRowVisuallyFull {
                                     Text(String(format: "%03d", row.lineNumber))
                                         .font(.system(size: 12, weight: .regular, design: .monospaced))
                                         .foregroundColor(.gray)
@@ -184,21 +207,50 @@ struct TerminalGridView: View {
                             // Digits
                             HStack(spacing: 0) {
                                 ForEach(0..<10) { i in
-                                    if i < row.digits.count {
-                                        let digit = row.digits[i]
-                                        let isLastDigitInRow = (row.id == rows.last?.id && i == row.digits.count - 1)
-                                        digitView(digit: digit, state: digitState(row: row, localIndex: i, isLast: isLastDigitInRow))
-                                    } else if i < (revealedDigitsPerRow[row.id] ?? 0) || isLearnMode || (showErrorReveal && startOffset + (row.id * 10) + i == typedDigits.count) {
-                                        let globalIndex = startOffset + (row.id * 10) + i
-                                        if globalIndex < fullDigits.count {
-                                            let ghostDigit = Int(String(fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)])) ?? 0
-                                            digitView(digit: ghostDigit, state: .normal)
-                                                .opacity(DesignSystem.Animations.ghostRevealOpacity)
+                                    if typedDigitsColumnOffset > 0 {
+                                        // Story 17.2: Challenge mode — column offset + relative ghost indexing
+                                        let colOffset = row.id == 0 ? typedDigitsColumnOffset : 0
+                                        let typedEnd = colOffset + row.digits.count
+                                        let revealed = revealedDigitsPerRow[row.id] ?? 0
+                                        let ghostEnd = typedEnd + revealed
+                                        let effectiveOffset = fullDigitsOffset ?? startOffset
+
+                                        if i < colOffset {
+                                            placeholderView
+                                        } else if i < typedEnd {
+                                            let digit = row.digits[i - colOffset]
+                                            let isLast = (row.id == rows.last?.id && i - colOffset == row.digits.count - 1)
+                                            digitView(digit: digit, state: digitState(row: row, localIndex: i, isLast: isLast))
+                                        } else if i < ghostEnd {
+                                            let globalIndex = effectiveOffset + (row.id * 10) + i
+                                            if globalIndex < fullDigits.count {
+                                                let ghostDigit = Int(String(fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)])) ?? 0
+                                                digitView(digit: ghostDigit, state: .normal)
+                                                    .opacity(DesignSystem.Animations.ghostRevealOpacity)
+                                            } else {
+                                                placeholderView
+                                            }
                                         } else {
                                             placeholderView
                                         }
                                     } else {
-                                        placeholderView
+                                        // Practice mode: original logic (unchanged)
+                                        if i < row.digits.count {
+                                            let digit = row.digits[i]
+                                            let isLastDigitInRow = (row.id == rows.last?.id && i == row.digits.count - 1)
+                                            digitView(digit: digit, state: digitState(row: row, localIndex: i, isLast: isLastDigitInRow))
+                                        } else if i < (revealedDigitsPerRow[row.id] ?? 0) || isLearnMode || (showErrorReveal && startOffset + (row.id * 10) + i == typedDigits.count) {
+                                            let globalIndex = (fullDigitsOffset ?? startOffset) + (row.id * 10) + i
+                                            if globalIndex < fullDigits.count {
+                                                let ghostDigit = Int(String(fullDigits[fullDigits.index(fullDigits.startIndex, offsetBy: globalIndex)])) ?? 0
+                                                digitView(digit: ghostDigit, state: .normal)
+                                                    .opacity(DesignSystem.Animations.ghostRevealOpacity)
+                                            } else {
+                                                placeholderView
+                                            }
+                                        } else {
+                                            placeholderView
+                                        }
                                     }
                                 }
                             }
@@ -258,8 +310,21 @@ struct TerminalGridView: View {
     
     private func revealFullRow(in row: TerminalRow) {
         let currentRevealed = revealedDigitsPerRow[row.id] ?? 0
-        let remainingOnRow = 10 - currentRevealed
-        if remainingOnRow > 0 {
+        if typedDigitsColumnOffset > 0 {
+            // Story 17.2: Challenge mode — only reveal the visually available ghost positions
+            let colOffset = row.id == 0 ? typedDigitsColumnOffset : 0
+            let typedEnd = colOffset + row.digits.count
+            let visualMax = 10 - typedEnd  // ghost slots available in this row
+            let remaining = max(0, visualMax - currentRevealed)
+            guard remaining > 0 else { return }
+            withAnimation(.spring()) {
+                revealedDigitsPerRow[row.id] = (revealedDigitsPerRow[row.id] ?? 0) + remaining
+            }
+            onReveal?(remaining)
+        } else {
+            // Practice mode: original logic (unchanged)
+            let remainingOnRow = 10 - currentRevealed
+            guard remainingOnRow > 0 else { return }
             withAnimation(.spring()) {
                 revealedDigitsPerRow[row.id] = 10
             }

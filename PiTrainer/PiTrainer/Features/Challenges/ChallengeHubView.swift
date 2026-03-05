@@ -128,6 +128,12 @@ struct ChallengeHubView: View {
             Task {
                 await viewModel.loadDailyChallenge()
             }
+            // Story 17.5: Request notification permission and schedule challenge reminder
+            NotificationService.shared.requestAuthorization { granted in
+                if granted {
+                    NotificationService.shared.scheduleDailyChallengeReminder()
+                }
+            }
         }
         .onChange(of: viewModel.presentedChallenge) { _, challenge in
             if let challenge = challenge {

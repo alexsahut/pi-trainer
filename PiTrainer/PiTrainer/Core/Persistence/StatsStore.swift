@@ -290,6 +290,7 @@ class StatsStore {
                 
                 streakStore.recordSession()
                 NotificationService.shared.scheduleDailyReminder(streak: streakStore.currentStreak)
+                NotificationService.shared.scheduleDailyChallengeReminder()
                 
                 // Story 11.3: Trigger Reward only if persistence succeeded
                 if shouldTriggerDoubleBang {
@@ -328,6 +329,7 @@ class StatsStore {
             self.historyCache = [:]
             streakStore.reset()
             NotificationService.shared.cancelPendingReminders()
+            NotificationService.shared.cancelPendingChallengeReminders()
             await PersonalBestStore.shared.reset()
             SegmentStore.shared.reset()
             self.totalCorrectDigits = 0

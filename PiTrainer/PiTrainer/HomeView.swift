@@ -199,6 +199,13 @@ struct HomeView: View {
             // Initial sync
             configureSession()
         }
+        // Story 17.5: Deep link from challenge notification → Challenge Hub
+        .onReceive(NotificationService.shared.$pendingDeepLink) { deepLink in
+            if let deepLink, deepLink == .challengeHub {
+                coordinator.push(.challengeHub)
+                NotificationService.shared.pendingDeepLink = nil
+            }
+        }
     }
     
     private func configureSession() {

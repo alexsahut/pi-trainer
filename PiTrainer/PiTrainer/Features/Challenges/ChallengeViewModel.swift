@@ -4,57 +4,64 @@ import SwiftUI
 @Observable
 class ChallengeViewModel {
     let challenge: Challenge
-    
+
     var currentInput: String = ""
     var isCompleted: Bool = false
     var isErrorShakeActive: Bool = false
-    
+
     var isShowingRecovery: Bool = false
     var shouldNavigateToPractice: Bool = false
-    
+
+    // Story 17.2: Progressive reveal state
+    var revealedCount: Int = 0
+
+    var canReveal: Bool {
+        revealedCount < challenge.revealPool.count
+    }
+
+    /// MUS + revealed decimals from the pool
+    var visibleDigits: String {
+        let revealed = String(challenge.revealPool.prefix(revealedCount))
+        return challenge.referenceSequence + revealed
+    }
+
+    /// Alias for revealedCount — used by the hint counter UI
+    var hintCount: Int { revealedCount }
+
+    // Story 17.3: Guessing mode state
+    var isInGuessingMode: Bool = false
+    var guessingInput: String = ""
+    var isSuccessfulCompletion: Bool = false
+
+    /// Number of correctly guessed digits — for Story 17.4 scoring
+    var correctGuessCount: Int { guessingInput.count }
+
+    /// Story 17.4: score = (correctGuessCount × 10) - (revealedCount × 5)
+    /// Score can be negative — intentional signal of over-reliance on hints.
+    var computedScore: Int {
+        correctGuessCount * 10 - revealedCount * 5
+    }
+
     // Dependencies
     private let hapticService: HapticService
     private let statsStore: StatsStore
     private let segmentStore: SegmentStore
-    
+
     // Derived properties
     var prompt: String {
         challenge.referenceSequence
     }
-    
+
     var targetLength: Int {
         challenge.expectedNextDigits.count
     }
-    
+
     var targetDigits: String {
         challenge.expectedNextDigits
     }
-    
-    var displayTarget: String {
-        var result = ""
-        let inputCount = currentInput.count
-        
-        for i in 0..<targetLength {
-            if i < inputCount {
-                let index = currentInput.index(currentInput.startIndex, offsetBy: i)
-                result += String(currentInput[index])
-            } else if isErrorShakeActive && i == inputCount {
-                // REVEAL LOGIC: If error input occurred, show what WAS expected at this index
-                let expectedIndex = targetDigits.index(targetDigits.startIndex, offsetBy: i)
-                result += String(targetDigits[expectedIndex])
-            } else {
-                result += "_"
-            }
-            
-            if i < targetLength - 1 {
-                result += " "
-            }
-        }
-        return result
-    }
-    
+
     // Story 13.2: Dependency Injection for better testability
-    init(challenge: Challenge, 
+    init(challenge: Challenge,
          hapticService: HapticService = .shared,
          statsStore: StatsStore = .shared,
          segmentStore: SegmentStore = .shared) {
@@ -63,76 +70,115 @@ class ChallengeViewModel {
         self.statsStore = statsStore
         self.segmentStore = segmentStore
     }
-    
+
+    // MARK: - Story 17.3: Guessing Mode
+
+    /// Transitions from reveal phase to guessing phase.
+    /// Blocked if pool is fully revealed — nothing left to guess.
+    func activateGuessingMode() {
+        guard !isInGuessingMode, !isCompleted else { return }
+        guard revealedCount < challenge.revealPool.count else { return }
+        isInGuessingMode = true
+    }
+
     func handleInput(_ digit: Int) {
-        guard !isCompleted else { return }
+        guard !isCompleted, isInGuessingMode else { return }
+        handleGuessDigit(digit)
+    }
+
+    /// Validates a guessed digit against the reveal pool at the correct offset.
+    /// Offset = revealedCount (hints shown) + guessingInput.count (digits already typed).
+    /// Precondition: activateGuessingMode() already verified revealedCount < pool.count.
+    private func handleGuessDigit(_ digit: Int) {
         let input = String(digit)
-        
-        // Reset error state on new input
-        if isErrorShakeActive {
-            isErrorShakeActive = false
-        }
-        
-        // Check if input matches expected digit at current position
-        let currentIndex = currentInput.count
-        guard currentIndex < targetLength else { return }
-        
-        let expectedIndex = targetDigits.index(targetDigits.startIndex, offsetBy: currentIndex)
-        let expectedDigit = String(targetDigits[expectedIndex])
-        
+        let poolOffset = revealedCount + guessingInput.count
+
+        // Defensive guard: unreachable in normal flow since activateGuessingMode() blocks
+        // this state, but prevents a crash if revealNextDigit() is called during guessing.
+        guard poolOffset < challenge.revealPool.count else { return }
+
+        let expectedCharIndex = challenge.revealPool.index(
+            challenge.revealPool.startIndex, offsetBy: poolOffset)
+        let expectedDigit = String(challenge.revealPool[expectedCharIndex])
+
         if input == expectedDigit {
-            currentInput += input
-            hapticService.playSuccess() // Immediate feedback per digit
-            
-            if currentInput.count == targetLength {
+            guessingInput += input
+            // Last correct digit → celebrate; otherwise per-digit success sound
+            if revealedCount + guessingInput.count >= challenge.revealPool.count {
                 isCompleted = true
-                hapticService.playDoubleBang() // Reward!
-                statsStore.creditXP(amount: targetLength) // Task 13.2: Credit XP
+                isSuccessfulCompletion = true
+                hapticService.playDoubleBang()
+            } else {
+                hapticService.playSuccess()
             }
         } else {
-            // Error!
+            // Wrong digit — end session immediately, no retry
             triggerError()
+            isCompleted = true
+            // isSuccessfulCompletion stays false
         }
     }
-    
+
     func handleBackspace() {
-        guard !isCompleted, !currentInput.isEmpty else { return }
-        currentInput.removeLast()
-        isErrorShakeActive = false
-        isShowingRecovery = false // Hide recovery if user corrects (or tries to)
+        if isInGuessingMode {
+            guard !isCompleted, !guessingInput.isEmpty else { return }
+            guessingInput.removeLast()
+        } else {
+            guard !currentInput.isEmpty else { return }
+            currentInput.removeLast()
+            isErrorShakeActive = false
+            isShowingRecovery = false
+        }
     }
-    
+
     func reset() {
         guard !isCompleted else { return }
         currentInput = ""
         isErrorShakeActive = false
         isShowingRecovery = false
+        isInGuessingMode = false
+        guessingInput = ""
+        isSuccessfulCompletion = false
     }
-    
+
     /// Story 14.1: Recovery Bridge - Transitions to Learn mode for the failed pattern context
     func triggerRecovery() {
-        // Calculate the absolute index where the user is currently (next expected digit)
-        // or where they failed (currentInput.count represents the index of the character they are trying to type)
-        let localFailIndex = currentInput.count
+        // Story 17.3: In guessing mode the fail index accounts for revealed hints + typed digits.
+        // In practice mode (pre-17.3 flow) it uses currentInput.count.
+        let localFailIndex: Int
+        if isInGuessingMode {
+            localFailIndex = revealedCount + guessingInput.count
+        } else {
+            localFailIndex = currentInput.count
+        }
         let absoluteIndex = challenge.startIndex + challenge.referenceSequence.count + localFailIndex
-        
+
         // Align to chunk
         let segmentStart = (absoluteIndex / DesignSystem.Constants.chunkSize) * DesignSystem.Constants.chunkSize
         let segmentEnd = segmentStart + DesignSystem.Constants.chunkSize
-        
-        print("debug: Recovery Bridge triggered. Absolute Error Index: \(absoluteIndex). Setting Segment: \(segmentStart)-\(segmentEnd)")
-        
+
         // Update Stores
         segmentStore.segmentStart = segmentStart
         segmentStore.segmentEnd = segmentEnd
         statsStore.selectedMode = .learn
-        
+
         // Trigger Navigation
         withAnimation {
             shouldNavigateToPractice = true
         }
     }
-    
+
+    // MARK: - Story 17.2: Progressive Reveal
+
+    func revealNextDigit() {
+        guard canReveal else { return }
+        revealedCount += 1
+    }
+
+    func revealDigits(count: Int) {
+        revealedCount = min(revealedCount + count, challenge.revealPool.count)
+    }
+
     private func triggerError() {
         hapticService.playError()
         withAnimation {
